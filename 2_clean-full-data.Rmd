@@ -1,0 +1,186 @@
+---
+title: "Final DataSet"
+output: 
+---
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+db <- read_rds("bld/full-data.rds")
+```
+
+
+
+Clean Basic Stats & Factors
+```{r}
+db <- 
+  db %>%
+  rename(perc_male = `% of male`,
+         perc_dom = `% dominant racial or ethnic group`,
+         ra_is_field = "lab or field",
+         jh_is_field = "lab/field",
+         additional_contact = `additional contact`,
+         direction = `anticipated direction (1) or backlash (-1), no prior (0)`) %>% 
+  select(-`_file`,
+         -starts_with("..."),
+         -starts_with("states "),
+         -starts_with("stated ")) %>% 
+  mutate(perc_male = round(parse_number(perc_male), 2),
+         perc_male = if_else(perc_male > 1, 
+                              perc_male / 100,
+                              perc_male),
+         perc_dom = round(parse_number(perc_dom), 2),
+         perc_dom = if_else(perc_dom > 1, 
+                              perc_dom / 100,
+                              perc_dom),
+  ra_is_field = recode(str_to_lower(ra_is_field), 
+                    "1" = TRUE,
+                    "field" = TRUE,
+                    "lab" = FALSE,
+                    "0" = FALSE),
+  jh_is_field = ifelse(jh_is_field == "field", TRUE, FALSE),
+  additional_contact = ifelse(additional_contact == 1, TRUE, FALSE),
+   n.t = parse_number(n.t),
+   n.c = parse_number(n.c),
+  pre_n = `number of participant`,
+   final_n = as.integer(ifelse(study.design == "pre-post", n.t, n.t + n.c))) %>% 
+  mutate(publication_type = factor(`publication type`, 
+                                   labels = c("journal article",
+                                              "book chapter",
+                                              "book",
+                                              "dissertation",
+                                              "government report",
+                                              "conference paper",
+                                              "unpublished"),
+                                   levels = seq(1, 7, by = 1)),
+         origin = factor(origin, labels = c("DeGue",
+                                            "Proquest",
+                                            "Author"),
+                         levels = c(1,2,3)),
+         sex_type = factor(`participant sex`, labels = c("Only Male",
+                                                         "Only Female",
+                                                         "Mixed Groups",
+                                                         "Separate Groups",
+                                                         "Mixed But Not Specified",
+                                                         "Not Specified",
+                                                         "General Population"),
+                           levels = seq(1, 7, by = 1)),
+         life_stage = factor(`stage in life`, labels = c("Middle School",
+                                                         "High School",
+                                                         "College",
+                                                         "Adult"),
+                             levels = c(1, 2, 3, 4)),
+         setting = factor(setting, labels = c("Middle School",
+                                              "High School",
+                                              "College",
+                                              "Work",
+                                              "Community",
+                                              "Faith Based",
+                                              "Other"),
+                             levels = seq(1, 7, by = 1)),
+         delivery = factor(`delivery of treatment`, labels = c("Lecture",
+                                                               "Interactive Presentation",
+                                                               "Theater",
+                                                               "Film",
+                                                               "Active Participation",
+                                                               "Booklets",
+                                                               "Online"),
+                           levels = seq(1, 7, by = 1)),
+         control_type = factor(`type of control`, labels = c("No Treatment / Waitlist",
+                                                             "Placebo",
+                                                             "Other Treatment",
+                                                             "No Control Group"),
+                               levels = c(1, 2, 3, 4))
+         ) %>% 
+  select(-`publication type`, -`participant sex`, -`stage in life`,
+         -`type of control`, -`delivery of treatment`) %>% 
+  mutate(stated_purpose = str_replace_all(stated_purpose, "10", "aa"),
+         stated_purpose = str_replace_all(stated_purpose, "11", "bb"),
+         attitudes_int = str_detect(stated_purpose, "1"),
+         knowledge_int = str_detect(stated_purpose, "2"),
+         perp_int = str_detect(stated_purpose, "3"),
+         bystander_int = str_detect(stated_purpose, "4"),
+         behavioral_int = str_detect(stated_purpose, "5"),
+         empathy_int = str_detect(stated_purpose, "6"),
+         legal_int = str_detect(stated_purpose, "7"),
+         alcohol_int = str_detect(stated_purpose, "8"),
+         rape_myth_int = str_detect(stated_purpose, "9"),
+         norms_int = str_detect(stated_purpose, "aa"),
+         other_int = str_detect(stated_purpose, "bb"))
+         
+```
+
+
+
+Locations
+```{r}
+states_key =
+tibble(abbreviation = state.abb,
+       us_region = as.character(state.region))
+
+db <- 
+  db %>%
+  mutate(country = str_to_lower(country),
+         country = ifelse(country == "us", "usa", country)) %>% 
+  mutate(temp_abb = case_when(str_length(state) > 2 ~ state.abb[match(state, state.name)],
+                       TRUE ~ state)) %>% 
+  left_join(states_key, by = c("temp_abb" = "abbreviation")) %>% 
+  mutate(us_region = case_when(str_detect(str_to_lower(state), "midwest") ~ "North Central",
+                                str_detect(str_to_lower(state), "northeast") ~ "Northeast",
+                                TRUE ~ us_region)) %>% 
+  select(-temp_abb)
+```
+
+Study Design
+```{r}
+db <- 
+db %>% 
+  mutate(study.design = case_when(contains.randomization == TRUE ~ "randomized horserace",
+                                  contains.randomization == FALSE ~ "non-randomized horserace",
+                                  TRUE ~ study.design))
+```
+
+
+Arrange, and Clean Numbers
+```{r}
+clean_numbers <- function(n){
+  round(as.numeric(n), 3)
+}
+
+db <- 
+db %>%
+  select(-`number of participant`) %>% 
+  janitor::clean_names() %>% 
+  select(author, year, intervention_name, delay, scale_name, scale_type, study_design,
+         eff_type, u_s_d:se_d, n_t:n_c_group, cluster_type, pre_n, final_n,
+         ra_is_field, jh_is_field, intervention_length,
+         perc_male, perc_dom, mean_age, setting, publication_type:control_type, country, state, us_region, 
+         everything()) %>% 
+  mutate_at(vars(u_s_d:final_n, mean_age, n_items, n_conditions, intervention_length), funs(clean_numbers(.)))
+```
+
+Factors without levels
+```{r}
+db <- 
+db %>% 
+  mutate(scale_type = factor(scale_type),
+         study_design = factor(study_design),
+         eff_type = factor(eff_type))
+```
+
+
+
+Export
+```{r}
+db %>%
+  write_rds("bld/full-data-clean.rds") %>%
+  write_tsv("bld/full-data-clean.tsv")
+```
+
+
+```{r}
+# db %>%
+#   vtable::vtable(out = "return", factor.limit = 0) %>%
+#   write_csv("README.csv")
+``` 

@@ -1,0 +1,343 @@
+---
+title: "Primary Prevention Meta - Preliminary Descriptive Findings"
+output:
+  rmarkdown::html_document:
+    smart: true
+    theme: spacelab
+---
+
+```{r setup, echo = F, warning=F, message=F}
+library(ggplot2)
+library(dplyr)
+library(metafor)
+# library(knitr)
+
+theme_set(theme_light())
+db <- readRDS("bld/full-data-clean.rds")
+
+knitr::opts_chunk$set(echo = F, cache = F, message = F, warning = F, results = 'asis')
+```
+
+```{r basic_stats}
+n_papers <- db %>% 
+  distinct(author, year, .keep_all = T) %>% 
+  count() %>% 
+  pull()
+
+n_interventions <- db %>% 
+  distinct(author, year, intervention_name, .keep_all = T) %>% 
+  count() %>% 
+  pull()
+
+n_degue_papers <- db %>% 
+  filter(origin == "DeGue") %>% 
+  distinct(author, year, .keep_all = T) %>% 
+  count() %>% 
+  pull()
+
+
+n_effect_size <- db %>% nrow
+```
+* We have `r n_papers` papers,
+* We `r n_interventions` intervention evaluations,
+* and `r n_effect_size` total effect sizes
+
+
+```{r functions}
+upper_limit = 2018
+
+paper_table <- function(data, x){
+  x <- enquo(x)
+  
+  data %>% 
+  distinct(author, year, .keep_all = T) %>% 
+  count(!!x) %>% 
+  mutate(freq = round(n / sum(n), 2)) %>%
+  kable()
+}
+
+
+paper_plot_by_year <- function(data, x){
+  x <- enquo(x)
+  
+  data %>% 
+  distinct(author, year, .keep_all = T) %>% 
+  group_by(year) %>% 
+  count(!!x) %>% 
+  ggplot(aes(year, n, color = !!x)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1985, upper_limit, by = 3), limits = c(1985, upper_limit))
+}
+
+intervention_table <- function(data, x){
+  x <- enquo(x)
+  
+  data %>% 
+  distinct(author, year, intervention_name, .keep_all = T) %>% 
+  count(!!x) %>% 
+  mutate(freq = round(n / sum(n), 2)) %>% 
+  kable()
+}
+
+
+intervention_plot_by_year <- function(data, x){
+  x <- enquo(x)
+  
+  data %>% 
+  distinct(author, year, intervention_name, .keep_all = T) %>% 
+  group_by(year) %>% 
+  count(!!x) %>% 
+  ggplot(aes(year, n, color = !!x)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1985, upper_limit, by = 3), limits = c(1985, upper_limit))
+}
+
+summary_stat <- function(data, x){
+  x <- enquo(x)
+  data %>% 
+  summarise(max = max(!!x, na.rm = T),
+            min = min(!!x, na.rm = T),
+            median = median(!!x, na.rm = T),
+            mean = mean(!!x, na.rm = T),
+            sd = sd(!!x, na.rm = T)) %>% 
+  kable()
+}
+```
+
+
+
+### Publication Types
+```{r pub_type_table}
+db %>% 
+  paper_table(publication_type)
+```
+
+
+
+```{r pub_type_plot}
+db %>% 
+  paper_plot_by_year(publication_type) +
+  labs(title = "Publication Types Over Time")
+```
+
+
+## Range of Number of Participants
+```{r participant_stats}
+db %>% 
+ filter(final_n < 100000) %>% 
+  #group_by(study_design) %>% 
+  summary_stat(final_n)
+```
+
+## Gender of Intervention Groups Over Time 
+```{r, gender_plot, eval=F}
+db %>% 
+  intervention_plot_by_year(sex_type)
+```
+
+## Percentage Male of Intervention Groups Over Time
+```{r, perc_male_plot}
+db %>% 
+  group_by(year) %>% 
+  summarise(perc_male = mean(perc_male, na.rm = T)) %>%
+  ggplot(aes(year, perc_male)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1985, upper_limit, by = 3),
+                     limits = c(1985, upper_limit))
+
+```
+
+
+## Percentage Dominant Group Over Time
+```{r, perc_dom_plot}
+db %>% 
+  distinct(author, year, program_name, .keep_all = T) %>% 
+  group_by(year) %>% 
+  summarise(perc_dom = mean(perc_dom, na.rm = T)) %>%
+  ggplot(aes(year, perc_dom)) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1985, upper_limit, by = 3), 
+                     limits = c(1985, upper_limit))
+```
+
+### Mean Age of Intervention Groups
+```{r}
+db %>% 
+  #group_by(study_design) %>% 
+  summary_stat(mean_age)
+```
+
+```{r}
+db %>% 
+  distinct(author, year, program_name, .keep_all = T) %>% 
+  ggplot(aes(mean_age)) +
+  geom_density() +
+  labs(title = "Density of Intervention Ages")
+```
+
+## Stage in Life
+```{r}
+db %>% 
+  intervention_table(life_stage)
+```
+
+```{r, life_stage_plot, eval=F}
+db %>% 
+  intervention_plot_by_year(life_stage) +
+  labs(title = "Participant Life Stage in Interventions Over Time")
+```
+
+
+
+## Setting
+```{r setting_table, eval=F}
+db %>% 
+  intervention_table(setting)
+```
+
+```{r, setting_plot, eval=F}
+db %>% 
+  intervention_plot_by_year(setting)
+```
+
+
+## Country
+```{r}
+db %>% 
+  mutate(country = ifelse(country == "usa", "usa", "other")) %>% 
+  paper_plot_by_year(country)
+```
+
+## Type of Control
+```{r, control_plot, eval=F}
+db %>% 
+  paper_plot_by_year(control_type) +
+  labs(title = "Type of Control Groups Intervention Have Over Time",
+       subtitle = "Including All Studies")
+```
+
+## What Kind of Control Groups Do the Studies Have?
+```{r, control_table}
+db %>% 
+  paper_table(control_type)
+```
+
+
+
+## Study Design
+```{r, design_plot, eval=F}
+db %>% 
+  intervention_plot_by_year(study_design)
+```
+
+```{r}
+db %>% 
+  mutate(study_design = ifelse(cluster_type == "cluster randomized" & 
+                                 n_t_group == "1",
+                               "quasi-experimental", 
+                               study_design)) %>% 
+  intervention_table(study_design)
+```
+
+
+```{r, eval=F}
+db %>%
+  select(scale_type, d, direction) %>% 
+  mutate(direction = as.integer(direction),
+         d = as.double(d),
+         d = abs(d) * direction)
+```
+
+
+
+
+# APPENDIX
+
+
+```{r, eval=F}
+## Our we standardizing effects sizes the way we expect to?
+effect_sizes <- tribble(~label, ~avg_d, ~eff.type,
+                        "Height difference \nbetween men and women", 1.85, "t.test",
+                        "Gender difference in weight", .59, "t.test")
+
+library(ggrepel)
+db %>% 
+  drop_na(eff_type) %>% 
+  select(eff_type, d, se_d) %>%
+  mutate(d = abs(as.numeric(d)),
+         se.d = as.numeric(se_d)) %>% 
+  group_by(eff_type) %>% 
+  summarise(avg_d = mean(d, na.rm = T),
+            avg_se = mean(se.d, na.rm = T)) %>%
+  ungroup() %>% 
+  ggplot(aes(eff_type, avg_d, 
+             ymin = avg_d - (avg_se * 1.96), 
+             ymax = avg_d + (avg_se * 1.96))) + 
+  coord_flip() +
+  geom_hline(yintercept = 0, lty = 2) +
+  geom_pointrange()
+  
+```
+
+
+```{r, eval = F}
+db %>% 
+  select(scale_type, eff_type, d, se_d) %>%
+  mutate(d = abs(as.numeric(d)),
+         se_d = as.numeric(se_d),
+         scale_type = str_to_lower(scale_type)) %>% 
+  drop_na(scale_type, eff_type) %>% 
+  group_by(scale_type, eff_type) %>% 
+  summarise(avg_d = mean(d, na.rm = T)) %>% 
+  ungroup() %>% 
+  spread(key = eff_type, value = avg_d) %>% 
+  select(-`-`)
+```
+
+```{r, eval = F}
+papers_reviewed <- read_xlsx(blpl::data_folder(file = "#jh_coding.xlsx", 
+                                               steps_back = 1))
+```
+
+
+```{r, eval = F}
+## So far, the RA's found this paper extra papers:
+
+degue_extras_found <- 
+papers_reviewed %>% 
+  filter(str_detect(Paper, "\\*"))
+
+degue_extras_found %>% count()
+```
+
+```{r, eval = F}
+## Of these I coded:
+
+degue_extras_found %>% 
+  filter(full.quant.coded == "y") %>% 
+  count()
+```
+
+
+```{r, eval = F}
+## But this is mostly because DeGue didn't do so well with 1999 (there are still more papers for me to go through)
+
+degue_extras_found %>% 
+  filter(full.quant.coded == "y") %>% 
+  group_by(Year) %>% 
+  count()
+```
+
+
+
+
+```{r, eval = F}
+## And I still need go through this many more papers
+
+degue_extras_found %>% 
+  filter(is.na(jh.looked)) %>% 
+  count()
+```
+
+
+

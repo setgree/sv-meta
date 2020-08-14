@@ -1,0 +1,168 @@
+---
+title: "R Notebook"
+output: 
+---
+
+==================================================
+
+
+```{r setup}
+library(tidyverse)
+library(lubridate)
+library(tidyselect)
+library(googledrive)
+library(readxl)
+library(openxlsx) # maybe also tidyverse address this
+
+
+coded_papers <- readxl::read_xlsx("#jh_coding.xlsx", sheet = 2)
+### we need a generalizeable solution :) 
+```
+
+
+```{r}
+coded_papers_clean <- coded_papers %>% 
+  drop_na(author) %>% 
+  mutate(author = str_to_lower(author),
+         condition.name = str_trim(str_to_lower(condition.name)),
+         delay = str_remove_all(delay, "\\d(\\s)?-(\\s)?"),
+         delay = str_remove_all(delay,"approx"),
+         delay = case_when(delay == "post" ~ "0 hours",
+                           TRUE ~ delay),
+         delay = lubridate::as.duration(delay),
+         delay = round(as.numeric(delay, "days"), 0))
+```
+
+
+
+
+Here's is our general approach to how we are going to update (if we are doing the cluster randomized sort of thing) in our meta
+```{r, eval=FALSE}
+# note that the file needs to be sourced in the right location
+papers_raw_stats <- 
+coded_papers_clean %>% 
+  mutate(cluster.type = ifelse(is.na(cluster.type),
+                               "-", cluster.type),
+         n_t = if_else(cluster.type == "cluster randomized",
+                      n.t.group, 
+                      n.t),
+         n_c = if_else(cluster.type == "cluster randomized",
+                      n.c.group, 
+                      n.c)) %>% 
+  #select(author, eff.type, n_t, n_c, ctrl.sd, u.s.d) %>% 
+  slice(9:12)
+
+papers_raw_stats %>% 
+  select(-starts_with("..")) %>% 
+  drop_na(eff.type) %>% 
+  mutate(d = as.numeric(d),
+         n_t = as.numeric(n_t),
+         n_c = as.numeric(n_c),
+         ctrl.sd = as.numeric(ctrl.sd),
+         u.s.d = as.numeric(u.s.d),
+         ctrl.sd = ifelse(is.na(ctrl.sd), 1, ctrl.sd),
+         eff.type = str_replace_all(eff.type, "\\.", "_")) %>% 
+  nest(eff.type, n_t, n_c, ctrl.sd, u.s.d) %>% 
+  mutate(standardized_d = map(data, ~stand_result(
+                                       eff_type = .x$eff.type, 
+                                       n_t = .x$n_t, 
+                                       n_c = .x$n_c, 
+                                       ctrl_sd = .x$ctrl.sd,
+                                       raw_effect_size = .x$u.s.d))) %>% 
+  unnest(standardized_d) 
+
+# Warning messages:
+# 1: NAs introduced by coercion 
+# 2: All elements of `...` must be named.
+# Did you want `data = c(eff.type, n_t, n_c, ctrl.sd, u.s.d)`? 
+
+```
+
+
+```{r}
+googledrive::drive_auth(email = T)
+raw_workbook <- as_id("https://docs.google.com/spreadsheets/d/1D28HNdzyEuYhnhUcBZXbIgJH2Xf5Ab1mhCXUrN8oR9g/edit#gid=38489026")
+googledrive::drive_download(raw_workbook,
+                            path = "bld/primary-prevention-meta.xlsx", 
+                            overwrite = T)
+
+
+## i manually open workbook to fix corruption and overwrite  
+## NOTE TO SETH TO LOOK FOR MECHANIZED SOLUTION
+
+wb_raw <- loadWorkbook("bld/primary-prevention-meta.xlsx")
+
+
+(sheet_to_keep <- getSheetNames("bld/primary-prevention-meta.xlsx")[c(-1, -12)])
+
+sheet_list <- lapply(sheet_to_keep,
+                   read_xlsx,
+                   path = "bld/primary-prevention-meta.xlsx",
+                   col_types = "text")
+
+
+data_list <- bind_rows(sheet_list)
+
+
+## cover up multiple stated purposes
+
+ra_coded_clean <- 
+data_list %>%
+  mutate(year = as.integer(year)) %>% 
+  select(-ends_with("...25")) %>% 
+  mutate(stated_purpose = 
+           coalesce(!!! syms(vars_select(names(.), 
+                                         starts_with("states purpose of the"))), 
+                    `stated purpose of the intervention`),
+         author = str_to_lower(author),
+         `intervention name` = str_trim(str_to_lower(`intervention name`))) %>%
+  arrange(year, author) %>% 
+  select(author, year, everything()) %>% 
+  distinct(author, year, `intervention name`, .keep_all = T)
+
+## This didn't work for Seth but it worked for John-Henry
+
+master_db <- 
+ra_coded_clean %>% 
+  right_join(coded_papers_clean, by = c("author", 
+                                        "year", 
+                                        "intervention name" = "condition.name"))
+# when two RAs coded we use the first RA's coding
+# we can triple check for convergence
+## export
+write_rds("bld/full-data.rds", x = master_db)
+write_csv("bld/full-data.csv", x = master_db)
+
+googledrive::drive_upload(media = "bld/full-data.csv",
+                          name = "Primary Prevention Meta 2020", 
+                          type = "spreadsheet", 
+                          verbose = T,
+                          overwrite = F)
+
+```
+
+
+
+
+Appendix Functions for Checking Data Quality
+```{r}
+comparer <- function(author_string){
+  ra_side <<- ra_coded_clean %>% 
+    select(author, year, `intervention name`, coder) %>% 
+    filter(author == author_string)
+  
+  jh_side <<- coded_papers_clean %>% 
+    select(author, year, condition.name) %>% 
+    filter(author == author_string)
+  
+  bind_rows(ra_side, jh_side) %>% View
+}
+
+ra_side %>% 
+  filter() %>% 
+    full_join(jh_side, by = c("author", 
+                              "year", 
+                              "intervention name" = "condition.name"))
+```
+
+
