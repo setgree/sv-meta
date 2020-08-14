@@ -3,3 +3,6 @@
 .pdf
 .xlsx
 .rds
+.Rhistory
+.RData
+.DS_Store
