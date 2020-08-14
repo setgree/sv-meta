@@ -1,8 +1,8 @@
-.httr-oauth
-.Rproj.user
-.pdf
-.xlsx
-.rds
-.Rhistory
-.RData
+*.httr-oauth
+*.Rproj.user
+*.pdf
+*.xlsx
+*.rds
+*.Rhistory
+*.RData
 .DS_Store
