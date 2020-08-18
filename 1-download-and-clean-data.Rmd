@@ -21,31 +21,118 @@ drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020", 
                path = "./data/sa_meta_data",
                overwrite = T, type = 'csv') # dl to csv gets just first sheet
+```
 
+
+```{r clean_data}
 raw_dat <- read.csv('./data/sa_meta_data.csv')
-# drop redline studies
+# drop redline studies and add unique paper ID
 raw_dat <- raw_dat %>% 
   fill(paper_title) %>% 
-  filter(!cell_color %in% c("#ff0000", "#ea4335")) %>% # drop red studies; some people use different red 
+  filter(!is_red %in% c("#ff0000", "#ea4335"))  %>%  # in case multiple red cols 
   group_by(paper_title) %>% 
-  mutate(unique_paper_id = cumsum(first_line)) %>%
-    ungroup()
+  mutate(first_line = row_number() == 1) %>% 
+  ungroup() %>%
+  mutate(unique_paper_id = cumsum(first_line))
 
+# studies where coder is blank?
 tibble(raw_dat[is.na(raw_dat$coder),])
 
 # drop team-internal stuff 
 colnames(raw_dat)
 raw_dat <- raw_dat %>% 
-  select(-c(coder, page_number, comments, d, var_d, se_d, checked, checker_comment))
-
-# fill in authors names (might be irrelevant but just in case)
-# drop redline studies # and add unique paper ID
-
-
+  select(-c(coder, page_number, comments, d, var_d, se_d, checked, checker_comment, is_red, first_line))
 # prepare Cohen's D calcs
 
 unique(raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = '', replacement = '', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'd.i.d', replacement = 'd_i_d', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'f.test', replacement = 'f_test', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'd.i.m', replacement = 'd_i_m', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'difference_in_proportion', replacement = 'd_i_p', x = raw_dat$eff_type)
+# raw_dat$eff_type <- gsub(pattern = 'reg.coef (B)', replacement = 'reg_coef', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'reg.coef', replacement = 'reg_coef', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 't.test', replacement = 't_test', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'beta', replacement = 'reg_coef', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'log.odds.ratio', replacement = 'log_odds_ratio', x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'odds.ratio', replacement = 'odds_ratio', x = raw_dat$eff_type)
+# raw_dat$eff_type <- gsub(pattern = '', replacement = NA, x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'NA', replacement = NA, x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'did', replacement = "d_i_d", x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'dim', replacement = "d_i_m", x = raw_dat$eff_type)
 
+unique(raw_dat$eff_type)
+
+## how many of these are going to require non-standard procedures
+## or potential re-doing of the recording
+table(raw_dat$eff_type, useNA = 'ifany') # Why isn't it useNA = T, whatevs
+## I fixed the blank ones, notes in slack conversation with JH & Roni
+# sum(is.na(raw_dat$eff_type))
+# test_eff_types <- na.omit(raw_dat$eff_type)
+# table(test_eff_types)
+
+## now fix the SDs
+class(raw_dat$ctrl_sd)
+unique(raw_dat$ctrl_sd)
+which(raw_dat$ctrl_sd == "") # good
+## convert "no.sd" and "-" to NA
+raw_dat$ctrl_sd <- gsub(pattern = 'no.sd', replacement = NA, x = raw_dat$ctrl_sd)
+raw_dat$ctrl_sd <- gsub(pattern = '-', replacement = NA, x = raw_dat$ctrl_sd)
+## Before convert to numeric,check which  will be converted to NA "by coercion" 
+which(is.na(as.numeric(raw_dat$ctrl_sd)) != is.na(raw_dat$ctrl_sd)) # ok none
+raw_dat$ctrl_sd <- as.numeric(raw_dat$ctrl_sd)
+
+## Convert all ctrl_SDs to 1 when Cohen's D is eff_type
+## probably not strictly necessary but good practice to note this
+raw_dat <- raw_dat %>% 
+  mutate(ctrl_sd = case_when(eff_type == 'd' ~ 1, TRUE ~ ctrl_sd))
+
+## are there any ctrl_sds that are NA when that's going to break the calculator?
+na_dat <- raw_dat %>% filter(is.na(ctrl_sd))
+which(na_dat$eff_type == 'd_i_d' | na_dat$eff_type == 'd_i_m')# oh boy
+# I'm going to break these out for now and we can try to figure out a solution
+problem_studies <- raw_dat %>% 
+  filter(is.na(ctrl_sd)) %>%
+  filter(eff_type == 'd_i_d' | eff_type == 'd_i_m') %>%
+  select(author, year, intervention_name, scale_name, delay, paper_title, 
+         eff_type, ctrl_sd)
+## Looking at the data more closely, a lot of these look like they should have
+## been reported as nulls.  So we're going to call them all Nulls for now 
+## but every one of them needs a closer look
+
+raw_dat <- raw_dat %>%
+  mutate(eff_type = case_when(eff_type == 'd_i_m' & is.na(ctrl_sd) ~ 'null',
+                              eff_type == 'd_i_d' & is.na(ctrl_sd) ~ 'null',
+                              TRUE ~ eff_type))
+
+# any studies where eff_type is just NA?
+na_effs <- raw_dat %>% filter(is.na(eff_type)) %>%
+  select(author, year, intervention_name, scale_name, delay, paper_title, 
+         eff_type, ctrl_sd)
+
+# drop all the messy stuff for now as we prepare for meta-analysis
+
+table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany') #14 NAs 
+which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 15 -- there's one that
+# I believe is a mistake, should have been marked d_i_d based on context
+
+raw_dat <- raw_dat %>% 
+  filter(!is.na(eff_type)) %>%
+  filter(eff_type != 'null')
+table(raw_dat$eff_type)
+```
+
+
+There's a lot more cleaning to do, but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
+Also must return to: 
+
+* log odds ratio and odds ratios, see if we can't just do a d_i_p; 
+* check the studies where no.sd is written to double-check if they're really null
+* all the other stuff I put on slack
+
+For now, save as clean data and start the Cohen's D script
+```{r save_clean_data}
+
+saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned')
 
 ```
