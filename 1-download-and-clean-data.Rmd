@@ -1,0 +1,51 @@
+---
+title: "1-download-and-clean-data.Rmd"
+author: "Seth Green and John-Henry Pezzuto"
+date: "8/14/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### setup
+```{r setup}
+library(dplyr, warn.conflicts = FALSE)
+library(googledrive)
+library(tidyr)
+```
+
+### Download most up to date dataset
+```{r download_data}
+## download sheet from google -----------------------------------
+drive_auth(email = T)
+drive_download("Primary Prevention Meta 2020", 
+               path = "./data/sa_meta_data",
+               overwrite = T, type = 'csv') # dl to csv gets just first sheet
+
+raw_dat <- read.csv('./data/sa_meta_data.csv')
+# drop redline studies
+raw_dat <- raw_dat %>% 
+  fill(paper_title) %>% 
+  filter(!cell_color %in% c("#ff0000", "#ea4335")) %>% # drop red studies; some people use different red 
+  group_by(paper_title) %>% 
+  mutate(unique_paper_id = cumsum(first_line)) %>%
+    ungroup()
+
+tibble(raw_dat[is.na(raw_dat$coder),])
+
+# drop team-internal stuff 
+colnames(raw_dat)
+raw_dat <- raw_dat %>% 
+  select(-c(coder, page_number, comments, d, var_d, se_d, checked, checker_comment))
+
+# fill in authors names (might be irrelevant but just in case)
+# drop redline studies # and add unique paper ID
+
+
+# prepare Cohen's D calcs
+
+unique(raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = '', replacement = '', x = raw_dat$eff_type)
+
+
+```
