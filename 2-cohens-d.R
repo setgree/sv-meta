@@ -53,5 +53,4 @@ dat_clean <- dat_clean %>%
 #' studies with 1 or 2 units assigned to treatment or control
 sum(dat_clean$var_d == 0 | dat_clean$var_d > 10, ma.rm = T) # 41 yikes!!
 #' ah well onto the analysis
-
-
+saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
