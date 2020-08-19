@@ -60,8 +60,13 @@ raw_dat$eff_type <- gsub(pattern = 'NA', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'did', replacement = "d_i_d", x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'dim', replacement = "d_i_m", x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = "^$|^ $", replacement =  NA, x = raw_dat$eff_type)
 
-unique(raw_dat$eff_type)
+# fix cluster type data
+raw_dat$cluster_type <- gsub('n_groups', 'n groups', raw_dat$cluster_type)
+raw_dat$cluster_type <- gsub('-', NA, raw_dat$cluster_type)
+raw_dat$cluster_type <- gsub("^$|^ $", NA, raw_dat$cluster_type)
+
 
 ## how many of these are going to require non-standard procedures
 ## or potential re-doing of the recording
@@ -120,6 +125,16 @@ raw_dat <- raw_dat %>%
   filter(!is.na(eff_type)) %>%
   filter(eff_type != 'null')
 table(raw_dat$eff_type)
+range(raw_dat$u_s_d, na.rm = T)
+
+## change the cluster randomized var to be factors with an NA rather than a -
+raw_dat$cluster_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$cluster_type)
+
+## make everything else we need numeric
+raw_dat <- raw_dat %>%
+  mutate(across(.cols = c(starts_with('n_')), .fns = as.numeric)) %>%
+  mutate(u_s_d = as.numeric(u_s_d)) %>%
+  mutate(anticipated_direction = as.numeric(anticipated_direction))
 ```
 
 
@@ -133,6 +148,6 @@ Also must return to:
 For now, save as clean data and start the Cohen's D script
 ```{r save_clean_data}
 
-saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned')
+saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
 
 ```
