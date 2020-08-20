@@ -1,7 +1,8 @@
 #testing
 library(tidyverse)
 rm(list=ls())
-source("Results_standardizeR.R")
+source("./functions/supplementary_equations.R")
+source('./functions/Results_standardizeR.R')
 
 # 2018  =================================
 weighted_average(men_average = 10, women_average = 27, n_men = 21, n_women = 59)

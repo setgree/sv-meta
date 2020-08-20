@@ -31,6 +31,8 @@ dat_clean <- dat_clean %>%
 # in total,35 rows removed
 sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
 sum(dat_clean$var_d > 10) # 0 now
+saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
+
 
 #' all right so we have a lot of stuff to look at 
 #' anything where D is greater than 4.7 or less than 4.7
@@ -48,4 +50,3 @@ sum(dat_clean$var_d > 10) # 0 now
 #' studies with 1 or 2 units assigned to treatment or control
 # not doing clusters 
 #' ah well onto the analysis
-saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
