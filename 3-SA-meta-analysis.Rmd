@@ -8,20 +8,43 @@ editor_options:
 ---
 
 ### First, an overall meta-analysis. 
-```{r overall_meta_analysis}
+```{r setup}
 rm(list = ls())
 library(metafor)
 library(ggplot2)
-
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+```
+
+```{r initial_exploration}
+
 #first, is there a relationship between effect size and variance?
 summary(lm(formula = d ~ se_d, data =  dat))
 ggplot(data = dat, mapping = aes(x = d, y = se_d)) + 
   geom_point() + 
-  geom_smooth(method = 'lm')
-# how about the overall relationship between 
+  geom_smooth(method = 'lm') #I'd say so
+
+# how about the overall relationship between lab/field and d? 
+summary(lm(formula = d ~ lab_or_field, data =  dat)) 
+# field experiments are 0.1 lower, right off the bat
+
+# study type?
+summary(lm(formula = d ~ study_design, data =  dat)) 
+# yep, meaningful relationship
+
 # first crack at meta-analysis
 robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_paper_id)
+# by study type?
+rcts <- dat %>% filter(study_design == 'rct')
+robust(x = rma(yi = d, vi = var_d, data = rcts), cluster = rcts$unique_paper_id)
+
+quasis <- dat %>% filter(study_design == 'quasi-experimental')
+robust(x = rma(yi = d, vi = var_d, data = quasis), cluster = quasis$unique_paper_id)
+
+rcts_and_quasi <- dat %>% filter(study_design == 'rct' | study_design == 'quasi-experimental')
+robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_quasi$unique_paper_id)
+
+observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
+robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_paper_id)
 ```
 
 * Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement). 

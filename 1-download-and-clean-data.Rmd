@@ -16,7 +16,7 @@ library(tidyr)
 ```
 
 ### Download most up to date dataset
-```{r download_data}
+```{r download_data, eval=FALSE}
 ## download sheet from google -----------------------------------
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020", 
@@ -143,6 +143,15 @@ raw_dat$lab_or_field <- gsub(pattern = 'field', replacement = 1,  x = raw_dat$la
 raw_dat$lab_or_field <- gsub(pattern = "^$|^ $", replacement = NA,  x = raw_dat$lab_or_field)
 raw_dat$lab_or_field <- as.numeric(raw_dat$lab_or_field)
 raw_dat <- raw_dat %>% select(!lab_field)
+ 
+# make study design a factor
+raw_dat$study_design <- as.factor(raw_dat$study_design)
+
+# fix study_design var
+raw_dat$study_design <- gsub(pattern = 'cross sectional', replacement = 'cross-sectional',  x = raw_dat$study_design)
+raw_dat$study_design <- gsub(pattern = 'prepost', replacement = 'pre-post',  x = raw_dat$study_design)
+raw_dat$study_design <- as.factor(raw_dat$study_design)
+
 ```
 
 

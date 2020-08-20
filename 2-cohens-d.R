@@ -27,9 +27,13 @@ dat_clean <- dat_clean %>%
   filter(d != -Inf) %>% # these are because of log negative numbers
   filter(!is.na(d)) %>% # these need to be looked at
   filter(!is.na(var_d)) %>% # these also need to be looked at
-  filter(d < 5 & d > -5) # these also need to be looked at
+  filter(d < 5 & d > -5) %>% # these also need to be looked at
+  filter(var_d != 0) # this is to address a warning from metafor;
+# it's one row  but maybe there's a better solution?
+
 # in total,35 rows removed
 sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
+
 sum(dat_clean$var_d > 10) # 0 now
 saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
 
