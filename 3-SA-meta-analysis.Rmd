@@ -30,7 +30,12 @@ summary(lm(formula = d ~ lab_or_field, data =  dat))
 # study type?
 summary(lm(formula = d ~ study_design, data =  dat)) 
 # yep, meaningful relationship
+```
 
+
+## By study type:
+"Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
+```{r study_type}
 # first crack at meta-analysis
 robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_paper_id)
 # by study type?
@@ -45,9 +50,21 @@ robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_qu
 
 observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
 robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_paper_id)
+
+### Visualizing this: plot D and SE, with color corresponding to study type and shape corresponding to lab or field
+
 ```
 
-* Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement). 
+## By outcome type:
+
+"... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
+
+```{r outcome_type}
+
+
+
+```
+
 Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
