@@ -3,14 +3,25 @@ title: "3-SA-meta-analyis.Rmd"
 author: "Seth Green"
 date: "8/19/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ### First, an overall meta-analysis. 
 ```{r overall_meta_analysis}
 rm(list = ls())
+library(metafor)
+library(ggplot2)
 
-
-
+dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+#first, is there a relationship between effect size and variance?
+summary(lm(formula = d ~ se_d, data =  dat))
+ggplot(data = dat, mapping = aes(x = d, y = se_d)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+# how about the overall relationship between 
+# first crack at meta-analysis
+robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_paper_id)
 ```
 
 * Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement). 

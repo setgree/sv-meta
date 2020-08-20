@@ -9,6 +9,7 @@ editor_options:
 
 ### setup
 ```{r setup}
+rm(list = ls())
 library(dplyr, warn.conflicts = FALSE)
 library(googledrive)
 library(tidyr)
@@ -135,6 +136,13 @@ raw_dat <- raw_dat %>%
   mutate(across(.cols = c(starts_with('n_')), .fns = as.numeric)) %>%
   mutate(u_s_d = as.numeric(u_s_d)) %>%
   mutate(anticipated_direction = as.numeric(anticipated_direction))
+
+# fix lab/field
+raw_dat$lab_or_field <- gsub(pattern = 'lab', replacement = 0,  x = raw_dat$lab_or_field)
+raw_dat$lab_or_field <- gsub(pattern = 'field', replacement = 1,  x = raw_dat$lab_or_field)
+raw_dat$lab_or_field <- gsub(pattern = "^$|^ $", replacement = NA,  x = raw_dat$lab_or_field)
+raw_dat$lab_or_field <- as.numeric(raw_dat$lab_or_field)
+raw_dat <- raw_dat %>% select(!lab_field)
 ```
 
 
