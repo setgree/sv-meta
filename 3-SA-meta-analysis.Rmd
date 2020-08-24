@@ -12,24 +12,31 @@ editor_options:
 rm(list = ls())
 library(metafor)
 library(ggplot2)
+source('./functions/dplot.R')
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
 ```
 
 ```{r initial_exploration}
 
-#first, is there a relationship between effect size and variance?
+#first, is there a relationship between effect size and se?
+summary(lm(formula = se_d ~ d, data =  dat))
 summary(lm(formula = d ~ se_d, data =  dat))
-ggplot(data = dat, mapping = aes(x = d, y = se_d)) + 
+
+ggplot(data = dat, mapping = aes(x = se_d, y = d)) + 
   geom_point() + 
   geom_smooth(method = 'lm') #I'd say so
 
 # how about the overall relationship between lab/field and d? 
-summary(lm(formula = d ~ lab_or_field, data =  dat)) 
-# field experiments are 0.1 lower, right off the bat
+summary(lm(formula = d ~ lab_field, data =  dat)) 
+# essentially no difference at all
 
 # study type?
 summary(lm(formula = d ~ study_design, data =  dat)) 
 # yep, meaningful relationship
+
+# scale type?
+summary(lm(formula = d ~ scale_type, data =  dat)) 
+# ah now THAT is significant
 ```
 
 
@@ -51,8 +58,16 @@ robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_qu
 observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
 robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_paper_id)
 
-### Visualizing this: plot D and SE, with color corresponding to study type and shape corresponding to lab or field
-
+### Visualizing this: plot D and SE, with color corresponding to
+### study type and shape corresponding to lab or field
+dplot(condense = T)
+# I had really thought there was more of a relationship
+dplot(condense = F)
+# if we look just at rtcs and quasi experiments?
+dplot(sa_data = rcts_and_quasi)
+# What's going on here...are the outlier studies getting a lot of weight
+dat_minus_outliers <- dat %>% filter(d <= 2 & d >= -2)
+dplot(sa_data = dat_minus_outliers, condense = T)
 ```
 
 ## By outcome type:
@@ -60,23 +75,84 @@ robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observationa
 "... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ```{r outcome_type}
+# let's talk about this
+unique(dat$scale_name)
+```
 
-
+* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
+```{r behavioral_over_time}
+summary(lm(formula = d ~ scale_type, data =  dat)) 
+behavioral_data <- dat %>% filter(scale_type == 'behavior')
+robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
+       cluster = behavioral_data$unique_paper_id)
+dat$delay # gonna need to recode this, it's a messy character vector
 
 ```
 
-Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
-Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
-Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
-Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
-Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
+* Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
+* Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
+
+```{r}
+# so we need a dummy variable for experimental or quasi_experimental
+summary(lm(formula = d ~ study_design, data =  behavioral_data)) 
+
+```
+* Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
+```{r perpetration outcomes}
+# let's talk about this
+
+```
+* Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
+```{r}
+summary(lm(formula = d ~ scale_type, data = rcts_and_quasi))
+```
 
 Analysis plan discussed 
 what is the average effect size:
 RCT – behavior
+```{r rct_behavior}
+rct_behavior <- rcts %>% filter(scale_type == 'behavior')
+robust(x = rma(yi = d, vi = var_d, data = rct_behavior), 
+       cluster = rct_behavior$unique_paper_id)
+```
+
 RCT – attitude
+```{r rct_attitude}
+rct_attitude <- rcts %>% filter(scale_type == 'attitudes')
+robust(x = rma(yi = d, vi = var_d, data = rct_attitude), 
+       cluster = rct_attitude$unique_paper_id)
+```
+
 RCT+Quasi – behavior
+```{r rct_quasi_behavior}
+rct_quasi_behavior <- rcts_and_quasi %>% filter(scale_type == 'behavior')
+robust(x = rma(yi = d, vi = var_d, data = rct_quasi_behavior), 
+       cluster = rct_quasi_behavior$unique_paper_id)
+
+```
+
 RCT+Quasi – attitude
+```{r rct_quasi_attitude}
+rct_quasi_attiude <- rcts_and_quasi %>% filter(scale_type == 'attitudes')
+robust(x = rma(yi = d, vi = var_d, data = rct_quasi_attiude), 
+       cluster = rct_quasi_attiude$unique_paper_id)
+```
+
 Everything – behavior
+```{r everything_behavior}
+robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
+       cluster = behavioral_data$unique_paper_id)
+```
+
 Everything – attitude
-What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’. We are only looking at studies that measure both attitudes and behavior in their outcomes. 
+```{r everything_attitude}
+attitudes <- dat %>% filter(scale_type == 'attitudes') 
+robust(x = rma(yi = d, vi = var_d, data = attitudes), 
+       cluster = attitudes$unique_paper_id)
+```
+
+What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’. We are only looking at studies that measure both attitudes and behavior in their outcomes.
+
+```{r i_dont_know_how_to_do_this}
+
+```

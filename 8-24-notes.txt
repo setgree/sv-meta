@@ -1,0 +1,13 @@
+*Table where the eff_types are blank
+ ** someone has to look at the blank eff_types :)
+ #JH-coding.xlsls -- figure out why these are NA
+
+ ** 37 DIMS or DIDs where the SD is blank, we need to fix those
+
+ * Seth is on the betas
+ * log odds will all be positive when Seth is through with them
+  meaning that I will convert to DIP when possible and make positive
+  and change directional note when not
+
+ Roni will redo Foshee and then Seth will double-check
+ * line 74 safe dates -- revisit this study (Seth) and find an SD

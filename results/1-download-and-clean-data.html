@@ -411,12 +411,12 @@ tibble(raw_dat[is.na(raw_dat$coder),])</code></pre>
 <pre><code>## # A tibble: 3 x 61
 ##   author  year intervention_na… scale_name delay paper_title coder lab_or_field
 ##   &lt;chr&gt;  &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;       
-## 1 mcleod  1997 miscomunication… rape myth… 28    Effects of… &lt;NA&gt;  &lt;NA&gt;        
-## 2 mcleod  1997 feminist rape e… rape myth… 28    Effects of… &lt;NA&gt;  &lt;NA&gt;        
+## 1 mcleod  1997 miscomunication… rape myth… 28    Effects of… &lt;NA&gt;  0           
+## 2 mcleod  1997 feminist rape e… rape myth… 28    Effects of… &lt;NA&gt;  0           
 ## 3 glick…  2002 &lt;NA&gt;             &lt;NA&gt;       &lt;NA&gt;  Outcome ev… &lt;NA&gt;  &lt;NA&gt;        
-## # … with 53 more variables: program_name &lt;chr&gt;, publication_type &lt;int&gt;,
-## #   origin &lt;int&gt;, setting &lt;chr&gt;, stage_in_life &lt;chr&gt;, mean_age &lt;chr&gt;,
-## #   participant_sex &lt;chr&gt;, percent_of_male &lt;chr&gt;,
+## # … with 53 more variables: lab_field &lt;chr&gt;, program_name &lt;chr&gt;,
+## #   publication_type &lt;int&gt;, origin &lt;int&gt;, setting &lt;chr&gt;, stage_in_life &lt;chr&gt;,
+## #   mean_age &lt;chr&gt;, participant_sex &lt;chr&gt;, percent_of_male &lt;chr&gt;,
 ## #   percent_dominant_racial_or_ethnic_group &lt;chr&gt;, country &lt;chr&gt;, state &lt;chr&gt;,
 ## #   number_of_participant &lt;chr&gt;, type_of_control &lt;chr&gt;,
 ## #   intrevention_description &lt;chr&gt;,
@@ -424,14 +424,14 @@ tibble(raw_dat[is.na(raw_dat$coder),])</code></pre>
 ## #   intervention_length &lt;chr&gt;, time_intervention_took &lt;chr&gt;,
 ## #   additional_contact &lt;int&gt;, stated_purpose_of_the_intervention &lt;chr&gt;,
 ## #   intervention_description &lt;dbl&gt;, stated_purpose &lt;chr&gt;,
-## #   condition_gender &lt;chr&gt;, lab_field &lt;chr&gt;, n_items &lt;chr&gt;,
-## #   contains_randomization &lt;lgl&gt;, partial_analysis &lt;lgl&gt;, study_design &lt;chr&gt;,
-## #   is_primary &lt;lgl&gt;, scale_type &lt;chr&gt;, type_of_at_risk_population &lt;chr&gt;,
-## #   n_conditions &lt;int&gt;, n_c_pre &lt;chr&gt;, n_c_post &lt;chr&gt;, n_t_pre &lt;chr&gt;,
-## #   n_t_post &lt;chr&gt;, n_t_group &lt;chr&gt;, n_c_group &lt;chr&gt;, cluster_type &lt;chr&gt;,
-## #   eff_type &lt;chr&gt;, u_s_d &lt;chr&gt;, anticipated_direction &lt;chr&gt;, ctrl_sd &lt;chr&gt;,
-## #   page_number &lt;chr&gt;, comments &lt;chr&gt;, d &lt;chr&gt;, var_d &lt;chr&gt;, se_d &lt;chr&gt;,
-## #   checked &lt;chr&gt;, checker_comment &lt;chr&gt;, is_red &lt;chr&gt;, first_line &lt;lgl&gt;,
+## #   condition_gender &lt;chr&gt;, n_items &lt;chr&gt;, contains_randomization &lt;lgl&gt;,
+## #   partial_analysis &lt;lgl&gt;, study_design &lt;chr&gt;, is_primary &lt;lgl&gt;,
+## #   scale_type &lt;chr&gt;, type_of_at_risk_population &lt;chr&gt;, n_conditions &lt;int&gt;,
+## #   n_c_pre &lt;chr&gt;, n_c_post &lt;chr&gt;, n_t_pre &lt;chr&gt;, n_t_post &lt;chr&gt;,
+## #   n_t_group &lt;chr&gt;, n_c_group &lt;chr&gt;, cluster_type &lt;chr&gt;, eff_type &lt;chr&gt;,
+## #   u_s_d &lt;chr&gt;, anticipated_direction &lt;chr&gt;, ctrl_sd &lt;chr&gt;, page_number &lt;chr&gt;,
+## #   comments &lt;chr&gt;, d &lt;chr&gt;, var_d &lt;chr&gt;, se_d &lt;chr&gt;, checked &lt;chr&gt;,
+## #   checker_comment &lt;chr&gt;, is_red &lt;chr&gt;, first_line &lt;lgl&gt;,
 ## #   unique_paper_id &lt;int&gt;</code></pre>
 <pre class="r"><code># drop team-internal stuff 
 colnames(raw_dat)</code></pre>
@@ -443,30 +443,30 @@ colnames(raw_dat)</code></pre>
 ##  [6] &quot;paper_title&quot;                            
 ##  [7] &quot;coder&quot;                                  
 ##  [8] &quot;lab_or_field&quot;                           
-##  [9] &quot;program_name&quot;                           
-## [10] &quot;publication_type&quot;                       
-## [11] &quot;origin&quot;                                 
-## [12] &quot;setting&quot;                                
-## [13] &quot;stage_in_life&quot;                          
-## [14] &quot;mean_age&quot;                               
-## [15] &quot;participant_sex&quot;                        
-## [16] &quot;percent_of_male&quot;                        
-## [17] &quot;percent_dominant_racial_or_ethnic_group&quot;
-## [18] &quot;country&quot;                                
-## [19] &quot;state&quot;                                  
-## [20] &quot;number_of_participant&quot;                  
-## [21] &quot;type_of_control&quot;                        
-## [22] &quot;intrevention_description&quot;               
-## [23] &quot;brief_description_of_the_intervention&quot;  
-## [24] &quot;delivery_of_treatment&quot;                  
-## [25] &quot;intervention_length&quot;                    
-## [26] &quot;time_intervention_took&quot;                 
-## [27] &quot;additional_contact&quot;                     
-## [28] &quot;stated_purpose_of_the_intervention&quot;     
-## [29] &quot;intervention_description&quot;               
-## [30] &quot;stated_purpose&quot;                         
-## [31] &quot;condition_gender&quot;                       
-## [32] &quot;lab_field&quot;                              
+##  [9] &quot;lab_field&quot;                              
+## [10] &quot;program_name&quot;                           
+## [11] &quot;publication_type&quot;                       
+## [12] &quot;origin&quot;                                 
+## [13] &quot;setting&quot;                                
+## [14] &quot;stage_in_life&quot;                          
+## [15] &quot;mean_age&quot;                               
+## [16] &quot;participant_sex&quot;                        
+## [17] &quot;percent_of_male&quot;                        
+## [18] &quot;percent_dominant_racial_or_ethnic_group&quot;
+## [19] &quot;country&quot;                                
+## [20] &quot;state&quot;                                  
+## [21] &quot;number_of_participant&quot;                  
+## [22] &quot;type_of_control&quot;                        
+## [23] &quot;intrevention_description&quot;               
+## [24] &quot;brief_description_of_the_intervention&quot;  
+## [25] &quot;delivery_of_treatment&quot;                  
+## [26] &quot;intervention_length&quot;                    
+## [27] &quot;time_intervention_took&quot;                 
+## [28] &quot;additional_contact&quot;                     
+## [29] &quot;stated_purpose_of_the_intervention&quot;     
+## [30] &quot;intervention_description&quot;               
+## [31] &quot;stated_purpose&quot;                         
+## [32] &quot;condition_gender&quot;                       
 ## [33] &quot;n_items&quot;                                
 ## [34] &quot;contains_randomization&quot;                 
 ## [35] &quot;partial_analysis&quot;                       
@@ -530,7 +530,6 @@ raw_dat$eff_type &lt;- gsub(pattern = &quot;^$|^ $&quot;, replacement =  NA, x =
 raw_dat$cluster_type &lt;- gsub(&#39;n_groups&#39;, &#39;n groups&#39;, raw_dat$cluster_type)
 raw_dat$cluster_type &lt;- gsub(&#39;-&#39;, NA, raw_dat$cluster_type)
 raw_dat$cluster_type &lt;- gsub(&quot;^$|^ $&quot;, NA, raw_dat$cluster_type)
-
 
 ## how many of these are going to require non-standard procedures
 ## or potential re-doing of the recording
@@ -667,42 +666,53 @@ raw_dat &lt;- raw_dat %&gt;%
   mutate(u_s_d = as.numeric(u_s_d)) %&gt;%
   mutate(anticipated_direction = as.numeric(anticipated_direction))</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `..1`.
-## x NAs introduced by coercion
+## ✖ NAs introduced by coercion
 ## ℹ Input `..1` is `across(.cols = c(starts_with(&quot;n_&quot;)), .fns = as.numeric)`.</code></pre>
 <pre><code>## Warning in fn(col, ...): NAs introduced by coercion</code></pre>
-<pre class="r"><code># fix lab/field
-raw_dat$lab_or_field &lt;- gsub(pattern = &#39;lab&#39;, replacement = 0,  x = raw_dat$lab_or_field)
-raw_dat$lab_or_field &lt;- gsub(pattern = &#39;field&#39;, replacement = 1,  x = raw_dat$lab_or_field)
-raw_dat$lab_or_field &lt;- gsub(pattern = &quot;^$|^ $&quot;, replacement = NA,  x = raw_dat$lab_or_field)
-raw_dat$lab_or_field &lt;- as.numeric(raw_dat$lab_or_field)
-raw_dat &lt;- raw_dat %&gt;% select(!lab_field)
- 
-# make study design a factor
-raw_dat$study_design &lt;- as.factor(raw_dat$study_design)</code></pre>
+<pre class="r"><code>warnings() # gotta look at these again
+
+# fix lab/field
+
+unique(raw_dat$lab_field)</code></pre>
+<pre><code>## [1] &quot;lab&quot;   &quot;field&quot;</code></pre>
+<pre class="r"><code>sum(is.na(raw_dat$lab_field))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>raw_dat$lab_field &lt;- as.factor(raw_dat$lab_field)
+
+# fix study_design var
+raw_dat$study_design &lt;- gsub(pattern = &#39;cross sectional&#39;, replacement = &#39;cross-sectional&#39;,  x = raw_dat$study_design)
+raw_dat$study_design &lt;- gsub(pattern = &#39;prepost&#39;, replacement = &#39;pre-post&#39;,  x = raw_dat$study_design)
+raw_dat$study_design &lt;- as.factor(raw_dat$study_design)
+
+raw_dat &lt;- raw_dat %&gt;% 
+  select(-lab_or_field)
+
+# scale type
+raw_dat$scale_type &lt;- as.factor(raw_dat$scale_type)</code></pre>
 <p>There’s a lot more cleaning to do, but if I’m not mistaken, we can go ahead with the core parts of the analysis and return to this. Also must return to:</p>
 <ul>
 <li>log odds ratio and odds ratios, see if we can’t just do a d_i_p;</li>
