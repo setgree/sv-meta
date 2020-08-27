@@ -25,9 +25,12 @@ summary(lm(formula = d ~ se_d, data =  dat))
 ggplot(data = dat, mapping = aes(x = se_d, y = d)) + 
   geom_point() + 
   geom_smooth(method = 'lm') #I'd say so
+# Roni is not that surprised because thsi is not psych; this is not as p-hacked
+# JH agrees and there's an interesting point about not going for flashy journals
 
 # how about the overall relationship between lab/field and d? 
 summary(lm(formula = d ~ lab_field, data =  dat)) 
+
 # essentially no difference at all
 
 # study type?
@@ -45,6 +48,7 @@ summary(lm(formula = d ~ scale_type, data =  dat))
 ```{r study_type}
 # first crack at meta-analysis
 robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_paper_id)
+
 # by study type?
 rcts <- dat %>% filter(study_design == 'rct')
 robust(x = rma(yi = d, vi = var_d, data = rcts), cluster = rcts$unique_paper_id)
@@ -77,15 +81,27 @@ dplot(sa_data = dat_minus_outliers, condense = T)
 ```{r outcome_type}
 # let's talk about this
 unique(dat$scale_name)
+behavioral_data <- dat %>% filter(scale_type == 'behavior')
+attitudes_data <- dat %>% filter(scale_type == 'attitudes')
+
+robust(x = rma(yi = d, vi = var_d, data = behavioral_data),
+       cluster = behavioral_data$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
+       cluster = attitudes_data$unique_paper_id)
+# perpetration, victimization, intervention are the big three intervention measures
+# we are not looking at the primary variable (defined by authors as primary outcome)
+# TODO: bin the behaviors into these three categories
 ```
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 ```{r behavioral_over_time}
 summary(lm(formula = d ~ scale_type, data =  dat)) 
-behavioral_data <- dat %>% filter(scale_type == 'behavior')
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_paper_id)
 dat$delay # gonna need to recode this, it's a messy character vector
+# put them all into days
+# We can kind of assume that NA = 0 days because if they had that info,
+# they would have shared it
 
 ```
 
@@ -95,6 +111,7 @@ dat$delay # gonna need to recode this, it's a messy character vector
 ```{r}
 # so we need a dummy variable for experimental or quasi_experimental
 summary(lm(formula = d ~ study_design, data =  behavioral_data)) 
+# the quality order is experiments; quasi; pre-post; cross-sectional
 
 ```
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
@@ -154,5 +171,9 @@ robust(x = rma(yi = d, vi = var_d, data = attitudes),
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’. We are only looking at studies that measure both attitudes and behavior in their outcomes.
 
 ```{r i_dont_know_how_to_do_this}
-
+# subset studies that have both behavioral and attitudinal outcomews
+# and then look at correlation within them and then average over all correlations
+# double-check this
+# regression of behavs on atts that controls for uique_study_id, but is that really gonna work
+# hierarchical linear rgression # lmer
 ```

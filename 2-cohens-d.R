@@ -6,12 +6,16 @@
 #' ---
 
 rm(list =  ls())
-library(dplyr)
+library(dplyr, warn.conflicts = FALSE)
 
 dat <- readRDS('./data/sa_meta_data_cleaned.rds')
 source('./functions/d_calc.R')
 source('./functions/var_d_calc.R')  
 
+# n_t_groups and n_c_groups, if both conditions are over 5, we go about our bizniz
+# if study_design == 'rct' & cluster = T & n_t_groups >= 5 & n_c_groups >= 5; then
+# replace n_t and n_c with above params. It's the split-apply-merge. or case-when
+# case when should be first approach
 dat_clean <- dat %>%
   mutate(d = mapply(FUN = d_calc, stat_type = eff_type, 
                     stat = u_s_d, sample_sd = ctrl_sd, 
@@ -31,7 +35,7 @@ dat_clean <- dat_clean %>%
   filter(var_d != 0) # this is to address a warning from metafor;
 # it's one row  but maybe there's a better solution?
 
-# in total,35 rows removed
+# in total,28 rows removed
 sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
 
 sum(dat_clean$var_d > 10) # 0 now
