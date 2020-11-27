@@ -41,6 +41,11 @@ se_2_sd <- function(se, n){
   (se * sqrt(n))
 } ## parentheses 'auto-print' but it seems fine without it. whatevs
 
+reg_se_2_sd <- function(se, n){
+  # https://training.cochrane.org/handbook/current/chapter-06#section-6-5-2-3
+  # 
+}
+
 se_2_sd(3.4, 50)
 # SD pooled
 

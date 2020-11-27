@@ -1,6 +1,7 @@
 #testing
 library(tidyverse)
-rm(list=ls())
+rm(list = ls())
+setwd(here::here())
 source("./functions/supplementary_equations.R")
 source('./functions/Results_standardizeR.R')
 
@@ -117,9 +118,17 @@ stand_result(eff_type = "t_test", raw_effect_size = 2.1, n_t = 20, n_c = 20)
 ## Sanchez-Jimenez -----------------------------------
 ### myths about romantic love
 ### lower is better
-sanchez_sd <- weighted_sd(ns = c(800, 801, 801, 801), sds = c(1.18, 1.01, .98, .96), means = c(1.6, 2.14, 2.7, 2.83))
-sanchez_rl <- did_calculator(mean_control_post = mean(c(1.38, 1.98, 2.59, 2.77)), mean_treatment_post = mean(c(.94, 1.42, 1.84, 1.92)), mean_control_pre = mean(c(1.6, 2.14, 2.7, 2.83)), mean_treatment_pre = mean(c(1.56, 2.14, 2.48, 2.64)), sd = sanchez_sd)
-stand_result(eff_type = "d_i_d", raw_effect_size = sanchez_rl, n_t = 4, n_c = 3, ctrl_sd = sanchez_sd)
+sanchez_sd <- weighted_sd(ns = c(800, 801, 801, 801), 
+                          sds = c(1.18, 1.01, .98, .96), 
+                          means = c(1.6, 2.14, 2.7, 2.83))
+sanchez_rl <- did_calculator(mean_control_post = mean(c(1.38, 1.98, 2.59, 2.77)), 
+                             mean_treatment_post = mean(c(.94, 1.42, 1.84, 1.92)), 
+                             mean_control_pre = mean(c(1.6, 2.14, 2.7, 2.83)), 
+                             mean_treatment_pre = mean(c(1.56, 2.14, 2.48, 2.64)), 
+                             sd = sanchez_sd)
+stand_result(eff_type = "d_i_d", 
+             raw_effect_size = sanchez_rl, n_t = 4, n_c = 3, 
+             ctrl_sd = sanchez_sd)
 
 ### physical violence
 #### perp
@@ -487,7 +496,6 @@ bystander_baseline_control <- mean(c(6.45, 2.82, .43,.27, 4.3, 2.14, 8.67, 2.26)
 bystander_3month_control <- mean(c(5.88, 2.94, .9, 4.14, 4.4, 2.57, 7.53, 2.42))
 bystander_baseline_intervention <- mean(c(7.41, 3.18, .75, .37, 4.76, 2.39, 9.15, 2.72))
 bystander_3month_intervention <- mean(c(8.38, 4.62, 1.45, 4.46, 7.36, 4.76, 8.16, 3.33))
-
 senn_se <- c(.722, .446, .174, .085, .405, .272, .39, .254)
 senn_sds <- se_2_sd(senn_se, 309)
 senn_weighted_sd <- weighted_sd(sds = senn_sds, ns = rep(309, length(senn_sds)), means = c(6.45, 2.82, .43,.27, 4.3, 2.14, 8.67, 2.26))
@@ -747,7 +755,8 @@ love <- 0
 # Menning -----------------------------------
 ### behavior
 menning_sd <- se_2_sd(4.282, n = 35+171)
-stand_result(eff_type = "log_odds_ratio", raw_effect_size = -8.491, ctrl_sd = menning_sd, n_t = 35, n_c = 171)
+stand_result(eff_type = "log_odds_ratio", raw_effect_size = -8.491, 
+              n_t = 35, n_c = 171)
 
 ### attitude post
 menning_post <- dim_calculator(mean_control = 3.647, mean_treatment = 3.225)
@@ -1053,10 +1062,14 @@ stand_result(eff_type = "d_i_m", raw_effect_size = mcmahon, ctrl_sd = .55, n_t =
 ### survey not intervention
 
 # peskin 2014 -----------------------------------
-physical_vict <- log_odds_ratio(n_control = 463, n_treatment = 303, percent_control = .199, percent_treatment = .156)
-stand_result(eff_type = "log_odds_ratio", raw_effect_size = physical_vict, n_t = 463, n_c = 303)
+physical_vict <- log_odds_ratio(n_control = 463, n_treatment = 303, 
+                                percent_control = .199, percent_treatment = .156)
+stand_result(eff_type = "log_odds_ratio", raw_effect_size = physical_vict, 
+             n_t = 463, n_c = 303)
 
-physical_perp <- log_odds_ratio(n_control = 463, n_treatment = 303, percent_control = .168, percent_treatment = .165)
+physical_perp <- log_odds_ratio(n_control = 463, n_treatment = 303, 
+                                percent_control = .168, 
+                                percent_treatment = .165)
 stand_result(eff_type = "log_odds_ratio", raw_effect_size = physical_perp, n_t = 463, n_c = 303)
 
 ## Peterson -----------------------------------
@@ -1245,7 +1258,7 @@ stand_result(eff_type = "d_i_m", raw_effect_size = black_es, n_t = sum(169, 202,
 ## Caver -----------------------------------
 ### not evaluating program
 
-## Foshee -----------------------------------
+## Foshee 2012 -----------------------------------
 stand_result(eff_type = "odds_ratio", raw_effect_size = .26, n_t = 140, n_c = 184) # physical victimization among NOT INVOLVED AT BASELINE. n is close, but a little too high. note this has controls
 stand_result(eff_type = "odds_ratio", raw_effect_size = .48, n_t = 140, n_c = 184) # physical perp
 
@@ -1255,7 +1268,6 @@ stand_result(eff_type = "d", raw_effect_size = .1, n_t = 8, n_c = 8) # compariso
 
 ## lawson -----------------------------------
 stand_result(eff_type = "d", raw_effect_size = .44, n_t = 3, n_c = 3)
-
 
 
 ## Martin -----------------------------------
@@ -2015,8 +2027,12 @@ wright_n = sum(245, 257, 196)
 pre_percent <- weighted.mean(x = c(59, 72, 64), w = c(245, 257, 196)) / 100
 post_percent <- weighted.mean(x = c(84, 88, 79), w = c(245, 257, 196)) / 100
 
-wright_log_odds <- log_odds_ratio(n_treatment = wright_n, n_control = wright_n, percent_control = pre_percent, percent_treatment = post_percent)
-stand_result(eff_type = "log.odds_ratio", raw_effect_size = wright_log_odds, n_t = wright_n, n_c = wright_n)
+wright_log_odds <- log_odds_ratio(n_treatment = wright_n, n_control = wright_n, 
+                                  percent_control = pre_percent, 
+                                  percent_treatment = post_percent)
+stand_result(eff_type = "log_odds_ratio", 
+             raw_effect_size = wright_log_odds, 
+             n_t = wright_n, n_c = wright_n)
 
 # 1999 ==================================
 ## Berg -----------------------------------
@@ -2311,7 +2327,7 @@ stand_result(eff_type = "d", raw_effect_size = 0,  n_t = 102, n_c = 90)
 ## Biviano -----------------------------------
 # knowledge; pg 101
 beviano_sd <- se_2_sd(se = .26, n = 173)
-stand_result(eff_type = "reg_coef", raw_effect_size = .83, n_t = 95, n_c = 78, ctrl_sd = beviano_sd)
+stand_result(eff_type = "reg_coef", raw_effect_size = .83, n_t = 95, n_c = 78, ctrl_sd = 1.74)
 
 ## Boulter -----------------------------------
 treatement_pre <- mean(c(48.22, 39.91))
@@ -3030,19 +3046,27 @@ stand_result(eff_type = "d_i_m", raw_effect_size = blame, ctrl_sd = 1.03, n_c = 
 
 ## Gibson -----------------------------------
 ## RMA
-rma_control <- weighted_average(men_average = 26.17, women_average = 20.3, n_men = 59, n_women = 100)
-rma_treatement <- weighted_average(n_men = 21, n_women = 40, men_average = 25.19, women_average = 19.4)
-control_sd <- weighted_sd(ns = c(59, 100), sds = c(7.14, 5.36), means = c(26.17, 20.3))
+rma_control <- weighted_average(men_average = 26.17, women_average = 20.3, 
+                                n_men = 59, n_women = 100)
+rma_treatement <- weighted_average(n_men = 21, n_women = 40, 
+                                   men_average = 25.19, women_average = 19.4)
+control_sd <- weighted_sd(ns = c(59, 100), 
+                          sds = c(7.14, 5.36), means = c(26.17, 20.3))
 
-rma_dim <- dim_calculator(mean_control = rma_control, mean_treatment = rma_treatement)
-stand_result(eff_type = "d_i_m", raw_effect_size = rma_dim, ctrl_sd = control_sd, n_t = 21+40, n_c = 100+59)
+rma_dim <- dim_calculator(mean_control = rma_control, 
+                          mean_treatment = rma_treatement)
+stand_result(eff_type = "d_i_m", raw_effect_size = rma_dim, ctrl_sd = control_sd,
+             n_t = 21+40, n_c = 100+59)
 # log_odds_ratio(n_treatment = 21, n_control = 59, percent_control = .08, percent_treatment = .11) %>% round(., 2)
 ### behavior pg 32
 # good
 men_tre_vict <- mean(c(10, 10, 5, 10))/100
 men_con_vict <- mean(c(27, 14, 2, 2))/100
-men_vict_odds <- log_odds_ratio(n_treatment = 21, n_control = 59, percent_treatment = men_tre_vict, percent_control = men_con_vict)
-stand_result(eff_type = "log_odds_ratio", n_t = 21, n_c = 59, raw_effect_size = men_vict_odds)
+men_vict_odds <- log_odds_ratio(n_treatment = 21, n_control = 59, 
+                                percent_treatment = men_tre_vict, 
+                                percent_control = men_con_vict)
+stand_result(eff_type = "log_odds_ratio", n_t = 21, n_c = 59, 
+             raw_effect_size = men_vict_odds)
 
 # good
 women_tre_vict <- mean(c(38, 18, 5, 0))/100
@@ -3071,10 +3095,14 @@ women_perp_odds <- log_odds_ratio(n_treatment = 40, n_control = 100, percent_tre
 stand_result(eff_type = "log_odds_ratio", n_t = 40, n_c = 100, raw_effect_size = women_perp_odds)
 
 ### perp together
-perp_tre <- weighted_average(men_average = men_tre_perp, women_average = women_tre_perp, n_men = 21, n_women = 40)
-perp_con <- weighted_average(men_average = men_con_perp, women_average = women_con_perp, n_men = 59, n_women = 100)
-perp_odds <- log_odds_ratio(n_control = 59+100, n_treatment = 21+40, percent_control = perp_con, percent_treatment = perp_tre)
-stand_result(eff_type = "log_odds_ratio", raw_effect_size = perp_odds, n_t = 21+40, n_c = 100+59)
+perp_tre <- weighted_average(men_average = men_tre_perp, 
+                             women_average = women_tre_perp, n_men = 21, n_women = 40)
+perp_con <- weighted_average(men_average = men_con_perp, 
+                             women_average = women_con_perp, n_men = 59, n_women = 100)
+perp_odds <- log_odds_ratio(n_control = 59+100, n_treatment = 21+40, 
+                            percent_control = perp_con, percent_treatment = perp_tre)
+stand_result(eff_type = "log_odds_ratio", raw_effect_size = perp_odds, 
+             n_t = 21+40, n_c = 100+59)
 
 ## Gilbert -----------------------------------
 volunteer_time <- dim_calculator(mean_control = .09, mean_treatment = .16)

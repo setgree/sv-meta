@@ -85,6 +85,7 @@ raw_dat$ctrl_sd <- gsub(pattern = 'no.sd', replacement = NA, x = raw_dat$ctrl_sd
 raw_dat$ctrl_sd <- gsub(pattern = '-', replacement = NA, x = raw_dat$ctrl_sd)
 ## Before convert to numeric,check which  will be converted to NA "by coercion" 
 which(is.na(as.numeric(raw_dat$ctrl_sd)) != is.na(raw_dat$ctrl_sd)) # ok none
+# note: if there are some, re-download the data
 raw_dat$ctrl_sd <- as.numeric(raw_dat$ctrl_sd)
 
 ## Convert all ctrl_SDs to 1 when Cohen's D is eff_type
@@ -159,7 +160,19 @@ raw_dat <- raw_dat %>%
 raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 ```
 
+### add pragmatic rct designation
+```{r pragmatic_rct}
+raw_dat$study_design <- as.character(raw_dat$study_design)
+raw_dat <- raw_dat %>%
+  mutate(study_design = if_else(condition = study_design == 'rct' & 
+                                  !is.na(n_t_group) & 
+                                  n_t_group + n_c_group < 10, 
+                                true = 'pragmatic rct', 
+                                false = study_design))
+raw_dat$study_design <- as.factor(raw_dat$study_design)
+table(raw_dat$study_design)
 
+```
 There's a lot more cleaning to do, but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 Also must return to: 
 
