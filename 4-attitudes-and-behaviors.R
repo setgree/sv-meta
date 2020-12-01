@@ -2,6 +2,7 @@
 
 rm(list = ls())
 library(dplyr, warn.conflicts = FALSE)
+(library(lme4))
 library(ggplot2)
 library(metafor)
 
@@ -51,4 +52,5 @@ has_both <- dat %>%
 
 # now, controlling for unique_paper_id, do attitudes predict behavior?
 summary(lm(formula = d ~ as.numeric(scale_type) + unique_paper_id, data = has_both))
-# that's not quite right. i should talk this over with JH or someone 
+# that's not quite right. i should talk this over with JH or someone ...lmer?
+summary(lmer(formula = d ~ scale_type + (1 | unique_study_id), data = has_both))

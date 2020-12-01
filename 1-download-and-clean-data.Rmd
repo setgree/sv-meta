@@ -176,6 +176,15 @@ raw_dat$study_design <- as.factor(raw_dat$study_design)
 table(raw_dat$study_design)
 
 ```
+
+### unique study id
+```{r}
+raw_dat <- raw_dat %>%
+  group_by(unique_paper_id, intervention_name) %>% 
+  mutate(unique_study_id = cur_group_id())
+
+
+```
 There's a lot more cleaning to do, but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 Also must return to: 
 
