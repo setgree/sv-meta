@@ -16,9 +16,12 @@ source('./functions/var_d_calc.R')
 # if study_design == 'rct' & cluster = T & n_t_groups >= 5 & n_c_groups >= 5; then
 # replace n_t and n_c with above params. It's the split-apply-merge. or case-when
 # case when should be first approach
+
+# note: if this fails for you, check that the inputs are of the righ type
+# e.g. eff_type != 'd_i_p.'
 dat_clean <- dat %>%
-  mutate(d = mapply(FUN = d_calc, stat_type = eff_type, 
-                    stat = u_s_d, sample_sd = ctrl_sd, 
+  mutate(d = mapply(FUN = d_calc, stat_type = eff_type, stat =  u_s_d, 
+                    sample_sd = ctrl_sd, 
                     n_t = n_t_post, n_c = n_c_post)) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
   mutate(var_d = mapply(FUN = var_d_calc, d = d, 
@@ -35,7 +38,7 @@ dat_clean <- dat_clean %>%
   filter(var_d != 0) # this is to address a warning from metafor;
 # it's one row  but maybe there's a better solution?
 
-# in total,28 rows removed
+# in total,22 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
 
 sum(dat_clean$var_d > 10) # 0 now

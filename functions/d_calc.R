@@ -16,6 +16,11 @@ d_calc <- function(stat_type , stat, sample_sd , n_t, n_c){
     d <- stat
   }
   
+  # unspecified null
+  else if (stat_type == "unspecified null") {
+    d <- 0
+  }
+  
   # regression coefficient
   else if (stat_type == "reg_coef") {
     d <- round(stat / sample_sd, digits = 3)
@@ -41,5 +46,7 @@ d_calc <- function(stat_type , stat, sample_sd , n_t, n_c){
   else if (stat_type == "log_odds_ratio") {
     d <- stat * sqrt(3) / pi
   }
+  
+  
   return(d)
 }

@@ -62,6 +62,9 @@ raw_dat$eff_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'did', replacement = "d_i_d", x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'dim', replacement = "d_i_m", x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = "^$|^ $", replacement =  NA, x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'd.i.p', replacement = "d_i_p", x = raw_dat$eff_type)
+raw_dat$eff_type <- gsub(pattern = 'd.i.p.', replacement = "d_i_p", x = raw_dat$eff_type)
+
 
 # fix cluster type data
 raw_dat$cluster_type <- gsub('n_groups', 'n groups', raw_dat$cluster_type)
