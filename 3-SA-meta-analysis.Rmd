@@ -47,20 +47,20 @@ summary(lm(formula = d ~ scale_type, data =  dat))
 "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
 ```{r study_type}
 # first crack at meta-analysis
-robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_study_id)
 
 # by study type?
 rcts <- dat %>% filter(study_design == 'rct')
-robust(x = rma(yi = d, vi = var_d, data = rcts), cluster = rcts$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = rcts), cluster = rcts$unique_study_id)
 
 quasis <- dat %>% filter(study_design == 'quasi-experimental')
-robust(x = rma(yi = d, vi = var_d, data = quasis), cluster = quasis$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = quasis), cluster = quasis$unique_study_id)
 
 rcts_and_quasi <- dat %>% filter(study_design == 'rct' | study_design == 'quasi-experimental')
-robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_quasi$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_quasi$unique_study_id)
 
 observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
-robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_paper_id)
+robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_study_id)
 
 ### Visualizing this: plot D and SE, with color corresponding to
 ### study type and shape corresponding to lab or field
@@ -80,14 +80,14 @@ dplot(sa_data = dat_minus_outliers, condense = T)
 
 ```{r outcome_type}
 # let's talk about this
-unique(dat$scale_name)
+# unique(dat$scale_name)
 behavioral_data <- dat %>% filter(scale_type == 'behavior')
 attitudes_data <- dat %>% filter(scale_type == 'attitudes')
 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data),
-       cluster = behavioral_data$unique_paper_id)
+       cluster = behavioral_data$unique_study_id)
 robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
-       cluster = attitudes_data$unique_paper_id)
+       cluster = attitudes_data$unique_study_id)
 # perpetration, victimization, intervention are the big three intervention measures
 # we are not looking at the primary variable (defined by authors as primary outcome)
 # TODO: bin the behaviors into these three categories
@@ -97,8 +97,8 @@ robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
 ```{r behavioral_over_time}
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
-       cluster = behavioral_data$unique_paper_id)
-dat$delay # gonna need to recode this, it's a messy character vector
+       cluster = behavioral_data$unique_study_id)
+# dat$delay # gonna need to recode this, it's a messy character vector
 # put them all into days
 # We can kind of assume that NA = 0 days because if they had that info,
 # they would have shared it
@@ -130,21 +130,21 @@ RCT – behavior
 ```{r rct_behavior}
 rct_behavior <- rcts %>% filter(scale_type == 'behavior')
 robust(x = rma(yi = d, vi = var_d, data = rct_behavior), 
-       cluster = rct_behavior$unique_paper_id)
+       cluster = rct_behavior$unique_study_id)
 ```
 
 RCT – attitude
 ```{r rct_attitude}
 rct_attitude <- rcts %>% filter(scale_type == 'attitudes')
 robust(x = rma(yi = d, vi = var_d, data = rct_attitude), 
-       cluster = rct_attitude$unique_paper_id)
+       cluster = rct_attitude$unique_study_id)
 ```
 
 RCT+Quasi – behavior
 ```{r rct_quasi_behavior}
 rct_quasi_behavior <- rcts_and_quasi %>% filter(scale_type == 'behavior')
 robust(x = rma(yi = d, vi = var_d, data = rct_quasi_behavior), 
-       cluster = rct_quasi_behavior$unique_paper_id)
+       cluster = rct_quasi_behavior$unique_study_id)
 
 ```
 
@@ -152,28 +152,48 @@ RCT+Quasi – attitude
 ```{r rct_quasi_attitude}
 rct_quasi_attiude <- rcts_and_quasi %>% filter(scale_type == 'attitudes')
 robust(x = rma(yi = d, vi = var_d, data = rct_quasi_attiude), 
-       cluster = rct_quasi_attiude$unique_paper_id)
+       cluster = rct_quasi_attiude$unique_study_id)
 ```
 
-Everything – behavior
+All study types – behavior
 ```{r everything_behavior}
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
-       cluster = behavioral_data$unique_paper_id)
+       cluster = behavioral_data$unique_study_id)
 ```
 
-Everything – attitude
+All study types – attitude
 ```{r everything_attitude}
 attitudes <- dat %>% filter(scale_type == 'attitudes') 
 robust(x = rma(yi = d, vi = var_d, data = attitudes), 
-       cluster = attitudes$unique_paper_id)
+       cluster = attitudes$unique_study_id)
 ```
 
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’. We are only looking at studies that measure both attitudes and behavior in their outcomes.
 
-```{r i_dont_know_how_to_do_this}
-# subset studies that have both behavioral and attitudinal outcomews
-# and then look at correlation within them and then average over all correlations
-# double-check this
-# regression of behavs on atts that controls for uique_study_id, but is that really gonna work
-# hierarchical linear rgression # lmer
+```{r}
+# new variable for whether a study has attitudes, behaviors, or both
+dat <- dat %>% 
+  select(unique_study_id, scale_type, everything()) %>% 
+  group_by(unique_study_id) %>%
+  mutate(attitudes_behaviors = case_when(
+    all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+    scale_type == 'attitudes' ~ 1,
+    scale_type == 'behavior' ~ 2)) %>% 
+  ungroup()
+
+has_both <- dat %>% 
+  filter(attitudes_behaviors == 0) %>%
+  group_by(unique_study_id, scale_type) %>%
+  mutate(mean_d = mean(d), mean_var_d = mean(var_d), mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, 
+         mean_d, mean_var_d, mean_se_d, everything()) %>%  
+  slice(1)
+
+cor.test(x = has_both$mean_d[has_both$scale_type == 'attitudes'], 
+         y = has_both$mean_d[has_both$scale_type == 'behavior'])
+
+# RCTs?
+has_both_rcts <- has_both %>% filter(study_design == 'rct')
+cor.test(x = has_both_rcts$mean_d[has_both$scale_type == 'attitudes'], 
+         y = has_both_rcts$mean_d[has_both$scale_type == 'behavior'])
 ```

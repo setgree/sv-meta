@@ -11,3 +11,6 @@ got organized (put everything into asana)
 * solved a few technical things -- group_by and then variable contains ALL of values, and a unique_study_id
 * have some preliminary results to dicsuss about the diminishing effects as you go up the scale in terms of study quality and behavirs
 * but do attitudes predict behaviors? This one is actually a hard question. Talk to Don & Betsy about it?
+
+### 2020-12-01
+* We have a lot more double-checking to do in the first cleaning script.
