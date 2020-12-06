@@ -8,3 +8,5 @@
 .DS_Store
 .Rproj.user
 bld/
+./results/
+.html
