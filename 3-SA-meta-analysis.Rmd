@@ -1,20 +1,26 @@
- ---
+---
 title: "3-SA-meta-analyis.Rmd"
 author: "Seth Green"
 date: "8/19/2020"
-output: html_document
+output: pdf_document
 editor_options: 
   chunk_output_type: console
 ---
 
-### First, an overall meta-analysis. 
-```{r setup}
+```{r setup, include=F, echo=F}
 rm(list = ls())
-library(metafor)
+library(broom)
+library(dplyr)
+library(metafor, quietly = T)
 library(ggplot2)
+library(stringr)
+
 source('./functions/dplot.R')
+
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
 ```
+
+### First, an overall meta-analysis. 
 
 ```{r initial_exploration}
 
@@ -22,10 +28,12 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
 summary(lm(formula = se_d ~ d, data =  dat))
 summary(lm(formula = d ~ se_d, data =  dat))
 
-ggplot(data = dat, mapping = aes(x = se_d, y = d)) + 
-  geom_point() + 
-  geom_smooth(method = 'lm') #I'd say so
-# Roni is not that surprised because thsi is not psych; this is not as p-hacked
+ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
+  geom_point() +
+  geom_smooth(method = 'lm') 
+
+# This is less of a relationship than I (Seth) expected;
+# Roni is not very surprised because public health is in general less p-hacked than psych
 # JH agrees and there's an interesting point about not going for flashy journals
 
 # how about the overall relationship between lab/field and d? 
@@ -39,14 +47,15 @@ summary(lm(formula = d ~ study_design, data =  dat))
 
 # scale type?
 summary(lm(formula = d ~ scale_type, data =  dat)) 
-# ah now THAT is significant
+# that is a substantial decline
 ```
 
 
-## By study type:
+### By study type:
 "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
 ```{r study_type}
 # first crack at meta-analysis
+# this can all, obviously, be more elegant -- consult with JH
 robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_study_id)
 
 # by study type?
@@ -62,8 +71,8 @@ robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_qu
 observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
 robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_study_id)
 
-### Visualizing this: plot D and SE, with color corresponding to
-### study type and shape corresponding to lab or field
+#### Visualizing this: plot D and SE, with color corresponding to
+#### study type and shape corresponding to lab or field
 dplot(condense = T)
 # I had really thought there was more of a relationship
 dplot(condense = F)
@@ -74,23 +83,48 @@ dat_minus_outliers <- dat %>% filter(d <= 2 & d >= -2)
 dplot(sa_data = dat_minus_outliers, condense = T)
 ```
 
-## By outcome type:
+### By outcome type:
 
 "... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ```{r outcome_type}
-# let's talk about this
+# let's talk about this -- what's the right way to filter by   behavior type? 
 # unique(dat$scale_name)
 behavioral_data <- dat %>% filter(scale_type == 'behavior')
+
 attitudes_data <- dat %>% filter(scale_type == 'attitudes')
 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data),
        cluster = behavioral_data$unique_study_id)
 robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
        cluster = attitudes_data$unique_study_id)
-# perpetration, victimization, intervention are the big three intervention measures
-# we are not looking at the primary variable (defined by authors as primary outcome)
-# TODO: bin the behaviors into these three categories
+
+### CATEGORIZE BEHAVIOR:
+# perpetration, victimization, intervention are the big three intervention measures. Also, there's involvement, I now see
+# unique(behavioral_data$scale_name)
+behavioral_data <- behavioral_data %>% mutate(
+  type_of_behavior = as.factor(case_when(
+    str_detect(scale_name, 
+               'perp|perpetration|agression|comitted') ~ 'perpetration',
+    str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
+    str_detect(scale_name, 'bystander|Observing') ~ 'bystander',
+    str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
+    TRUE ~ 'other')
+    )
+)
+# TODO: this was crude, because the scale_names weren't written with this analysis in mind. I think we should rewrite each of the scale names to clearly state which of the four categories it falls into, and I will discuss this with JH & Roni when we next speak. Anyway:
+
+summary(lm(formula = d ~ type_of_behavior, data = behavioral_data))
+# on average, interventions seem to be more effective at reducing victimization than perpetration, but the differences aren't huge. The effects are pretty small across the board.
+robust(rma(yi = d, vi = var_d, mods = type_of_behavior, data = behavioral_data), cluster = behavioral_data$unique_study_id)
+# This isn't quite right, and ideally we want coefficients associated with each 
+# that correspond to different effect sizes within each category
+# what about just RCTs? 
+rct_behavioral <- behavioral_data %>% filter(study_design == 'rct')
+summary(lm(formula = d ~ type_of_behavior, data = rct_behavioral))
+# effects are small here overall
+robust(rma(yi = d, vi = var_d, data = rct_behavioral), cluster = rct_behavioral$unique_study_id)
+
 ```
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
@@ -98,10 +132,21 @@ robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_study_id)
-# dat$delay # gonna need to recode this, it's a messy character vector
-# put them all into days
-# We can kind of assume that NA = 0 days because if they had that info,
-# they would have shared it
+
+no_delay_dat <- dat %>% 
+  filter(delay == 0)
+delay_dat <- dat %>%
+  filter(delay > 0)
+summary(lm(formula = d ~ scale_type, data =  delay_dat))
+summary(lm(formula = d ~ scale_type, data =  no_delay_dat))
+# in general, delayed results are smaller. this is crude and needs revisiting
+summary(lm(formula = d ~ delay, data = dat))
+# don't knwo what to make of this
+robust(x = rma(yi = d, vi = var_d, data = no_delay_dat), 
+       cluster = no_delay_dat$unique_study_id)
+
+robust(x = rma(yi = d, vi = var_d, data = delay_dat), 
+       cluster = delay_dat$unique_study_id)
 
 ```
 
@@ -110,65 +155,51 @@ robust(x = rma(yi = d, vi = var_d, data = behavioral_data),
 
 ```{r}
 # so we need a dummy variable for experimental or quasi_experimental
-summary(lm(formula = d ~ study_design, data =  behavioral_data)) 
-# the quality order is experiments; quasi; pre-post; cross-sectional
+# comparing study designs overall
+summary(lm(formula = d ~ study_design, data =  behavioral_data))
+# just within studies with delayed outcomes?
+delay_behavior <- behavioral_data %>% filter(delay > 0)
+no_delay_behavior <- behavioral_data %>% filter(delay == 0)
+summary(lm(formula = d ~ study_design, data =  no_delay_behavior))
+summary(lm(formula = d ~ study_design, data =  delay_behavior))
+# what does this subset like overall
+robust(rma(yi = d, vi = var_d, data = delay_behavior), cluster = delay_behavior$unique_study_id)
+robust(rma(yi = d, vi = var_d, data =  no_delay_behavior), cluster = no_delay_behavior$unique_study_id)
 
 ```
+
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
 ```{r perpetration outcomes}
-# let's talk about this
-
+rct_perp <- rct_behavioral %>%
+  filter(type_of_behavior == 'perpetration')
+robust(rma(yi = d, vi = var_d, data =  rct_perp), cluster = rct_perp$unique_study_id)
+# still about 0.1
+# TODO: these _all_ have delays. maybe something like delay > 1 month?
+summary(lm(formula = d ~ delay, data = rct_perp))
+#...kind of not really any clear relationship?
+rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) + 
+  geom_point() +
+  geom_smooth(method = 'lm')
+# the story here is the range of Ds -- what's this -0.5 increase in perpetration?
+# TODO: double-check that we coded this in the right direction
+range(rct_perp$d); mean(rct_perp$d)
+# TODO: all this delay stuff could be addresesd with a delay yes/no variable.
+# TBD: sensible thing to call that?
 ```
 * Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
 ```{r}
 summary(lm(formula = d ~ scale_type, data = rcts_and_quasi))
+rcts_and_quasi_delay <- rcts_and_quasi %>% 
+  filter(delay > 0)
+
+rcts_and_quasi_no_delay <- rcts_and_quasi %>% 
+  filter(delay == 0)
+
+summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_delay))
+summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_no_delay))
 ```
 
-Analysis plan discussed 
-what is the average effect size:
-RCT – behavior
-```{r rct_behavior}
-rct_behavior <- rcts %>% filter(scale_type == 'behavior')
-robust(x = rma(yi = d, vi = var_d, data = rct_behavior), 
-       cluster = rct_behavior$unique_study_id)
-```
-
-RCT – attitude
-```{r rct_attitude}
-rct_attitude <- rcts %>% filter(scale_type == 'attitudes')
-robust(x = rma(yi = d, vi = var_d, data = rct_attitude), 
-       cluster = rct_attitude$unique_study_id)
-```
-
-RCT+Quasi – behavior
-```{r rct_quasi_behavior}
-rct_quasi_behavior <- rcts_and_quasi %>% filter(scale_type == 'behavior')
-robust(x = rma(yi = d, vi = var_d, data = rct_quasi_behavior), 
-       cluster = rct_quasi_behavior$unique_study_id)
-
-```
-
-RCT+Quasi – attitude
-```{r rct_quasi_attitude}
-rct_quasi_attiude <- rcts_and_quasi %>% filter(scale_type == 'attitudes')
-robust(x = rma(yi = d, vi = var_d, data = rct_quasi_attiude), 
-       cluster = rct_quasi_attiude$unique_study_id)
-```
-
-All study types – behavior
-```{r everything_behavior}
-robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
-       cluster = behavioral_data$unique_study_id)
-```
-
-All study types – attitude
-```{r everything_attitude}
-attitudes <- dat %>% filter(scale_type == 'attitudes') 
-robust(x = rma(yi = d, vi = var_d, data = attitudes), 
-       cluster = attitudes$unique_study_id)
-```
-
-What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’. We are only looking at studies that measure both attitudes and behavior in their outcomes.
+What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
 
 ```{r}
 # new variable for whether a study has attitudes, behaviors, or both

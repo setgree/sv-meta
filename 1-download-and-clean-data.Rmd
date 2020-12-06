@@ -184,9 +184,31 @@ raw_dat <- raw_dat %>%
   mutate(unique_study_id = cur_group_id())
 # based this on https://stackoverflow.com/questions/62562499/obtain-a-unique-id-by-group-in-mutate-pipeline
 # hope it's right
+```
+### fix delay
 
+```{r delay}
+# TODO: double-check dat$delay. it's a string vector and we need to convert everything to days. 
+# I'm doing a lubridate thing here but obviously this is not perfect
+# I am assuming that NA = 0 days because if we had that info, we'd record it. 
+# I know there's a better way to do this and I will consult with JH
+
+# raw_dat$delay <- gsub(NA, '0', raw_dat$delay)
+# raw_dat$delay <- gsub('NA', '0', raw_dat$delay
+
+raw_dat$delay <- gsub('4 month', '122', raw_dat$delay)
+raw_dat$delay <- gsub('2.5 years', '912.5', raw_dat$delay)
+raw_dat$delay <- gsub('2 weeks', '14', raw_dat$delay)
+raw_dat$delay <- gsub('3 weeks', '21', raw_dat$delay)
+raw_dat$delay <- gsub('1 month', '30.5', raw_dat$delay)
+raw_dat$delay <- gsub('5 weeks', '35', raw_dat$delay)
+raw_dat$delay[is.na(raw_dat$delay)] = "0"
+
+raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ```
+
+
 There's a lot more cleaning to do, but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 Also must return to: 
 

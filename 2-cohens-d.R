@@ -43,7 +43,6 @@ sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
 
 sum(dat_clean$var_d > 10) # 0 now
 
-# check these
 
 saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
 
