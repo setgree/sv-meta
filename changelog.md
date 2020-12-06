@@ -17,6 +17,9 @@ got organized (put everything into asana)
 * Solved the correlation thing, it wasn't so hard once I knew what the right function was.
 * The next big thing was behavior types and delay
 
+#### 2020-12-02
+* Small cleaning stuff. Need to double-check everything in 1-download-and-clean-data once Roni is done
+
 ### 2020-12-05
 * I thought there was 30 minutes of work to do tonight but it was more like 2 hours. Time well spent
 * Fixed the delay metric, I think (though, ultimately, we need a delay yes/no. Maybe we should call it delay_yes_no :))
