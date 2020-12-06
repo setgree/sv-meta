@@ -14,3 +14,13 @@ got organized (put everything into asana)
 
 ### 2020-12-01
 * We have a lot more double-checking to do in the first cleaning script.
+* Solved the correlation thing, it wasn't so hard once I knew what the right function was.
+* The next big thing was behavior types and delay
+
+### 2020-12-05
+* I thought there was 30 minutes of work to do tonight but it was more like 2 hours. Time well spent
+* Fixed the delay metric, I think (though, ultimately, we need a delay yes/no. Maybe we should call it delay_yes_no :))
+* I think we should put redlined studies in their own tab (tell Roni)
+* I took a first, really rough stab at categorizing the behavior types, but this is going to need serious revision
+* Emailed the whole team! Really much easier to do the analysis for this  knd of paper having done it twice before. not only because we have a good sense of what functions and stuff to use but also because I have an intuition about rabbit holes best avoided and how we're likely to frame the argument in the end.
+* Graphs and stuff, that we need to do. + all the data and code cleaning and everything. it's fine
