@@ -8,11 +8,11 @@ dplot  <- function(sa_data = dat, dot_size = 3, condense = F,
   
   # condense down to one estimate per paper?
   {if (condense) sa_data <- sa_data %>%
-      group_by(unique_paper_id) %>% 
+      group_by(unique_study_id) %>% 
       mutate(d = mean(d),
              se_d = mean(se_d)) %>% 
       ungroup() %>% 
-      distinct(unique_paper_id, .keep_all = T)}
+      distinct(unique_study_id, .keep_all = T)}
   
   # helper functions for statistical summaries
   add_parenthesis <- function(vector){
