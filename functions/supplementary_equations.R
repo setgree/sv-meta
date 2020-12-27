@@ -5,12 +5,12 @@
 
 CI_converter <- function(upper, lower, n, interval = 95) {
   # https://handbook-5-1.cochrane.org/chapter_7/7_7_3_2_obtaining_standard_deviations_from_standard_errors_and.htm
-  if (interval == 95){
+  if (interval == 95) {
     sd <- (sqrt(n) * (upper - lower)) / 3.92
     print(sd)
     return( (sqrt(n) * (upper - lower)) / 3.92)
   }
-  else if(interval == 90){
+  else if(interval == 90) {
     sd <- (sqrt(n) * (upper -lower)) / 3.29
     print(sd)
     return(sd)
@@ -23,7 +23,7 @@ did_calculator <- function(mean_treatment_post, # sd left for legacy reasons
                            mean_treatment_pre, 
                            mean_control_post, 
                            mean_control_pre,
-                           sd = 1){
+                           sd = 1) {
   
   treatment <-  mean_treatment_post - mean_treatment_pre
   control <- mean_control_post - mean_control_pre
@@ -37,11 +37,11 @@ did_calculator <- function(mean_treatment_post, # sd left for legacy reasons
 
 # SE 2 SD
 
-se_2_sd <- function(se, n){
+se_2_sd <- function(se, n) {
   (se * sqrt(n))
 } ## parentheses 'auto-print' but it seems fine without it. whatevs
 
-reg_se_2_sd <- function(se, n){
+reg_se_2_sd <- function(se, n) {
   # https://training.cochrane.org/handbook/current/chapter-06#section-6-5-2-3
   # 
 }
@@ -49,9 +49,9 @@ reg_se_2_sd <- function(se, n){
 se_2_sd(3.4, 50)
 # SD pooled
 
-sd_pooled <- function(sd, n){
+sd_pooled <- function(sd, n) {
   #taken from Hedges, 1981:110
-  if (length(sd) != length(n)){
+  if (length(sd) != length(n)) {
     stop("Length of sd and length of n need to be the same")
   }
   
@@ -71,7 +71,7 @@ sd_pooled(sd = c(7.28, 7.32), n = c(22, 15))
 
 #DIM function
 
-dim_calculator <- function (mean_control, mean_treatment){
+dim_calculator <- function (mean_control, mean_treatment) {
   dim <- mean_control - mean_treatment
   print(dim)
   return(dim)
@@ -79,9 +79,9 @@ dim_calculator <- function (mean_control, mean_treatment){
 
 # LogOdds ratio
 log_odds_ratio <- function(n_control, n_treatment, 
-                           percent_control, percent_treatment){
+                           percent_control, percent_treatment) {
   # https://www.medcalc.org/calc/odds_ratio.php                       
-  if (percent_control > 1 || percent_treatment > 1){ # percent_control_pre > 1 || percent_control_post > 1 ||
+  if (percent_control > 1 || percent_treatment > 1) { # percent_control_pre > 1 || percent_control_post > 1 ||
     stop("Insert percentage as decimal")
   }
   
@@ -96,9 +96,9 @@ log_odds_ratio <- function(n_control, n_treatment,
 
 
 odds_ratio <- function(n_control, n_treatment, 
-                       percent_control, percent_treatment){
+                       percent_control, percent_treatment) {
   # https://www.medcalc.org/calc/odds_ratio.php                       
-  if (percent_control > 1 || percent_treatment > 1){ # percent_control_pre > 1 || percent_control_post > 1 ||
+  if (percent_control > 1 || percent_treatment > 1) { # percent_control_pre > 1 || percent_control_post > 1 ||
     stop("Insert percentage as decimal")
   }
   
@@ -113,11 +113,11 @@ odds_ratio <- function(n_control, n_treatment,
 # Chi-Squared to D
 # taken from Conversion of Common Test Statistics to r and d Values in methods folder
 # also see https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2850938/
-chisq_2_d <- function(chisq, df, n){
+chisq_2_d <- function(chisq, df, n) {
   r <- sqrt(chisq / n)
   d <- r_2_d(r)
   return(d)
-  # if (df == 1){
+  # if (df == 1) {
   #   d <- 2*sqrt(chisq /( n - chisq))
   # } else {
   #   d <- 2*sqrt(chisq / n)
@@ -128,12 +128,12 @@ chisq_2_d <- function(chisq, df, n){
 
 # R to D
 # taken from Conversion of Common Test Statistics to r and d Values in methods folder
-r_2_d <- function(r){
+r_2_d <- function(r) {
   d <- (2 * r) / sqrt(1 - r^2)
   d
 }
 
-weighted_average <- function(men_average, n_men, women_average, n_women){
+weighted_average <- function(men_average, n_men, women_average, n_women) {
   weighted_men <- men_average*n_men
   weighted_women <- women_average*n_women
   
@@ -141,10 +141,10 @@ weighted_average <- function(men_average, n_men, women_average, n_women){
   return(real_average)
 }
 
-# weighted_sd <- function(ns, sds, means){
+# weighted_sd <- function(ns, sds, means) {
 #   # https://en.wikipedia.org/wiki/Pooled_variance#Aggregation_of_standard_deviation_data
 #   # methods for samples
-#   if (length(ns) != length(sds)){
+#   if (length(ns) != length(sds)) {
 #     stop("ns and sds need to be the same length")
 #   }
 #   
@@ -162,12 +162,12 @@ weighted_average <- function(men_average, n_men, women_average, n_women){
 
 ci_2_sd <- function(lower, upper, n, conf_level = .95) {
   # https://handbook-5-1.cochrane.org/chapter_7/7_7_3_2_obtaining_standard_deviations_from_standard_errors_and.htm
-  if (conf_level == .95){
+  if (conf_level == .95) {
     sd_return <- (sqrt(n) * (upper - lower)) / 3.92
     print(sd_return)
     return(sd_return)
   }
-  else if(conf_level == .90){
+  else if(conf_level == .90) {
     sd_return <- (sqrt(n) * (upper - lower)) / 3.29
     print(sd_return)
     return(sd_return)
@@ -177,17 +177,17 @@ ci_2_sd <- function(lower, upper, n, conf_level = .95) {
 }
 
 
-t_inverse <- function (p, n){
+t_inverse <- function (p, n) {
   qt(1 - p/2, n - 2)
 }
 
 
-s_pooled <- function(reg_coef, total_n, outcome_sd, n_treatment, n_control){
+s_pooled <- function(reg_coef, total_n, outcome_sd, n_treatment, n_control) {
   # https://stats.stackexchange.com/questions/348502/cohens-d-from-a-linear-regression-model
   sqrt(((outcome_sd^2)*(total_n - 1) - (reg_coef^2)*((n_treatment*n_control)/(total_n))) / (total_n - 2))
 }
 
-# weighted_sd <- function(men_sd, n_men, women_sd, n_women){ 
+# weighted_sd <- function(men_sd, n_men, women_sd, n_women) { 
 #   # https://en.wikipedia.org/wiki/Pooled_variance
 #   df <- n_men + n_women - 2
 #   num <- ((n_men - 1) * men_sd^2) + ((n_women - 1) * women_sd^2)
