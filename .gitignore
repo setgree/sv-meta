@@ -9,7 +9,6 @@
 .Rproj.user
 bld/
 cutouts/
-results/*
-*.html
-data/*
-*.csv
+results/*.html
+data/*.csv
+notes/*.png
