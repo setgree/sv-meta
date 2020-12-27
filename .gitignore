@@ -8,7 +8,8 @@
 *.DS_Store
 .Rproj.user
 bld/
-*./results/*
+cutouts/
+results/*
 *.html
-./data/*
+data/*
 *.csv
