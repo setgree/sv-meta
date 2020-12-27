@@ -27,3 +27,6 @@ got organized (put everything into asana)
 * I took a first, really rough stab at categorizing the behavior types, but this is going to need serious revision
 * Emailed the whole team! Really much easier to do the analysis for this  knd of paper having done it twice before. not only because we have a good sense of what functions and stuff to use but also because I have an intuition about rabbit holes best avoided and how we're likely to frame the argument in the end.
 * Graphs and stuff, that we need to do. + all the data and code cleaning and everything. it's fine
+
+### 2020-12-26
+* Addewd a git remote and by instructions [here](https://stackoverflow.com/questions/1818895/keep-ignored-files-out-of-git-status) I ignored some files but this time it worked
