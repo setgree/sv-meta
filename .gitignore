@@ -5,10 +5,10 @@
 *.rds
 *.Rhistory
 *.RData
-.DS_Store
+*.DS_Store
 .Rproj.user
 bld/
-./results/*
+*./results/
 *.html
-./data/*
-.csv
+./data/
+*.csv
