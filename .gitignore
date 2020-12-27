@@ -9,6 +9,6 @@
 .Rproj.user
 bld/
 cutouts/*
-results/*
+/results/*
 data/*
 notes/*
