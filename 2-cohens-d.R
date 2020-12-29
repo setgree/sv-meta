@@ -62,5 +62,7 @@ saveRDS(object = dat_cleaned, file = './data/sa_meta_data_for_analysis.rds')
 
 #' NOTE for future reference: we have some weird values because of 
 #' studies with 1 or 2 units assigned to treatment or control
-# not doing clusters 
+#' not doing clusters 
+#' I think I fixed this with the pragmatic RCT designation
+
 #' ah well onto the analysis
