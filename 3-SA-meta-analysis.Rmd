@@ -245,6 +245,7 @@ cor.test(x = has_both$mean_d[has_both$scale_type == 'attitudes'],
          y = has_both$mean_d[has_both$scale_type == 'behavior'])
 
 # try pivot wider
+# JH -- can I get a hand with this?
 has_both_two <- has_both %>% 
   pivot_wider(names_from = scale_type, 
               values_from = c(d, var_d, se_d)) %>%
