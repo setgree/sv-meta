@@ -240,13 +240,17 @@ has_both <- dat %>%
   select(author, year, paper_title, unique_study_id, 
          mean_d, mean_var_d, mean_se_d, everything()) %>%  
   slice(1) 
+
 cor.test(x = has_both$mean_d[has_both$scale_type == 'attitudes'], 
          y = has_both$mean_d[has_both$scale_type == 'behavior'])
 
 # try pivot wider
 has_both_two <- has_both %>% 
   pivot_wider(names_from = scale_type, 
-              values_from = c(d, var_d, se_d))
+              values_from = c(d, var_d, se_d)) %>%
+  select(author, year, paper_title, unique_study_id,
+         unique_paper_id,
+         d_attitudes, d_behavior) 
 
 cor.test(x = has_both_two$d_attitudes, 
          y = has_both_two$d_behavior)
