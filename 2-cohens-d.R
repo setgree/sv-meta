@@ -29,22 +29,23 @@ dat_clean <- dat %>%
   mutate(se_d = sqrt(var_d))
 
 # remove impossible values: basically take the inverse of these changes
-# (the dataset that's just the stuff removed here) and look at it
-dat_clean <- dat_clean %>%
+dat_cleaned <- dat_clean %>%
   filter(d != -Inf) %>% # these are because of log negative numbers
   filter(!is.na(d)) %>% # these need to be looked at
   filter(!is.na(var_d)) %>% # these also need to be looked at
   filter(d < 5 & d > -5) %>% # these also need to be looked at
   filter(var_d != 0) # this is to address a warning from metafor;
-# it's one row  but maybe there's a better solution?
 
-# in total,22 rows removed -- need to check these!! *after Roni has chcked studies
-sum(dat_clean$var_d == 0) # 1, now that we're not doing clusters
+# (the dataset that's just the stuff removed above): look at it
+studies_to_check <- setdiff(dat_clean, dat_cleaned)
 
-sum(dat_clean$var_d > 10) # 0 now
+# in total,34 rows removed -- need to check these!! *after Roni has chcked studies
+sum(dat_cleaned$var_d == 0) # 1, now that we're not doing clusters
+
+sum(dat_cleaned$var_d > 10) # 0 now
 
 
-saveRDS(object = dat_clean, file = './data/sa_meta_data_for_analysis.rds')
+saveRDS(object = dat_cleaned, file = './data/sa_meta_data_for_analysis.rds')
 
 
 #' all right so we have a lot of stuff to look at 
