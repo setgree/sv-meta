@@ -30,3 +30,9 @@ got organized (put everything into asana)
 
 ### 2020-12-26
 * Addewd a git remote and by instructions [here](https://stackoverflow.com/questions/1818895/keep-ignored-files-out-of-git-status) I ignored some files but this time it worked
+* Used pivot_wider to make the attitudes correspondence thing easier to plot via ggplot
+### 2020-12-30
+* Fixed a small thing about the attitudes behavior correspondence. 
+* New idea for the plot about this is to mutate a new variable that calculates individual correspondences and then plots *those* by mean(se_attitudes_d + se_behavior_d) and that would show if there's more of a correspondence as things get higher-powered.
+* That will go next to , or in addition to, a simple X = attitudes D and Y = behavior D plot.
+* last but not least is a forest plot of each study but...i have to learn how to do that.
