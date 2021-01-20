@@ -280,7 +280,6 @@ ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
   geom_smooth(method = 'lm') + 
   theme_minimal()
 
-
 #### Visualizing this: plot D and SE, with color corresponding to
 #### study type and shape corresponding to lab or field
 dplot(condense = T)
@@ -314,13 +313,13 @@ has_both_rcts %>%
 
 # forest plot
 rcts_grouped <- rcts %>%
-  group_by(unique_study_id) %>%
+  group_by(unique_paper_id) %>%
   mutate(mean_d = mean(d), mean_var_d = mean(var_d), mean_se_d = mean(se_d)) %>%
   select(author, year, paper_title, unique_study_id, 
          mean_d, mean_var_d, mean_se_d, everything()) %>%  
   slice(1) 
 
-meta_rcts_grouped <- rma(yi = mean_d, vi = mean_var_d, data = rcts_grouped, slab = labels)
+meta_rcts_grouped <- rma(yi = mean_d, vi = mean_var_d, data = rcts_grouped, slab = labels); meta_rcts_grouped
 #forest plot attempt one
 pdf('./results/forest-plot.pdf',width = 20, height = 28)
 sort.by.error <- rcts_grouped[order(rcts_grouped$mean_se_d), ]
@@ -331,13 +330,13 @@ var_names <- sort.by.error$labels
 metaplot(mn = yi, se = sei, 
          labels = var_names,
          xlab = "Effect Size", ylab = "Study", 
-         colors = meta.colors(box="blue",
-                              lines=44,
+         colors = meta.colors(box = "blue",
+                              lines = 44,
                               zero = "white",
-                              summary="orange",
-                              text="black"),
+                              summary = "orange",
+                              text = "black"),
          title(main = "SA  Forest Plot"))
-abline(v= meta_rcts_grouped$beta, col = "blue", lty = "dashed")
+abline(v = meta_rcts_grouped$beta, col = "blue", lty = "dashed")
 dev.off()
 dev.off()
 ```
