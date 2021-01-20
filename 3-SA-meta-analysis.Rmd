@@ -12,13 +12,28 @@ rm(list = ls())
 library(broom)
 library(dplyr)
 library(metafor, quietly = T)
+library(rmeta)
 library(ggplot2)
+library(ggrepel)
 library(stringr)
 library(tidyr)
 
 source('./functions/dplot.R')
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+# read in data and also add in two useful variables: 
+#  labels (for beahvior) and attitudes_behaviors
+
+dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
+  select(unique_study_id, scale_type, everything()) %>% 
+  mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
+  group_by(unique_study_id) %>%
+  mutate(attitudes_behaviors = case_when(
+    all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+    scale_type == 'attitudes' ~ 1,
+    scale_type == 'behavior' ~ 2)) %>% 
+  ungroup()
+
+
 ```
 
 ### First, an overall meta-analysis. 
@@ -28,10 +43,6 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
 #first, is there a relationship between effect size and se?
 summary(lm(formula = se_d ~ d, data =  dat))
 summary(lm(formula = d ~ se_d, data =  dat))
-
-ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
-  geom_point() +
-  geom_smooth(method = 'lm') 
 
 # This is less of a relationship than I (Seth) expected;
 # Roni is not very surprised because public health is in general less p-hacked than psych
@@ -49,6 +60,10 @@ summary(lm(formula = d ~ study_design, data =  dat))
 # scale type?
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 # that is a substantial decline
+
+# new variable for whether a study has attitudes, behaviors, or both (used later)
+dat <- dat %>% 
+
 ```
 
 
@@ -57,7 +72,7 @@ summary(lm(formula = d ~ scale_type, data =  dat))
 ```{r study_type}
 # first crack at meta-analysis
 # this can all, obviously, be more elegant -- consult with JH
-robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_study_id)
+initial_meta <- robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_study_id); initial_meta
 
 # what does grouping by study and then slicing do to the results?
 dat_grouped <- dat %>%
@@ -67,6 +82,8 @@ dat_grouped <- dat %>%
          mean_se_d = mean(se_d)) %>%
   slice(1)
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped), cluster = dat_grouped$unique_study_id)
+# once we've already grouped by study_id, whatdo we need to cluster?
+grouped_meta <- rma(yi = d, vi = var_d, data = dat_grouped); grouped_meta # basically the same
 # these are very similar. How about not grouping by scale_type?
 
 dat_grouped_two <- dat %>%
@@ -92,16 +109,6 @@ robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_qu
 observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
 robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_study_id)
 
-#### Visualizing this: plot D and SE, with color corresponding to
-#### study type and shape corresponding to lab or field
-dplot(condense = T)
-# I had really thought there was more of a relationship
-dplot(condense = F)
-# if we look just at rtcs and quasi experiments?
-dplot(sa_data = rcts_and_quasi)
-# What's going on here...are the outlier studies getting a lot of weight
-dat_minus_outliers <- dat %>% filter(d <= 2 & d >= -2)
-dplot(sa_data = dat_minus_outliers, condense = T)
 ```
 
 ### By outcome type:
@@ -223,15 +230,6 @@ summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_no_delay))
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
 
 ```{r}
-# new variable for whether a study has attitudes, behaviors, or both
-dat <- dat %>% 
-  select(unique_study_id, scale_type, everything()) %>% 
-  group_by(unique_study_id) %>%
-  mutate(attitudes_behaviors = case_when(
-    all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-    scale_type == 'attitudes' ~ 1,
-    scale_type == 'behavior' ~ 2)) %>% 
-  ungroup()
 
 has_both <- dat %>% 
   filter(attitudes_behaviors == 0) %>%
@@ -247,7 +245,7 @@ cor.test(x = has_both$mean_d[has_both$scale_type == 'attitudes'],
 # try pivot wider
 # JH -- can I get a hand with this?
 has_both_two <- has_both %>% 
-  pivot_wider(id_cols = c(author, year, paper_title, unique_study_id, study_design),
+  pivot_wider(id_cols = c(author, year, paper_title, unique_study_id, study_design, labels),
               names_from = scale_type, 
               values_from = c(mean_d, mean_var_d, mean_se_d))
 
@@ -265,7 +263,81 @@ has_both_rcts_alternative <- has_both %>% filter(study_design == 'rct')
 
 cor.test(x = has_both_rcts_alternative$mean_d[has_both$scale_type == 'attitudes'], 
          y = has_both_rcts_alternative$mean_d[has_both$scale_type == 'behavior'])
-# let's figure out a clever way to plot this
+
+# what's the slope of these lines
+summary(lm(mean_d_behavior ~ mean_d_attitudes, data = has_both_two))
+summary(lm(mean_d_behavior ~ mean_d_attitudes, data = has_both_rcts))
+
+```
 
 
+### Plotting
+```{r plotting}
+
+# overall linear plot
+ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+
+
+#### Visualizing this: plot D and SE, with color corresponding to
+#### study type and shape corresponding to lab or field
+dplot(condense = T)
+# I had really thought there was more of a relationship
+dplot(condense = F)
+# if we look just at rtcs and quasi experiments?
+dplot(sa_data = rcts_and_quasi)
+# What's going on here...are the outlier studies getting a lot of weight
+dat %>% filter(d <= 2 & d >= -2) %>% dplot(condense = T)
+
+
+## Relationship between attitudes and behaviors 
+
+has_both_two %>%
+  select(author, year, mean_d_attitudes, mean_d_behavior) %>%
+  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  geom_point(size = 3) + 
+  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
+  theme_minimal()
+
+# now same with RCTs 
+has_both_rcts %>% 
+  select(author, year, mean_d_attitudes, mean_d_behavior, labels) %>%
+  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  geom_point(size = 3) + 
+  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE, 
+              method = "lm",
+              show.legend = FALSE, alpha = .1, se = F) + 
+  geom_label_repel(mapping = aes(label = labels)) +
+  theme_minimal()
+
+# forest plot
+rcts_grouped <- rcts %>%
+  group_by(unique_study_id) %>%
+  mutate(mean_d = mean(d), mean_var_d = mean(var_d), mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, 
+         mean_d, mean_var_d, mean_se_d, everything()) %>%  
+  slice(1) 
+
+meta_rcts_grouped <- rma(yi = mean_d, vi = mean_var_d, data = rcts_grouped, slab = labels)
+#forest plot attempt one
+pdf('./results/forest-plot.pdf',width = 20, height = 28)
+sort.by.error <- rcts_grouped[order(rcts_grouped$mean_se_d), ]
+yi <- sort.by.error$mean_d
+sei <- sort.by.error$mean_se_d
+var_names <- sort.by.error$labels
+
+metaplot(mn = yi, se = sei, 
+         labels = var_names,
+         xlab = "Effect Size", ylab = "Study", 
+         colors = meta.colors(box="blue",
+                              lines=44,
+                              zero = "white",
+                              summary="orange",
+                              text="black"),
+         title(main = "SA  Forest Plot"))
+abline(v= meta_rcts_grouped$beta, col = "blue", lty = "dashed")
+dev.off()
+dev.off()
 ```
