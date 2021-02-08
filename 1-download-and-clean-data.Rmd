@@ -174,7 +174,9 @@ raw_dat <- raw_dat %>%
                                 false = study_design))
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 table(raw_dat$study_design)
-
+# Foshee 1998 -- should be 7 and 7 in n_t and n_c
+# so the D calculation needs to be modified to say, if cluster + rct, 
+# n = n_t_group, n_c_group
 ```
 
 ### unique study id
