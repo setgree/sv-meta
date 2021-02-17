@@ -21,8 +21,9 @@ library(tidyr, warn.conflicts = F)
 
 source('./functions/dplot.R')
 
-# read in data and also add in two useful variables: 
-#  labels (for beahvior) and attitudes_behaviors
+# read in data, add in two useful variables: 
+# labels (for behavior) and attitudes_behaviors
+
 
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
@@ -78,11 +79,9 @@ summary(lm(formula = d ~ scale_type, data =  dat))
 "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
 ```{r study_type}
 # first crack at meta-analysis
-# this can all, obviously, be more elegant -- consult with JH
-initial_meta <-
-  robust(x = rma(yi = d, vi = var_d, data = dat),
-         cluster = dat$unique_study_id)
-initial_meta
+
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_study_id)
 
 # what does grouping by study and then slicing do to the results?
 dat_grouped <- dat %>%
@@ -165,25 +164,20 @@ robust(rma(yi = d, vi = var_d, data = rct_behavioral), cluster = rct_behavioral$
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 ```{r behavioral_over_time}
-#TODO: 021621 i stopped here, figure out how to do split %>% map here
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_study_id)
 
-no_delay_dat <- dat %>% 
-  filter(delay == 0)
-delay_dat <- dat %>%
-  filter(delay > 0)
-summary(lm(formula = d ~ scale_type, data =  delay_dat))
-summary(lm(formula = d ~ scale_type, data =  no_delay_dat))
-# in general, delayed results are smaller. this is crude and needs revisiting
-summary(lm(formula = d ~ delay, data = dat))
-# don't knwo what to make of this
-robust(x = rma(yi = d, vi = var_d, data = no_delay_dat), 
-       cluster = no_delay_dat$unique_study_id)
+behavioral_data %>% 
+  split(as.factor(behavioral_data$delay > 0)) %>%
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
 
-robust(x = rma(yi = d, vi = var_d, data = delay_dat), 
-       cluster = delay_dat$unique_study_id)
+# declines by about half
+dat %>% 
+  split(as.factor(dat$delay > 0)) %>%
+  map(.f = ~summary(lm(.x$d ~ .x$scale_type)))
+# in general, delayed results are smaller. this is crude and needs revisiting
 
 ```
 
@@ -207,11 +201,14 @@ robust(rma(yi = d, vi = var_d, data =  no_delay_behavior), cluster = no_delay_be
 
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
 ```{r perpetration outcomes}
-rct_perp <- rct_behavioral %>%
-  filter(type_of_behavior == 'perpetration')
-robust(rma(yi = d, vi = var_d, data =  rct_perp), cluster = rct_perp$unique_study_id)
+
+rct_behavioral %>%
+  split(rct_behavioral$type_of_behavior) %>%
+  map(.f = ~robust(rma(yi = .x$d, vi = .x$var_d), 
+                   cluster = .x$unique_study_id))
 # still about 0.1
 # TODO: these _all_ have delays. maybe something like delay > 1 month?
+rct_perp <- rct_behavioral %>% filter(type_of_behavior == 'perpetration')
 summary(lm(formula = d ~ delay, data = rct_perp))
 #...kind of not really any clear relationship?
 rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) + 
@@ -225,6 +222,7 @@ range(rct_perp$d); mean(rct_perp$d)
 ```
 * Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
 ```{r}
+# TODO: REDO
 summary(lm(formula = d ~ scale_type, data = rcts_and_quasi))
 rcts_and_quasi_delay <- rcts_and_quasi %>% 
   filter(delay > 0)
@@ -239,7 +237,7 @@ summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_no_delay))
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
 
 ```{r}
-
+# TODO: reformat this whole thing
 has_both <- dat %>% 
   filter(attitudes_behaviors == 0) %>%
   group_by(unique_study_id, scale_type) %>%
@@ -251,8 +249,7 @@ has_both <- dat %>%
 cor.test(x = has_both$mean_d[has_both$scale_type == 'attitudes'], 
          y = has_both$mean_d[has_both$scale_type == 'behavior'])
 
-# try pivot wider
-# JH -- can I get a hand with this?
+# alternative is pivot_wider
 has_both_two <- has_both %>% 
   pivot_wider(id_cols = c(author, year, paper_title, unique_study_id, study_design, labels),
               names_from = scale_type, 
@@ -295,7 +292,7 @@ dplot(condense = T)
 # I had really thought there was more of a relationship
 dplot(condense = F)
 # if we look just at rtcs and quasi experiments?
-dplot(sa_data = rcts_and_quasi)
+# dplot(sa_data = rcts_and_quasi)
 # What's going on here...are the outlier studies getting a lot of weight
 dat %>% filter(d <= 2 & d >= -2) %>% dplot(condense = T)
 
