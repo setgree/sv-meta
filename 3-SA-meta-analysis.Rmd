@@ -10,27 +10,31 @@ editor_options:
 ```{r setup, include=F, echo=F}
 rm(list = ls())
 library(broom)
-library(dplyr)
+library(dplyr, warn.conflicts = F)
 library(metafor, quietly = T)
 library(rmeta)
-library(ggplot2)
-library(ggrepel)
-library(stringr)
-library(tidyr)
+library(ggplot2, warn.conflicts = F)
+library(ggrepel, warn.conflicts = F)
+library(purrr)
+library(stringr, warn.conflicts = F)
+library(tidyr, warn.conflicts = F)
 
 source('./functions/dplot.R')
 
 # read in data and also add in two useful variables: 
 #  labels (for beahvior) and attitudes_behaviors
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
-  select(unique_study_id, scale_type, everything()) %>% 
+dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+  select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
   group_by(unique_study_id) %>%
-  mutate(attitudes_behaviors = case_when(
-    all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-    scale_type == 'attitudes' ~ 1,
-    scale_type == 'behavior' ~ 2)) %>% 
+  mutate(
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2
+    )
+  ) %>%
   ungroup()
 
 
@@ -45,8 +49,10 @@ summary(lm(formula = se_d ~ d, data =  dat))
 summary(lm(formula = d ~ se_d, data =  dat))
 
 # This is less of a relationship than I (Seth) expected;
-# Roni is not very surprised because public health is in general less p-hacked than psych
-# JH agrees and there's an interesting point about not going for flashy journals
+# Roni is not very surprised because public health is 
+# in general less p-hacked than psych
+# JH agrees and there's an interesting point about
+# not going for flashy journals
 
 # how about the overall relationship between lab/field and d? 
 summary(lm(formula = d ~ lab_field, data =  dat)) 
@@ -61,8 +67,9 @@ summary(lm(formula = d ~ study_design, data =  dat))
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 # that is a substantial decline
 
-# new variable for whether a study has attitudes, behaviors, or both (used later)
-dat <- dat %>% 
+# new variable for whether a study has attitudes,
+# behaviors, or both (used later)
+# dat <- dat %>% # why did I leave this blank
 
 ```
 
@@ -72,18 +79,27 @@ dat <- dat %>%
 ```{r study_type}
 # first crack at meta-analysis
 # this can all, obviously, be more elegant -- consult with JH
-initial_meta <- robust(x = rma(yi = d, vi = var_d, data = dat), cluster = dat$unique_study_id); initial_meta
+initial_meta <-
+  robust(x = rma(yi = d, vi = var_d, data = dat),
+         cluster = dat$unique_study_id)
+initial_meta
 
 # what does grouping by study and then slicing do to the results?
 dat_grouped <- dat %>%
   group_by(unique_study_id, scale_type) %>%
-  mutate(mean_d = mean(d),
-         mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
+  mutate(
+    mean_d = mean(d),
+    mean_var_d = mean(var_d),
+    mean_se_d = mean(se_d)
+  ) %>%
   slice(1)
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped), cluster = dat_grouped$unique_study_id)
+# if we're doing this all throughout, it'll be a lot easier
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
+       cluster = dat_grouped$unique_study_id)
 # once we've already grouped by study_id, whatdo we need to cluster?
-grouped_meta <- rma(yi = d, vi = var_d, data = dat_grouped); grouped_meta # basically the same
+rma(yi = d, vi = var_d, data = dat_grouped)
+
 # these are very similar. How about not grouping by scale_type?
 
 dat_grouped_two <- dat %>%
@@ -92,22 +108,16 @@ dat_grouped_two <- dat %>%
          mean_var_d = mean(var_d),
          mean_se_d = mean(se_d)) %>%
   slice(1)
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two), cluster = dat_grouped_two$unique_study_id)
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
+  cluster = dat_grouped_two$unique_study_id)
 # again, very similar.Consult with group
 
-
-# by study type?
-rcts <- dat %>% filter(study_design == 'rct')
-robust(x = rma(yi = d, vi = var_d, data = rcts), cluster = rcts$unique_study_id)
-
-quasis <- dat %>% filter(study_design == 'quasi-experimental')
-robust(x = rma(yi = d, vi = var_d, data = quasis), cluster = quasis$unique_study_id)
-
-rcts_and_quasi <- dat %>% filter(study_design == 'rct' | study_design == 'quasi-experimental')
-robust(x = rma(yi = d, vi = var_d, data = rcts_and_quasi), cluster = rcts_and_quasi$unique_study_id)
-
-observational <- dat %>% filter(study_design == 'pre-post' | study_design == 'cross-sectional')
-robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observational$unique_study_id)
+dat %>% 
+  split(dat$study_design) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# map is beautiful once you get the hang of it
 
 ```
 
@@ -118,19 +128,17 @@ robust(x = rma(yi = d, vi = var_d, data = observational), cluster = observationa
 ```{r outcome_type}
 # let's talk about this -- what's the right way to filter by   behavior type? 
 # unique(dat$scale_name)
-behavioral_data <- dat %>% filter(scale_type == 'behavior')
-
-attitudes_data <- dat %>% filter(scale_type == 'attitudes')
-
-robust(x = rma(yi = d, vi = var_d, data = behavioral_data),
-       cluster = behavioral_data$unique_study_id)
-robust(x = rma(yi = d, vi = var_d, data = attitudes_data),
-       cluster = attitudes_data$unique_study_id)
+dat %>% 
+  split(dat$scale_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
 
 ### CATEGORIZE BEHAVIOR:
 # perpetration, victimization, intervention are the big three intervention measures. Also, there's involvement, I now see
 # unique(behavioral_data$scale_name)
-behavioral_data <- behavioral_data %>% mutate(
+behavioral_data <- dat %>% 
+  filter(scale_type == 'behavior') %>%
+  mutate(
   type_of_behavior = as.factor(case_when(
     str_detect(scale_name, 
                'perp|perpetration|agression|comitted') ~ 'perpetration',
@@ -157,6 +165,7 @@ robust(rma(yi = d, vi = var_d, data = rct_behavioral), cluster = rct_behavioral$
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 ```{r behavioral_over_time}
+#TODO: 021621 i stopped here, figure out how to do split %>% map here
 summary(lm(formula = d ~ scale_type, data =  dat)) 
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_study_id)
