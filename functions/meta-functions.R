@@ -1,15 +1,19 @@
 # WIP
 sa_meta <- function(data = dat, dv = d, iv = var_d, condense = T, ){
- # fill in stuff about  
+ # fill in stuff about robust
+# use JH's code as a base
 }
 
-print(summary(lm(formula = d ~ se_d, data = dat)))
-
-sum_lm <- function(dataset, dv, iv) {
-  print(summary(lm(formula = dv ~ iv, data = dataset)))
+sum_lm <- function(dataset, y = d, x = se_d) {
+  y <- dplyr::enexpr(y)
+  x <- dplyr::enexpr(x)
+  print(summary(lm(formula = as.formula(paste(y, '~', x)), data = dataset)))
 }
-sum_lm(dataset = dat, dv = d, iv = se_d)
-# there's something interesting about why this doesn't work
+
+dat %>%
+  sum_lm()
+
+?# there's something interesting about why this doesn't work
 
 print(summary(lm(formula = d ~ se_d, data = dat))) # doesn't work
 print(summary(lm(formula = dat$d ~ dat$se_d, data = dat)))
