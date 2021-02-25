@@ -28,11 +28,11 @@ drive_download("Primary Prevention Meta 2020",
 ```{r clean_data}
 raw_dat <- read.csv('./data/sa_meta_data.csv')
 # drop redline studies and add unique paper ID
-raw_dat <- raw_dat %>% 
-  fill(paper_title) %>% 
-  filter(!is_red %in% c("#ff0000", "#ea4335"))  %>%  # in case multiple red cols 
-  group_by(paper_title) %>% 
-  mutate(first_line = row_number() == 1) %>% 
+raw_dat <- raw_dat %>%
+  fill(paper_title) %>%
+  filter(!is_red %in% c("#ff0000", "#ea4335"))  %>%  # in case multiple red cols
+  group_by(paper_title) %>%
+  mutate(first_line = row_number() == 1) %>%
   ungroup() %>%
   mutate(unique_paper_id = cumsum(first_line))
 
@@ -87,7 +87,7 @@ which(raw_dat$ctrl_sd == "") # double-checked these, should double-check before 
 raw_dat$ctrl_sd <- gsub(pattern = 'no.sd', replacement = NA, x = raw_dat$ctrl_sd)
 raw_dat$ctrl_sd <- gsub(pattern = '-', replacement = NA, x = raw_dat$ctrl_sd)
 ## Before convert to numeric,check which  will be converted to NA "by coercion" 
-which(is.na(as.numeric(raw_dat$ctrl_sd)) != is.na(raw_dat$ctrl_sd)) # ok none
+which(is.na(as.numeric(raw_dat$ctrl_sd)) != is.na(raw_dat$ctrl_sd)) # lots!
 # note: if there are some, re-download the data
 raw_dat$ctrl_sd <- as.numeric(raw_dat$ctrl_sd)
 
@@ -213,10 +213,6 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 There's a lot more cleaning to do, but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 Also must return to: 
-
-* check the studies where no.sd is written to double-check if they're really null
-TRANSFERRED TO ASANA * all the other stuff I put on slack
-DONE * log odds ratio and odds ratios, see if we can't just do a d_i_p; 
 
 For now, save as clean data and start the Cohen's D script
 ```{r save_clean_data}
