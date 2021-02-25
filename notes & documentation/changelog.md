@@ -38,14 +38,14 @@ got organized (put everything into asana)
 * That will go next to , or in addition to, a simple X = attitudes D and Y = behavior D plot.
 * last but not least is a forest plot of each study but...i have to learn how to do that.
 
-### 2020-01-19 
+### 2021-01-19 
 * Welcome back after 3 weeks off 
 * Got a lot further towards complete plots, which I feel good about
 * The forest plot with one attitude, one behavior eludes me
 * But I think a ggplot forest plot is the way to go because I won't be fiddling in the dark so much
 * Just now fixed the forest plot so it's one *per paper* rather than one per study
 
-### 2020-02-07
+### 2021-02-07
 * I have been reading papers, not as well as I might; I forgot to record notes last time
 * not sure what to make of Foshee. the number of schools is few; the results reported in the tables and the text make it seem like nothing happened (esp. not behaviorally) and also the baseline levels of SV are, this is impolite to say but incredibly high for 7th and 8th graders (are most of them really active romantically at all?); then the follow-ups find large persistent results. hmm
   * in light of this, make sure the Ns are correct for cluster > 10 studies -- still need N to be number of groups and not
@@ -57,3 +57,20 @@ got organized (put everything into asana)
 &
 > This evaluation on two different campuses highlights that there are important distinctions to be made in terms of who it works for and how— in this case, how it works differently for women and men, how it works differently between campuses, and how it works differently by gender between campuses. This is an important lesson for the prevention field, which often wants one-time, low-resource, prevention tools that can easily apply to many communities. Social change efforts for problems as complex as sexual and relationship violence will require more. (p. 179). 
 I also note the lack of behavioral interventions.
+
+### 2021-02-17 
+* read some studies; notes inline
+*  lot of reformatting and cleaning using Rstudio built-in stuff
+* replaced a lot of messy repetitive code with `map` which I'm stoked about
+* began the process of making a meta function
+
+### 2021-02-18
+* fixed `lm_sum()` with JH's help
+
+### 2021-02-19
+* organizational stuff (folder structure &c.)
+* worked a bit on the robust meta function
+
+### 2021-02-24
+* re-ran the first two scripts and notice a lot of stuff that needs adjusting once we review all studies
+* I think I fixed the cohen's D `case_when` n_t_groups thing but maybe there's a need for more complex logic e.g. `case_when(study_design = 'rct' & !is.na(n_t_group) ~` as opposed to just ~is.na(n_t_group)`.  I"m honeslty happy with this simplified version and just keeping everything group-based SEs when the assignment is at the group level but maybe that's not right.
