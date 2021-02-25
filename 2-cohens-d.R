@@ -20,15 +20,21 @@ source('./functions/var_d_calc.R')
 # note: if this fails for you, check that the inputs are of the righ type
 # e.g. eff_type != 'd_i_p.'
 dat_clean <- dat %>%
-  mutate(d = mapply(FUN = d_calc, stat_type = eff_type, stat =  u_s_d, 
-                    sample_sd = ctrl_sd, 
-                    n_t = n_t_post, n_c = n_c_post)) %>%
+  mutate(d = case_when(
+    !is.na(n_t_group) ~ mapply(
+      FUN = d_calc, stat_type = eff_type, stat =  u_s_d, 
+      sample_sd = ctrl_sd, 
+      n_t = n_t_group, n_c = n_c_group),
+    is.na(n_t_group) ~mapply(
+      FUN = d_calc, stat_type = eff_type, stat =  u_s_d, 
+      sample_sd = ctrl_sd, 
+      n_t = n_t_post, n_c = n_c_post))) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
   mutate(var_d = mapply(FUN = var_d_calc, d = d, 
                         n_t = n_t_post, n_c = n_c_post)) %>%
   mutate(se_d = sqrt(var_d))
 
-# remove impossible values: basically take the inverse of these changes
+# removeimpossible values: basically take the inverse of these changes
 dat_cleaned <- dat_clean %>%
   filter(d != -Inf) %>% # these are because of log negative numbers
   filter(!is.na(d)) %>% # these need to be looked at
@@ -39,11 +45,10 @@ dat_cleaned <- dat_clean %>%
 # (the dataset that's just the stuff removed above): look at it
 studies_to_check <- setdiff(dat_clean, dat_cleaned)
 
-# in total,34 rows removed -- need to check these!! *after Roni has chcked studies
-sum(dat_cleaned$var_d == 0) # 1, now that we're not doing clusters
+# in total, 40 rows removed -- need to check these!! *after Roni has chcked studies
+sum(dat_cleaned$var_d == 0) # 0
 
 sum(dat_cleaned$var_d > 10) # 0 now
-
 
 saveRDS(object = dat_cleaned, file = './data/sa_meta_data_for_analysis.rds')
 
