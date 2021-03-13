@@ -20,7 +20,7 @@ library(stringr, warn.conflicts = F)
 library(tidyr, warn.conflicts = F)
 
 source('./functions/dplot.R')
-
+source('./functions/sum_lm.R')
 # read in data, add in two useful variables: 
 # labels (for behavior) and attitudes_behaviors
 
@@ -222,16 +222,20 @@ range(rct_perp$d); mean(rct_perp$d)
 ```
 * Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
 ```{r}
-# TODO: REDO
-summary(lm(formula = d ~ scale_type, data = rcts_and_quasi))
-rcts_and_quasi_delay <- rcts_and_quasi %>% 
-  filter(delay > 0)
 
-rcts_and_quasi_no_delay <- rcts_and_quasi %>% 
-  filter(delay == 0)
+rcts_and_quasi <- dat %>% 
+  filter(study_design == 'rct' | study_design == 'quasi-experimental')  %>%
+  mutate(delayed_outcome = as.factor(delay > 0))
 
-summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_delay))
-summary(lm(formula = d ~ scale_type, data = rcts_and_quasi_no_delay))
+# overall effect size difference between attitudes and behaviors?
+rcts_and_quasi %>%
+  sum_lm(d, scale_type)
+
+rcts_and_quasi %>% 
+  group_split(delayed_outcome) %>% 
+  # split(rcts_and_quasi$delayed_outcome) %>% 
+  map(.f = ~sum_lm(dataset = .x, y = d, x = scale_type))
+# TODO BLARGH why is it so hard to rename the dataframes in a list
 ```
 
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
