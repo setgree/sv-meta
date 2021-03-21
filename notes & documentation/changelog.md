@@ -82,3 +82,6 @@ I also note the lack of behavioral interventions.
 ### 2021-03-12 
 * i did not make any progress on the renaming of the dataframes but I think this will be a relatively easy fix (ask Reka maybe?); got distracted away from the ggplot forest graph when I saw something I'd been neglecting
 * Has it really been so long since I last worked on this? Perhaps I forgot to note some stuff. But no, I think I've neglected the coding
+
+### 2021-03-20 
+few cleaning things; next up is seriously looking at the studies that get excluded by the cohens do script (there's something strange about one of the studies not having a Var_d where it should)
