@@ -38,6 +38,7 @@ raw_dat <- raw_dat %>%
 
 # studies where coder is blank?
 tibble(raw_dat[is.na(raw_dat$coder),])
+#' TODO: does this matter?
 
 # drop team-internal stuff 
 colnames(raw_dat)
@@ -144,9 +145,13 @@ raw_dat <- raw_dat %>%
   mutate(u_s_d = as.numeric(u_s_d)) %>%
   mutate(anticipated_direction = as.numeric(anticipated_direction))
 warnings() # gotta look at these again
+no_anticipation <- raw_dat %>% filter(is.na(anticipated_direction))
+# fix lab/field; I made a comment abou this one study  
+#(Foshee 2004 but it's not really that study, so take it out for now)
 
-# fix lab/field
+raw_dat <- raw_dat %>% filter(!is.na(anticipated_direction))
 
+# check lab/field variable
 unique(raw_dat$lab_field)
 sum(is.na(raw_dat$lab_field))
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)

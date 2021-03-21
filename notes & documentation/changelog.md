@@ -74,3 +74,11 @@ I also note the lack of behavioral interventions.
 ### 2021-02-24
 * re-ran the first two scripts and notice a lot of stuff that needs adjusting once we review all studies
 * I think I fixed the cohen's D `case_when` n_t_groups thing but maybe there's a need for more complex logic e.g. `case_when(study_design = 'rct' & !is.na(n_t_group) ~` as opposed to just ~is.na(n_t_group)`.  I"m honeslty happy with this simplified version and just keeping everything group-based SEs when the assignment is at the group level but maybe that's not right.
+
+
+### 2021-03-07
+* addressed some questions about the data
+
+### 2021-03-12 
+* i did not make any progress on the renaming of the dataframes but I think this will be a relatively easy fix (ask Reka maybe?); got distracted away from the ggplot forest graph when I saw something I'd been neglecting
+* Has it really been so long since I last worked on this? Perhaps I forgot to note some stuff. But no, I think I've neglected the coding
