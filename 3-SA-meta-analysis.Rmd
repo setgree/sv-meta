@@ -197,18 +197,23 @@ behavioral_data %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r}
-# so we need a dummy variable for experimental or quasi_experimental
-# comparing study designs overall
-sum_lm(behavioral_data, d, study_design)
-# TODO: this whole chunk was mistaken, I think, and should be rewritten.
-
+behavioral_data %>% 
+  mutate(rct_and_quasi_design = if_else(
+    study_design %in% c('pragmatic rct', 'quasi-experimental', 'rct'), TRUE,
+    FALSE)) %>%
+  split(.$rct_and_quasi_design == TRUE) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) %>%
+# TODO: this is a stat. I think what we're looking for is a double-map. That or 
+# something a lot more inelegant.
+  
 ```
 
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
 ```{r perpetration outcomes}
 
 rct_behavioral %>%
-  split(rct_behavioral$behavior_type) %>%
+  split(.$behavior_type) %>%
   map(.f = ~robust(rma(yi = .x$d, vi = .x$var_d), 
                    cluster = .x$unique_study_id))
 # still about 0.1
