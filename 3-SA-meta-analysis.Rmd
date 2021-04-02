@@ -45,9 +45,9 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 ```{r initial_exploration}
 
-#first, is there a relationship between effect size and se?
-summary(lm(formula = se_d ~ d, data =  dat))
-summary(lm(formula = d ~ se_d, data =  dat))
+# first, is there a relationship between effect size and se?
+# `sum_lm(dat, d, se_d)` = `summary(lm(formula = d ~ se_d, data =  dat))`
+sum_lm(dat, d, se_d)
 
 # This is less of a relationship than I (Seth) expected;
 # Roni is not very surprised because public health is 
@@ -55,22 +55,19 @@ summary(lm(formula = d ~ se_d, data =  dat))
 # JH agrees and there's an interesting point about
 # not going for flashy journals
 
-# how about the overall relationship between lab/field and d? 
-summary(lm(formula = d ~ lab_field, data =  dat)) 
 
+# how about the overall relationship between lab/field and d? 
+sum_lm(dat, d, lab_field)
+# this is equivalent to `
 # essentially no difference at all
 
 # study type?
-summary(lm(formula = d ~ study_design, data =  dat)) 
+sum_lm(dat, d, study_design)
 # yep, meaningful relationship
 
 # scale type?
-summary(lm(formula = d ~ scale_type, data =  dat)) 
+sum_lm(dat, d, scale_type)
 # that is a substantial decline
-
-# new variable for whether a study has attitudes,
-# behaviors, or both (used later)
-# dat <- dat %>% # why did I leave this blank
 
 ```
 
@@ -83,24 +80,21 @@ summary(lm(formula = d ~ scale_type, data =  dat))
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 
-# what does grouping by study and then slicing do to the results?
+# group by study AND scale_type
 dat_grouped <- dat %>%
   group_by(unique_study_id, scale_type) %>%
-  mutate(
-    mean_d = mean(d),
-    mean_var_d = mean(var_d),
-    mean_se_d = mean(se_d)
-  ) %>%
+  mutate(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
   slice(1)
 # if we're doing this all throughout, it'll be a lot easier
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
        cluster = dat_grouped$unique_study_id)
-# once we've already grouped by study_id, whatdo we need to cluster?
 rma(yi = d, vi = var_d, data = dat_grouped)
+# once we've already grouped by study_id, clustering changes the SE by just 0.0001
 
-# these are very similar. How about not grouping by scale_type?
-
+# How about not grouping by scale_type?s
 dat_grouped_two <- dat %>%
   group_by(unique_study_id) %>%
   mutate(mean_d = mean(d),
@@ -110,13 +104,14 @@ dat_grouped_two <- dat %>%
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
   cluster = dat_grouped_two$unique_study_id)
-# again, very similar.Consult with group
+# again, very similar.Consult with group.
 
+# meta-analyze each of the study design types separately
 dat %>% 
   split(dat$study_design) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-# map is beautiful once you get the hang of it
+
 
 ```
 
