@@ -104,15 +104,15 @@ dat_grouped_two <- dat %>%
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
   cluster = dat_grouped_two$unique_study_id)
-# again, very similar.Consult with group.
+# again, very similar.Consult with group. What's our one true way of doing this -- 
+# cluster on unique_study_id, have one outcome per study as default?
+# Aren't those two redundant...this is hard
 
 # meta-analyze each of the study design types separately:
 dat %>% 
   split(dat$study_design) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-
-
 ```
 
 ### By outcome type:
@@ -141,7 +141,10 @@ behavioral_data <- dat %>%
     str_detect(scale_name, 'bystander|Observing') ~ 'bystander',
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
     TRUE ~ 'other')))
-# TODO: this was crude, because the scale_names weren't written with this analysis in mind. I think we should rewrite each of the scale names to clearly state which of the four categories it falls into, and I will discuss this with JH & Roni when we next speak. Anyway:
+# TODO: this was crude, because the scale_names weren't written with this analysis in mind. 
+#I think we should rewrite each of the scale names to clearly state which of the
+# four categories it falls into, and I will discuss this with JH & Roni 
+# when we next speak. Anyway:
 
 sum_lm(behavioral_data, d, behavior_type)
 # on average, interventions seem to be more effective at reducing victimization than perpetration, 
@@ -173,16 +176,18 @@ sum_lm(dat, d, scale_type)
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_study_id)
 
+# first, meta-analysis with a split for delay, yes, no
 behavioral_data %>% 
   split(as.factor(behavioral_data$delay > 0)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-# declines by about half
+
+# declines by about half. now as a regression on the same split
 dat %>% 
   split(as.factor(dat$delay > 0)) %>%
   map(.f = sum_lm,
       d, scale_type)
-# in general, delayed results are smaller. this is crude and needs revisiting
+# in general, delayed results are smaller.
 
 # TODO: rewrite robust(rma) as robust_rma to have this work w/othe ~ and .x
 # low priority
