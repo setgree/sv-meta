@@ -196,7 +196,7 @@ behavioral_data %>%
 * Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
-```{r}
+```{r behavioral_outcomes_ranodmization_short_term_long_term}
 behavioral_data %>% 
   mutate(rct_and_quasi_design = if_else(
     study_design %in% c('pragmatic rct', 'quasi-experimental', 'rct'), TRUE,

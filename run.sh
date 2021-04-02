@@ -8,5 +8,5 @@ Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd',
 Rscript 2-cohens-d.R
 
 # step 3: paper stats
-Rscript -e "rmarkdown::render('./3-SA-meta-analysis.Rmd', 
+Rscript -e "rmarkdown::render('./3-sa-meta.Rmd', 
   output_dir = './results', clean = T)"

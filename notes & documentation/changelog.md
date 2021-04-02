@@ -85,3 +85,6 @@ I also note the lack of behavioral interventions.
 
 ### 2021-03-20 
 few cleaning things; next up is seriously looking at the studies that get excluded by the cohens do script (there's something strange about one of the studies not having a Var_d where it should)
+
+### 04-02 
+I took a close look at the ggplot forest plot code and I think it's going to be pretty easy. Right now I'm trying to make the `behavioral_outcomes_ranodmization_short_term_long_term` chunk elegant  (in `3-SA-meta`) but it might just require creating four separate datasets. Maybe I can map twice? What I had there was redundant. also renamed that file. overall lot of tinkering but it's coming together. Still a lot of todos, studies to read, effect sizes to re-examine. 
