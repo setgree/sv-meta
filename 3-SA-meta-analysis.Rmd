@@ -183,7 +183,7 @@ behavioral_data %>%
        cluster = .x$unique_study_id))
 
 # declines by about half. now as a regression on the same split
-dat %>% 
+behavioral_data %>% 
   split(as.factor(dat$delay > 0)) %>%
   map(.f = sum_lm,
       d, scale_type)
@@ -200,15 +200,7 @@ dat %>%
 # so we need a dummy variable for experimental or quasi_experimental
 # comparing study designs overall
 sum_lm(behavioral_data, d, study_design)
-
-# just within studies with delayed outcomes?
-delay_behavior <- behavioral_data %>% filter(delay > 0)
-no_delay_behavior <- behavioral_data %>% filter(delay == 0)
-summary(lm(formula = d ~ study_design, data =  no_delay_behavior))
-summary(lm(formula = d ~ study_design, data =  delay_behavior))
-# what does this subset like overall
-robust(rma(yi = d, vi = var_d, data = delay_behavior), cluster = delay_behavior$unique_study_id)
-robust(rma(yi = d, vi = var_d, data =  no_delay_behavior), cluster = no_delay_behavior$unique_study_id)
+# TODO: this whole chunk was mistaken, I think, and should be rewritten.
 
 ```
 
