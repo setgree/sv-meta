@@ -203,8 +203,10 @@ behavioral_data %>%
     FALSE)) %>%
   split(.$rct_and_quasi_design == TRUE) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) %>%
-# TODO: this is a stat. I think what we're looking for is a double-map. That or 
+       cluster = .x$unique_study_id))
+  
+# TODO: this is a single one of the things we want.
+# I think what we're looking for is a double-map. That or 
 # something a lot more inelegant.
   
 ```
