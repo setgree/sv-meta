@@ -47,7 +47,7 @@ got organized (put everything into asana)
 
 ### 2021-02-07
 * I have been reading papers, not as well as I might; I forgot to record notes last time
-* not sure what to make of Foshee. the number of schools is few; the results reported in the tables and the text make it seem like nothing happened (esp. not behaviorally) and also the baseline levels of SV are, this is impolite to say but incredibly high for 7th and 8th graders (are most of them really active romantically at all?); then the follow-ups find large persistent results. hmm
+* not sure what to make of Foshee. the number of schools is few; the results reported in the tables and the text make it seem like nothing happened (esp. not behaviorally) and also the baseline levels of SV are -- this is impolite to say -- incredibly high for 7th and 8th graders (are most of them really active romantically at all?); then the follow-ups find large persistent results. hmm
   * in light of this, make sure the Ns are correct for cluster > 10 studies -- still need N to be number of groups and not
 * Banyard 2007: there's an easy explanation for why the results seem to get a lot bigger as time goes on: men didn't respond to the follow-up survey. We don't get attrition reported by treatment condition and gender but presumably there's something there.
 ### 2020-02-208

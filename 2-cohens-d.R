@@ -58,9 +58,11 @@ dat_cleaned <- dat_clean %>%
   filter(var_d != 0) # this is to address a warning from metafor;
 
 # (the dataset that's just the stuff removed above): look at it
-studies_to_check <- setdiff(dat_clean, dat_cleaned)
+studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
+  select(author, year, paper_title, eff_type, d, var_d, 
+         n_t_post, n_c_post, unique_paper_id, intervention_name)
 
-# in total, 40 rows removed -- need to check these!! *after Roni has chcked studies
+# in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_cleaned$var_d == 0) # 0
 
 sum(dat_cleaned$var_d > 10) # 0 now
