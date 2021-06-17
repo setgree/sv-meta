@@ -39,15 +39,22 @@ dat_clean <- dat %>%
     )
   )) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
-  mutate(var_d = mapply(
-    FUN = var_d_calc,
-    d = d,
-    n_t = n_t_post,
-    n_c = n_c_post
-  )) %>%
+  mutate(var_d = case_when(
+    !is.na(n_t_group) ~ mapply(
+      FUN = var_d_calc,
+      d = d,
+      n_t = n_t_group,
+      n_c = n_c_group),
+    is.na(n_t_group) ~ mapply(
+      FUN = var_d_calc,
+      d = d,
+      n_t = n_t_post,
+      n_c = n_c_post)
+    )
+    ) %>%
   mutate(se_d = sqrt(var_d))
-# 12 warnings; warnings()
-# it's just one study (Taylor 2016), half of whose values are negative odds ratios
+# 6 warnings; warnings()
+# it's mostly one study (Taylor 2016), half of whose values are negative odds ratios
 # (not a thing) and that are duplicative of the regression results so I pinklined them
 # remove impossible values: basically take the inverse of these changes
 dat_cleaned <- dat_clean %>%
@@ -60,7 +67,9 @@ dat_cleaned <- dat_clean %>%
 # (the dataset that's just the stuff removed above): look at it
 studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
   select(author, year, paper_title, eff_type, d, var_d, 
-         n_t_post, n_c_post, unique_paper_id, intervention_name)
+         n_t_post, n_c_post, n_t_group, n_c_group,
+         unique_paper_id, intervention_name,
+         study_design)
 
 # in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_cleaned$var_d == 0) # 0
