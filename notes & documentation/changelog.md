@@ -88,3 +88,6 @@ few cleaning things; next up is seriously looking at the studies that get exclud
 
 ### 04-02 
 I took a close look at the ggplot forest plot code and I think it's going to be pretty easy. Right now I'm trying to make the `behavioral_outcomes_ranodmization_short_term_long_term` chunk elegant  (in `3-SA-meta`) but it might just require creating four separate datasets. Maybe I can map twice? What I had there was redundant. also renamed that file. overall lot of tinkering but it's coming together. Still a lot of todos, studies to read, effect sizes to re-examine. 
+
+### 06-18 
+I've been working on this a fair bit this week, reading papers and today some cleaning. a lot of it was in the primary prevention sheet itself but also some miscellany relating to how things were coded.
