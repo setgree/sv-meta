@@ -18,7 +18,7 @@ d_calc <- function(stat_type , stat, sample_sd , n_t, n_c){
   
   # unspecified null
   else if (stat_type == "unspecified null") {
-    d <- 0
+    d <- 0.01
   }
   
   # regression coefficient

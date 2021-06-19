@@ -12,6 +12,7 @@ editor_options:
 rm(list = ls())
 library(dplyr, warn.conflicts = FALSE)
 library(googledrive)
+library(readr)
 library(tidyr)
 options(scipen = 99)
 ```
@@ -27,7 +28,8 @@ drive_download("Primary Prevention Meta 2020",
 
 
 ```{r clean_data}
-raw_dat <- read.csv('./data/sa_meta_data.csv')
+raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA"))
+readr::problems(raw_dat)
 # drop redline studies and add unique paper ID
 raw_dat <- raw_dat %>%
   fill(paper_title) %>%
@@ -85,7 +87,7 @@ table(raw_dat$eff_type, useNA = 'ifany') # so 15 NAs. think these are nulls
 ```
 
 
-#' now fix the SDs and study designs
+#' now fix the Ns and anticipated directions and such
 
 
 ```{r fix_vars }
@@ -103,16 +105,16 @@ raw_dat$ctrl_sd <- gsub(pattern = '-', replacement = NA, x = raw_dat$ctrl_sd)
 table(raw_dat$ctrl_sd)
 
 #' Before convert to numeric,check which  will be converted to NA "by coercion" 
-which(is.na(as.numeric(raw_dat$ctrl_sd))) != which(is.na(raw_dat$ctrl_sd))
+sum(which(is.na(as.numeric(raw_dat$ctrl_sd))) != which(is.na(raw_dat$ctrl_sd)))
 # as of 6/18/2021. there are no studies converted by coercion
 # note: if there are some, re-download the data
 raw_dat$ctrl_sd <- as.numeric(raw_dat$ctrl_sd)
-# as
 
 #' Convert all ctrl_SDs to 1 when Cohen's D is eff_type
 #' probably not strictly necessary but good practice to note this
 raw_dat <- raw_dat %>% 
-  mutate(ctrl_sd = case_when(eff_type == 'd' ~ 1, TRUE ~ ctrl_sd))
+  mutate(ctrl_sd = if_else(condition = (eff_type == 'd'),
+                           true = 1, false = ctrl_sd))
 
 ## are there any ctrl_sds that are NA when that's going to break the calculator?
 na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
@@ -120,63 +122,73 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
     select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
-         study_design, scale_name)
-
+         study_design, scale_name, is_red)
+## TODO: every one of the above studies needs a closer look;
+# plus the redline thing isn't workign consistently, some studies are coming through as
+# is_red = null
 ## Looking at the data more closely, a lot of these look like they should have
 ## been reported as nulls.  So we're going to call them all Nulls for now 
-## TODO: every one of the above studies needs a closer look
+
 
 # any studies where eff_type is just NA?
-na_effs <- raw_dat %>% filter(is.na(eff_type)) %>%
-    select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,
-         n_t_post, n_c_post, n_t_group, n_c_group,
-         unique_paper_id, intervention_name,
-         study_design, scale_name)
-
-#' NOTE: on 06/18/2021 I addressed all of the above studies and either 
-#' pinklined them (re: recommended for redline) or filled them in
-
+na_effs <- raw_dat %>% filter(is.na(eff_type)) # no, because 
+# on 06/18/2021 I addressed all of the above studies and either 
+# pinklined them (re: recommended for redline) or filled them in
+rm(na_effs)
 
 #' FOR NOW: drop all the messy stuff for now as we prepare for meta-analysis
 
-table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany') #10 NAs on 06/18 
-which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 15 -- there's one that
-# I believe is a mistake, should have been marked d_i_d based on context
-
-raw_dat <- raw_dat %>% 
-  filter(!is.na(eff_type))  %>%
-  filter(eff_type != 'null') %>%
-  filter(eff_type != 'unspecified null')
+table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany')  
+which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 0 as of 06/18
 table(raw_dat$eff_type)
-range(raw_dat$u_s_d, na.rm = T)
+range(raw_dat$u_s_d, na.rm = T) 
 
 ## change the cluster randomized var to be factors with an NA rather than a -
 raw_dat$cluster_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$cluster_type)
 
 ## make everything else we need numeric
+raw_dat$n_t_pre <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_pre)
+raw_dat$n_t_post <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_post)
+raw_dat$n_c_pre <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_pre)
+raw_dat$n_c_post <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_post)
+raw_dat$n_t_group <-  gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_group)
+raw_dat$n_c_group <-  gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_group)
+
+# class(raw_dat$n_c_post)
+# table(raw_dat$n_c_post)
+# table(raw_dat$n_t_pre)
 raw_dat <- raw_dat %>%
-  mutate(across(.cols = c(starts_with('n_')), .fns = as.numeric)) %>%
+    mutate(across(.cols = c(starts_with('n_')), .fns = as.numeric)) %>% 
   mutate(u_s_d = as.numeric(u_s_d)) %>%
   mutate(anticipated_direction = as.numeric(anticipated_direction))
-warnings() # gotta look at these again
-no_anticipation <- raw_dat %>% filter(is.na(anticipated_direction))
-# fix lab/field; I made a comment about this one study  
-#(Foshee 2004 but it's not really that study, so take it out for now)
-
-raw_dat <- raw_dat %>% filter(!is.na(anticipated_direction))
+# TODO: revisit these warnings
+na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |
+                                is.na(across(.cols = c(starts_with('n_'))))) %>%
+    select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,
+           n_t_pre, n_c_pre,
+         n_t_post, n_c_post, n_t_group, n_c_group,
+         unique_paper_id, intervention_name,
+         study_design, scale_name)
+# these are all fine -- enough info to calculate Cohen's D
+rm(na_vals)
 
 # check lab/field variable
 unique(raw_dat$lab_field)
 sum(is.na(raw_dat$lab_field))
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)
+```
 
 # fix study_design var
+
+
+```{study_design}
 raw_dat$study_design <- gsub(pattern = 'cross sectional', replacement = 'cross-sectional',  x = raw_dat$study_design)
 raw_dat$study_design <- gsub(pattern = 'prepost', replacement = 'pre-post',  x = raw_dat$study_design)
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 raw_dat <- raw_dat %>% 
-  select(-lab_or_field, -is_red)
+  select(-lab_or_field)
+# ADD IS_RED at the end
 
 # scale type
 raw_dat$scale_type <- as.factor(raw_dat$scale_type)
@@ -185,15 +197,20 @@ raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 ### add pragmatic rct designation
 ```{r pragmatic_rct}
 raw_dat$study_design <- as.character(raw_dat$study_design)
+table(raw_dat$study_design)
 raw_dat <- raw_dat %>%
   mutate(study_design = 
-           case_when(study_design == 'rct' & 
-                       !is.na(n_t_group) & 
-                       n_t_group + n_c_group < 10 ~ 'pragmatic rct',
-                     cluster_type == 'cluster randomized' &
-                       !is.na(n_t_group) &
-                       n_t_group + n_c_group < 10 ~ 'pragmatic rct',
+           case_when(!is.na(n_t_group) &
+                       study_design == 'rct' & 
+                       between(n_t_group + n_c_group, 3, 10) ~ 'pragmatic rct',
+                     !is.na(n_t_group) &
+                       study_design == 'rct' &
+                       n_t_group + n_c_group <= 3 ~ 'quasi-experimental',
+                     !is.na(n_t_group) &
+                       cluster_type == 'cluster randomized' &
+                       between(n_t_group + n_c_group, 3, 10) ~ 'pragmatic rct',
                      TRUE ~ study_design))
+
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 
@@ -238,7 +255,7 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ```
 
 
-There's a lot more cleaning to do -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
+There's a lot more cleaning that could be done -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 
 For now, save as clean data and start the Cohen's D script
 ```{r save_clean_data}

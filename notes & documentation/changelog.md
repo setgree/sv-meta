@@ -91,3 +91,6 @@ I took a close look at the ggplot forest plot code and I think it's going to be 
 
 ### 06-18 
 I've been working on this a fair bit this week, reading papers and today some cleaning. a lot of it was in the primary prevention sheet itself but also some miscellany relating to how things were coded.
+
+### 06-19 
+mostly data cleaning, made a few changes to the way Cohen's D is calculated (only RCTs need to have clustered SEs -- something we should eventually talk about -- but also, if we try to apply the variance of Cohen's D calculator to studies with just one control group, then variance will be zero and that doesn't count as evidence). Also am just calling all null/unspecified nulls -- things where we can't exactly figure out a point estimate but we know that it's not significant -- just 0.01. 

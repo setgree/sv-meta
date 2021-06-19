@@ -21,14 +21,14 @@ source('./functions/var_d_calc.R')
 # e.g. eff_type != 'd_i_p.'
 dat_clean <- dat %>%
   mutate(d = case_when(
-    !is.na(n_t_group) ~ mapply(
-      FUN = d_calc,
-      stat_type = eff_type,
-      stat =  u_s_d,
-      sample_sd = ctrl_sd,
-      n_t = n_t_group,
-      n_c = n_c_group
-    ),
+    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic rct') ~ 
+      mapply(
+        FUN = d_calc,
+        stat_type = eff_type,
+        stat =  u_s_d,
+        sample_sd = ctrl_sd,
+        n_t = n_t_group,
+        n_c = n_c_group),
     is.na(n_t_group) ~ mapply(
       FUN = d_calc,
       stat_type = eff_type,
@@ -53,9 +53,12 @@ dat_clean <- dat %>%
     )
     ) %>%
   mutate(se_d = sqrt(var_d))
-# 6 warnings; warnings()
-# it's mostly one study (Taylor 2016), half of whose values are negative odds ratios
-# (not a thing) and that are duplicative of the regression results so I pinklined them
+# 06/19 no more warnings!
+# warnings were mostly one study (Taylor 2016),
+# half of whose values are negative odds ratios (not a thing) and that are 
+# duplicative of the regression results so I pinklined them
+
+
 # remove impossible values: basically take the inverse of these changes
 dat_cleaned <- dat_clean %>%
   filter(d != -Inf) %>% # these are because of log negative numbers
@@ -66,10 +69,10 @@ dat_cleaned <- dat_clean %>%
 
 # (the dataset that's just the stuff removed above): look at it
 studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
-  select(author, year, paper_title, eff_type, d, var_d, 
+  select(author, year, paper_title, eff_type, d, var_d, u_s_d, ctrl_sd,
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
-         study_design)
+         study_design, scale_name, is_red)
 
 # in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_cleaned$var_d == 0) # 0
