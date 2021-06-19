@@ -201,17 +201,17 @@ Also make some just quasi-experimental because t=otherwise they really won't wor
 raw_dat$study_design <- as.character(raw_dat$study_design)
 table(raw_dat$study_design)
 raw_dat <- raw_dat %>%
-  mutate(study_design = 
-           case_when(!is.na(n_t_group) &
-                       study_design == 'rct' & 
-                       between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
-                     !is.na(n_t_group) &
-                       study_design == 'rct' &
-                       n_t_group + n_c_group <= 3 ~ 'quasi-experimental',
-                     !is.na(n_t_group) &
-                       cluster_type == 'cluster randomized' &
-                       between(n_t_group + n_c_group, 3, 10) ~ 'pragmatic rct',
-                     TRUE ~ study_design))
+  mutate(study_design = case_when(
+    !is.na(n_t_group) &
+      study_design == 'rct' &
+      n_t_group + n_c_group <= 3 ~ 'quasi-experimental',
+    !is.na(n_t_group) &
+      study_design == 'rct' & 
+      between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
+    !is.na(n_t_group) &
+      cluster_type == 'cluster randomized' &
+      between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
+    TRUE ~ study_design))
 
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
@@ -256,6 +256,15 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ```
 
+### is_red: loading?
+```{r is_red}
+raw_dat %>% filter(is_red == "Loading...")
+# TODO: make sure there are no rows that meet this condition
+
+raw_dat <- raw_dat %>% select(-is_red)
+
+
+```
 
 There's a lot more cleaning that could be done -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 
