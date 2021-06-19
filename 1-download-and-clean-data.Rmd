@@ -123,11 +123,11 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
          study_design, scale_name, is_red)
-## TODO: every one of the above studies needs a closer look;
-# plus the redline thing isn't workign consistently, some studies are coming through as
-# is_red = null
-## Looking at the data more closely, a lot of these look like they should have
-## been reported as nulls.  So we're going to call them all Nulls for now 
+## TODO: every one of the above studies needs a closer look; Fortunately they're all
+# either quasi-experimental or prepost (except for two from Foshee but that's just that)
+# the redline thing isn't working consistently, some studies are coming through as
+# is_red = 'loading' 
+# Probably a lot of these should have been reported as unspecified nulls
 
 
 # any studies where eff_type is just NA?
@@ -174,11 +174,12 @@ rm(na_vals)
 
 # check lab/field variable
 unique(raw_dat$lab_field)
-sum(is.na(raw_dat$lab_field))
+sum(is.na(raw_dat$lab_field)) # 0 as of 09/19
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 ```
 
 # fix study_design var
+and scale type
 
 
 ```{study_design}
@@ -195,6 +196,7 @@ raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 ```
 
 ### add pragmatic rct designation
+Also make some just quasi-experimental because t=otherwise they really won't work for calculating variance
 ```{r pragmatic_rct}
 raw_dat$study_design <- as.character(raw_dat$study_design)
 table(raw_dat$study_design)
@@ -202,7 +204,7 @@ raw_dat <- raw_dat %>%
   mutate(study_design = 
            case_when(!is.na(n_t_group) &
                        study_design == 'rct' & 
-                       between(n_t_group + n_c_group, 3, 10) ~ 'pragmatic rct',
+                       between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
                      !is.na(n_t_group) &
                        study_design == 'rct' &
                        n_t_group + n_c_group <= 3 ~ 'quasi-experimental',

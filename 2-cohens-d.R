@@ -29,27 +29,27 @@ dat_clean <- dat %>%
         sample_sd = ctrl_sd,
         n_t = n_t_group,
         n_c = n_c_group),
-    is.na(n_t_group) ~ mapply(
+     TRUE ~ mapply(
       FUN = d_calc,
       stat_type = eff_type,
       stat =  u_s_d,
       sample_sd = ctrl_sd,
       n_t = n_t_post,
-      n_c = n_c_post
-    )
-  )) %>%
+      n_c = n_c_post))) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
   mutate(var_d = case_when(
-    !is.na(n_t_group) ~ mapply(
-      FUN = var_d_calc,
-      d = d,
-      n_t = n_t_group,
-      n_c = n_c_group),
-    is.na(n_t_group) ~ mapply(
-      FUN = var_d_calc,
-      d = d,
-      n_t = n_t_post,
-      n_c = n_c_post)
+    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic rct') ~
+      mapply(
+        FUN = var_d_calc,
+        d = d,
+        n_c = n_c_group,
+        n_t = n_t_group),
+   TRUE  ~ 
+      mapply(
+        FUN = var_d_calc,
+        d = d,
+        n_t = n_t_post,
+        n_c = n_c_post)
     )
     ) %>%
   mutate(se_d = sqrt(var_d))
