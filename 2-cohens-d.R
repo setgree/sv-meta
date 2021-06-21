@@ -19,6 +19,8 @@ source('./functions/var_d_calc.R')
 
 # note: if this fails for you, check that the inputs are of the right type
 # e.g. eff_type != 'd_i_p.'
+which(is.na(dat$eff_type)) # TODO: remove this once we fix the redline thing
+# it's there because sometimes redline studies aren't marked that way in "is_red"
 dat_clean <- dat %>%
   mutate(d = case_when(
     !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic rct') ~ 
@@ -72,7 +74,7 @@ studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
   select(author, year, paper_title, eff_type, d, var_d, u_s_d, ctrl_sd,
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
-         study_design, scale_name)
+         study_design, scale_name, delay)
 
 # in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_cleaned$var_d == 0) # 0
