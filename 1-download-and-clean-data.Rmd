@@ -18,7 +18,7 @@ options(scipen = 99)
 ```
 
 ### Download most up to date dataset
-```{r download_data, eval=FALSE}
+```{r download_data}
 ## download sheet from google -----------------------------------
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020", 
@@ -265,7 +265,7 @@ raw_dat <- raw_dat %>% select(-is_red)
 
 ```
 
-There's more cleaning that could be done -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
+There's more cleaning that could be done -- All marked with TODOs in the above text, or in subsequent files -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 
 For now, save as clean data and start the Cohen's D script
 ```{r save_clean_data}

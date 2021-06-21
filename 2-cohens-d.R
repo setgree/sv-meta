@@ -76,29 +76,12 @@ studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
          unique_paper_id, intervention_name,
          study_design, scale_name, delay)
 
-# in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
+# As of 06/21 I think all of these should have been addressed
 sum(dat_cleaned$var_d == 0) # 0
+sum(between(dat_cleaned$d, -4.7, 4.7)) 
+# 507 which means that all our effect sizes fall within 
+# our predefined 'reasonable' range
 
 sum(dat_cleaned$var_d > 10) # 0 now
 
 saveRDS(object = dat_cleaned, file = './data/sa_meta_data_for_analysis.rds')
-
-
-#' all right so we have a lot of stuff to look at
-#' anything where D is greater than 4.7 or less than 4.7
-#' certainly anything where D is inf :) or missing or whatever
-#' Anything where Var D is missing
-#' We need to figure out what we're doing about these because our extant
-#' methods are going to be really weird with the low cluster studies being
-#' considered quasi-experimental. But, luckily, I think with the above code,
-#' and its generally much simpler syntax, we can add some case_when conditions
-#' and avoid purrr and tidyr, and the whole thing just makes a lot more sense
-#' to me
-
-
-#' NOTE for future reference: we have some weird values because of
-#' studies with 1 or 2 units assigned to treatment or control
-#' not doing clusters
-#' I think I fixed this with the pragmatic RCT designation
-
-#' ah well onto the analysis
