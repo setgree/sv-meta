@@ -97,3 +97,5 @@ mostly data cleaning, made a few changes to the way Cohen's D is calculated (onl
 
 ### 06-20 
 The cleaning is in good shape. There are 20 effect sizes that need a revisit for gleaning an effect size, and I can tell JH directly how to check for them. Or we can move on. Roni needs to review the pinklined studies. And I need to make a forest plot and write a few sections on methods.
+
+If we want to highlight a truly pioneering study I vote Lee 1987
