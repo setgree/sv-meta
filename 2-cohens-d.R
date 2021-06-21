@@ -72,7 +72,7 @@ studies_to_check <- dplyr::setdiff(dat_clean, dat_cleaned) %>%
   select(author, year, paper_title, eff_type, d, var_d, u_s_d, ctrl_sd,
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
-         study_design, scale_name, is_red)
+         study_design, scale_name)
 
 # in total, 27 rows removed -- need to check these!! *after Roni has chcked studies
 sum(dat_cleaned$var_d == 0) # 0

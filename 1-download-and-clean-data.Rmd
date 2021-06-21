@@ -47,9 +47,13 @@ tibble(raw_dat[is.na(raw_dat$coder),])
 colnames(raw_dat)
 raw_dat <- raw_dat %>% 
   select(-c(coder, page_number, comments, d, var_d, se_d, checked, checker_comment, first_line))
+```
 
-#' prepare Cohen's D calcs, making sure that inputs are all what the functions expect
+#' prepare Cohen's D calcs
 
+making sure that inputs are all what the functions expect: eff_type, cluster_type, and checking for NAs
+
+```{r standardizing_inputs}
 unique(raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'd.i.d', replacement = 'd_i_d', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'f.test', replacement = 'f_test', x = raw_dat$eff_type)
@@ -78,22 +82,16 @@ raw_dat$cluster_type <- gsub("^$|^ $", NA, raw_dat$cluster_type)
 
 ## how many of these are going to require non-standard procedures
 ## or potential re-doing of the recording
-table(raw_dat$eff_type, useNA = 'ifany') # so 15 NAs. think these are nulls
-# (Why isn't it useNA = T, whatevs)
-## I fixed the blank ones, notes in slack conversation with JH & Roni
-# sum(is.na(raw_dat$eff_type))
-# test_eff_types <- na.omit(raw_dat$eff_type)
-# table(test_eff_types)
+table(raw_dat$eff_type, useNA = 'ifany') # there were 15 NAs but as of 06/18/21
+# everything is accounted for; notes on specifics in slack conversation  with 
+# JH & Roni. For each, I either pinklined them (re: recommended for redline) or filled them in
 ```
 
-
-#' now fix the Ns and anticipated directions and such
-
+#' Ns, anticipated directions, and ctrl_SDs
 
 ```{r fix_vars }
 class(raw_dat$ctrl_sd)
 table(raw_dat$ctrl_sd)
-
 
 which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows, because
 # I fixed a bunch of studies' 'is_red' tab not being up to date
@@ -129,13 +127,6 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
 # is_red = 'loading' 
 # Probably a lot of these should have been reported as unspecified nulls
 
-
-# any studies where eff_type is just NA?
-na_effs <- raw_dat %>% filter(is.na(eff_type)) # no, because 
-# on 06/18/2021 I addressed all of the above studies and either 
-# pinklined them (re: recommended for redline) or filled them in
-rm(na_effs)
-
 #' FOR NOW: drop all the messy stuff for now as we prepare for meta-analysis
 
 table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany')  
@@ -154,13 +145,21 @@ raw_dat$n_c_post <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_post)
 raw_dat$n_t_group <-  gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_group)
 raw_dat$n_c_group <-  gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_group)
 
+# not given
+raw_dat$n_c_group <-  gsub(pattern = 'not given', replacement = NA, x = raw_dat$n_c_group)
+raw_dat$n_t_group <-  gsub(pattern = 'not given', replacement = NA, x = raw_dat$n_t_group)
+
 # class(raw_dat$n_c_post)
 # table(raw_dat$n_c_post)
 # table(raw_dat$n_t_pre)
+
+Ns <- raw_dat %>%
+  select(n_t_pre, n_t_post, n_c_pre, n_c_post, n_t_group, n_c_group)
+
 raw_dat <- raw_dat %>%
-    mutate(across(.cols = c(starts_with('n_')), .fns = as.numeric)) %>% 
+  mutate(across(.cols = c(starts_with(c('n_t_', 'n_c_'))), .fns = as.numeric) %>% 
   mutate(u_s_d = as.numeric(u_s_d)) %>%
-  mutate(anticipated_direction = as.numeric(anticipated_direction))
+  mutate(anticipated_direction = as.numeric(anticipated_direction)))
 # TODO: revisit these warnings
 na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |
                                 is.na(across(.cols = c(starts_with('n_'))))) %>%
@@ -259,14 +258,14 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ### is_red: loading?
 ```{r is_red}
 raw_dat %>% filter(is_red == "Loading...")
-# TODO: make sure there are no rows that meet this condition
+# GENERAL CHECK: make sure there are no rows that meet this condition
 
 raw_dat <- raw_dat %>% select(-is_red)
 
 
 ```
 
-There's a lot more cleaning that could be done -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
+There's more cleaning that could be done -- All marked with TODOs in the above text -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
 
 For now, save as clean data and start the Cohen's D script
 ```{r save_clean_data}

@@ -94,3 +94,6 @@ I've been working on this a fair bit this week, reading papers and today some cl
 
 ### 06-19 
 mostly data cleaning, made a few changes to the way Cohen's D is calculated (only RCTs need to have clustered SEs -- something we should eventually talk about -- but also, if we try to apply the variance of Cohen's D calculator to studies with just one control group, then variance will be zero and that doesn't count as evidence). Also am just calling all null/unspecified nulls -- things where we can't exactly figure out a point estimate but we know that it's not significant -- just 0.01. 
+
+### 06-20 
+The cleaning is in good shape. There are 20 effect sizes that need a revisit for gleaning an effect size, and I can tell JH directly how to check for them. Or we can move on. Roni needs to review the pinklined studies. And I need to make a forest plot and write a few sections on methods.
