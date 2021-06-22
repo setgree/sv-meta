@@ -3,61 +3,58 @@
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
+library(metafor)
 library(stringr)
 
 
+# Prep Data
 dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
-  select(unique_study_id, scale_type, everything()) %>%
-  mutate(labels = paste(tools::toTitleCase(word(author)), year, scale_type)) %>%
-  group_by(unique_study_id) %>%
-  filter(scale_type %in% all(c('attitudes', 'behavior'))) %>%
-  ungroup()  %>%
-  select(unique_study_id,
-         labels, d, var_d, se_d, scale_name, scale_type) %>%
-  group_by(unique_study_id, scale_type) %>%
+  filter(study_design == 'rct') %>%
+  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
+                         year, " ", "(", scale_type, ")")) %>%
+  filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
+  group_by(unique_paper_id, scale_type) %>%
   mutate(d = mean(d), 
          var_d = mean(var_d),
          se_d = mean(se_d)) %>%
-  ungroup(scale_type) %>%
-  mutate(index = )
+  slice(1) %>%
+  ungroup(scale_type) %>% 
+  mutate(mean_se = mean(se_d)) %>%
+  arrange(desc(mean_se)) %>%
+  ungroup() %>%
+  mutate(index = row_number()) %>%
+  select(index, study_names, d, se_d, scale_type, unique_paper_id)
+
+# overall effect size
+overall <- dat_for_forest_plot %>%
+  split(.$scale_type) %>%
+  map(~robust(x = rma(yi = .$d, 
+                          sei = .$se_d),
+                  cluster = .$unique_paper_id))
+  # plot 
+
+p <- dat_for_forest_plot %>%
+  ggplot(mapping = aes(y = study_names, x = d, xmin = d - (1.96 * se_d),
+                       xmax = d + (1.96 * se_d))) +  
+           geom_point(size = 1) +
+  geom_errorbarh(height=.1, aes(color = scale_type)) +
+  geom_vline(xintercept = 0, 
+             color = "black",  alpha = .5) +
+  scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
+  ylab("Study") +
+  geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
+  geom_vline(xintercept = overall$behavior$beta, color = '#00BFC4', lty = 'dashed') +
   
-  slice(1)
+  labs(color = "Attitudes or behaviors") +
+theme_minimal()
+p
 
-dat_two <- dat_two %>%
-  ungroup()  %>%
-  group_by(unique_study_id) %>%
-  arrange(var_d)
-# how do this only for var_d of behavior
+# This was really useful for figuring out colors and such: `ggplot_build(p)$data`
 
-# forest plot
-rcts_grouped <- dat %>%
-  filter(study_design == 'rct') %>%
-  group_by(unique_paper_id) %>%
-  mutate(mean_d = mean(d), mean_var_d = mean(var_d), mean_se_d = mean(se_d)) %>%
-  select(author, year, paper_title, unique_study_id, 
-         mean_d, mean_var_d, mean_se_d, everything()) %>%  
-  slice(1) 
+# TODO: create another point at the bottom that's the overall effect size and
+# SE, a la the bottom point you get from the stata equivalent. (Or...just do
+# this in Stata? Don's stata plot from the contact hypothesis is really nice and
+# the code is  really clear and easy to follow, just look at figure 2 on
+# https://codeocean.com/capsule/8235972/tree/v7)
 
-
-## metaplot effort
-meta_rcts_grouped <- rma(yi = mean_d, vi = mean_var_d, data = rcts_grouped, slab = labels); meta_rcts_grouped
-#forest plot attempt one
-# pdf('./results/forest-plot.pdf',width = 20, height = 28)
-sort.by.error <- rcts_grouped[order(rcts_grouped$mean_se_d), ]
-yi <- sort.by.error$mean_d
-sei <- sort.by.error$mean_se_d
-var_names <- sort.by.error$labels
-
-metaplot(mn = yi, se = sei, 
-         labels = var_names,
-         xlab = "Effect Size", ylab = "Study", 
-         colors = meta.colors(box = "blue",
-                              lines = 44,
-                              zero = "white",
-                              summary = "orange",
-                              text = "black"),
-         title(main = "SA  Forest Plot"))
-abline(v = meta_rcts_grouped$beta, col = "blue", lty = "dashed")
-# dev.off()
-# don't love this, will use ggplot
-
+# Plus just make it nicer overall
