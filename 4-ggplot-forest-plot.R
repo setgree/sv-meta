@@ -1,11 +1,19 @@
+#' ---
+#' title: 4-ggplot-forest-plot.R
+#' author: Seth Green
+#' date: 2021-06-21
+#' output:
+#'  pdf_document
+#' ---
+
 # ggplot forest plot
 # https://www.selfmindsociety.com/post/a-forest-plot-in-ggplot2
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
 library(metafor)
+library(purrr)
 library(stringr)
-
 
 # Prep Data
 dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
@@ -37,7 +45,7 @@ p <- dat_for_forest_plot %>%
   ggplot(mapping = aes(y = study_names, x = d, xmin = d - (1.96 * se_d),
                        xmax = d + (1.96 * se_d))) +  
            geom_point(size = 1) +
-  geom_errorbarh(height=.1, aes(color = scale_type)) +
+  geom_errorbarh(height = .1, aes(color = scale_type)) +
   geom_vline(xintercept = 0, 
              color = "black",  alpha = .5) +
   scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
