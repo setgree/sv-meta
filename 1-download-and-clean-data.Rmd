@@ -39,10 +39,6 @@ raw_dat <- raw_dat %>%
   ungroup() %>%
   mutate(unique_paper_id = cumsum(first_line))
 
-# ' studies where coder is blank:
-#' TODO ASK JOHN-HENRY: does this matter?
-tibble(raw_dat[is.na(raw_dat$coder),])
-
 #' drop team-internal stuff 
 colnames(raw_dat)
 raw_dat <- raw_dat %>% 
@@ -206,9 +202,6 @@ raw_dat <- raw_dat %>%
       n_t_group + n_c_group <= 3 ~ 'quasi-experimental',
     !is.na(n_t_group) &
       study_design == 'rct' & 
-      between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
-    !is.na(n_t_group) &
-      cluster_type == 'cluster randomized' &
       between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic rct',
     TRUE ~ study_design))
 

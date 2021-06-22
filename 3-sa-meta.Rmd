@@ -14,6 +14,7 @@ library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
 library(purrr)
+library(stringr)
 library(tidyr, warn.conflicts = F)
 
 source('./functions/dplot.R')
@@ -103,7 +104,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
 # in the prejudice meta, y'all averaged all the Ds and var_ds
 # within each (to create a single point estimate representing each
 # study). But here, we are looking for a lot more within-study variance (e.g. to
-# attitudes predidct # behavior? What about perp/victimization? So I personally
+# attitudes predict # behavior? What about perp/victimization? So I personally
 # vote that we not average but take everything. As a robustness check above, I found
 # that averaging doesn't change the overall results (it didn't
 # in the prejudice meta that much either if I recall correctly). Another
@@ -141,12 +142,12 @@ dat %>%
 # Also, there's involvement, and then things that are harder to classify.
 behavioral_data <- dat %>% 
   filter(scale_type == 'behavior') %>%
-  mutate(
+  mutate(scale_name = str_to_lower(scale_name),
   behavior_type = as.factor(case_when(
     str_detect(scale_name, 
                'perp|perpetration|agression|comitted') ~ 'perpetration',
     str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
-    str_detect(scale_name, 'bystander|Observing') ~ 'bystander',
+    str_detect(scale_name, 'bystander|observing') ~ 'bystander',
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
     TRUE ~ 'other')))
 
@@ -172,7 +173,7 @@ behavioral_rcts %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id)) 
 
-robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_data), cluster = behavioral_data$unique_study_id)
+robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts), cluster = behavioral_rcts$unique_study_id)
 # in general, the effects on victimization and  perpetration are larger in the rcts, which is encouraging (and surprising to me).
 ```
 
@@ -212,7 +213,6 @@ behavioral_data %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
-
 behavioral_data %>% 
   mutate(study_group = if_else(
     study_design %in% c('pragmatic rct', 'rct'), 'randomized', 'observational'),) %>%
@@ -224,6 +224,7 @@ behavioral_data %>%
 ```
 
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
+
 ```{r perpetration outcomes}
 
 rct_perp <- behavioral_rcts %>% filter(behavior_type == 'perpetration')
@@ -290,7 +291,6 @@ has_both <- dat %>%
     id_cols = c(author, year, paper_title, unique_study_id, study_design, labels),
     names_from = scale_type, 
     values_from = c(mean_d, mean_var_d, mean_se_d))
-
 
 cor.test(x = has_both$mean_d_attitudes, 
          y = has_both$mean_d_behavior)

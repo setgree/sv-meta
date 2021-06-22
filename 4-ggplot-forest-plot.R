@@ -1,29 +1,26 @@
 # ggplot forest plot
-
+# https://www.selfmindsociety.com/post/a-forest-plot-in-ggplot2
+rm(list = ls())
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
 library(stringr)
 
 
-dat_two <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
-  mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
-  mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
+  mutate(labels = paste(tools::toTitleCase(word(author)), year, scale_type)) %>%
   group_by(unique_study_id) %>%
-  mutate(
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) %>%
+  filter(scale_type %in% all(c('attitudes', 'behavior'))) %>%
   ungroup()  %>%
-  filter(attitudes_behaviors == 0) %>%
-  ungroup() %>% 
   select(unique_study_id,
          labels, d, var_d, se_d, scale_name, scale_type) %>%
   group_by(unique_study_id, scale_type) %>%
   mutate(d = mean(d), 
          var_d = mean(var_d),
          se_d = mean(se_d)) %>%
+  ungroup(scale_type) %>%
+  mutate(index = )
+  
   slice(1)
 
 dat_two <- dat_two %>%
