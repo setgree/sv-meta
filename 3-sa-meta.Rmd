@@ -22,16 +22,14 @@ source('./functions/sum_lm.R')
 # `sum_lm(dat, d, se_d)` = `summary(lm(formula = d ~ se_d, data =  dat))`
 
 
-# read in data, add in three useful variables: 
+# read in data, add in two useful variables
 # labels that paste together author and year for plots;  
-# "yes_delay" (a character vector for whether measurement was delayed, useful for 
 # reading later results);
 # and attitudes_behaviors (for studies that have both), onem or the other.
 
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
-  mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   group_by(unique_study_id) %>%
   mutate(
     attitudes_behaviors = case_when(
@@ -204,7 +202,8 @@ behavioral_data %>%
 behavioral_data %>% 
   mutate(study_group = if_else
          (study_design %in% c('quasi-experimental', 'pragmatic rct', 'rct'),
-           'randomized and quasis',  'observational')) %>%
+           'randomized and quasis',  'observational'),
+         yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   split(list(.$study_group, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -216,7 +215,8 @@ behavioral_data %>%
 
 behavioral_data %>% 
   mutate(study_group = if_else(
-    study_design %in% c('pragmatic rct', 'rct'), 'randomized', 'observational')) %>%
+    study_design %in% c('pragmatic rct', 'rct'), 'randomized', 'observational'),) %>%
+    mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   split(list(.$study_group, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -267,6 +267,7 @@ rcts_and_quasi %>%
 
 # meta-analyze attitudes and behaviors separately, short and long term
 rcts_and_quasi %>% 
+    mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   split(list(.$scale_type, .$yes_delay)) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
