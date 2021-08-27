@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 # Step 1: clean
 Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd', 
