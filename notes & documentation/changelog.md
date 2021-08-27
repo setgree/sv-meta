@@ -108,4 +108,8 @@ I think (hope?) that everything else is clear enough for JH to pick up from ther
 I think my portion is done for now. I'm stoked about that. I did the forest plot, at leat a first draft of it, and outlined 7 to-dos outstanding. I also wrote two emails, one to the entire group and one to the data analysis subset, about where we stand and outstanding to-dos. Think the project is in good shape! Time to get back to the hike.
 
 ### 08-27
+<<<<<<< HEAD
 committed existing changes; re-ran everything; created Dockerfile (that process might be too much, might go with just package info a la the contact code); emailed JH & Roni about a limiting case for quasi vs cross-sectional; now including JH's 'descriptives' script; next up is all the to-dos
+=======
+commited existing changes and now re-running from scratch
+>>>>>>> 81c3bcf884db49f3e393eb92e6bf07967c98398d
