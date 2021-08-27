@@ -15,3 +15,7 @@ Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',
 # step 4: forest plot
 Rscript -e "rmarkdown::render('./4-ggplot-forest-plot.R', 
   output_dir = './results', clean = T)"
+
+Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd', 
+  output_dir = './results', clean = T)"
+
