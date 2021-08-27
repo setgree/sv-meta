@@ -23,17 +23,20 @@ options(scipen = 99)
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020", 
                path = "./data/sa_meta_data",
-               overwrite = T, type = 'csv') # dl to csv gets just first sheet
+               overwrite = T, 
+               type = 'csv') # dl to csv gets just first sheet
 ```
 
 
 ```{r clean_data}
-raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA"))
+raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA")) %>% as_tibble()
 readr::problems(raw_dat)
 # drop redline studies and add unique paper ID
+
 raw_dat <- raw_dat %>%
   fill(paper_title) %>%
-  filter(!is_red %in% c("#ff0000", "#ea4335", "#f4cccc"))  %>%  # in case multiple red cols
+  replace_na(list(eliminiate = 0)) %>% 
+  filter(!eliminiate == 1) %>%  # drop red rows
   group_by(paper_title) %>%
   mutate(first_line = row_number() == 1) %>%
   ungroup() %>%
@@ -177,8 +180,10 @@ raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 and scale type
 
 
-```{study_design}
-raw_dat$study_design <- gsub(pattern = 'cross sectional', replacement = 'cross-sectional',  x = raw_dat$study_design)
+```{r study_design}
+raw_dat$study_design <- gsub(pattern = 'cross sectional', 
+                             replacement = 'cross-sectional',  
+                             x = raw_dat$study_design)
 raw_dat$study_design <- gsub(pattern = 'prepost', replacement = 'pre-post',  x = raw_dat$study_design)
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
