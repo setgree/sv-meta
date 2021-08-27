@@ -1,0 +1,185 @@
+---
+title: "Descriptives"
+subtitle: ""
+output:
+  rmarkdown::html_document:
+    smart: true
+    theme: spacelab
+    number_sections: no
+    toc: true
+    toc_float:
+      collapsed: true
+    toc_depth: 4
+---
+
+```{r echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE, 
+                      results = 'asis')
+```
+
+```{r setup_libraries}
+library(tidyverse)
+library(ggtext) # figures
+library(patchwork)
+library(knitr) # tables
+library(kableExtra)
+library(glue) # convenience
+library(janitor)
+library(clipr)
+library(rstatix) # summary
+```
+
+
+```{r load_data}
+dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+  select(unique_study_id, scale_type, everything()) %>%
+  mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
+  group_by(unique_study_id) %>%
+  mutate(
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2)) %>%
+  ungroup() 
+```
+
+
+We recovered XXX manuscripts from our search that qualified methodologically and theoretically. 
+```{r}
+dat %>% 
+  select(unique_study_id, unique_paper_id) %>% 
+  summarise(n_papers = max(unique_paper_id),
+            n_studies = max(unique_study_id))
+```
+
+We found XX studies that measuredself-reported behavior.
+```{r}
+dat %>% 
+  select(unique_study_id, scale_type) %>% 
+  group_by(scale_type) %>% 
+  summarise(n_unique_studies = n_distinct(unique_study_id))
+```
+
+
+
+XX of these studies measured behavior only in the immediate aftermath of the intervention, while xx included long-term measures.  
+```{r}
+dat %>% 
+  filter(scale_type == "behavior") %>% 
+  select(unique_study_id, delay) %>% 
+  drop_na(delay) %>% 
+  group_by(unique_study_id) %>% 
+  mutate(max_delay = max(delay),
+         only_short_term = max_delay == 0) %>% 
+  count(only_short_term) %>% 
+  ungroup() %>% 
+  count(only_short_term)
+```
+
+To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
+```{r}
+dat %>% 
+  select(unique_study_id, scale_type, study_design, d) %>% 
+  filter(scale_type == "behavior") %>% 
+  group_by(unique_study_id, study_design) %>% 
+  summarise(mean_d_by_study_x_design = mean(d)) %>% 
+  group_by(study_design) %>% 
+  summarise(n = n(),
+            mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
+  kable(digits = 2, format = "latex", booktabs = T) %>%
+  kableExtra::kable_styling() %>% 
+  clipr::write_clip()
+```
+
+
+```{r}
+dat %>% 
+  count(scale_name, sort = T) %>%
+  View
+```
+
+
+##### Attitudes
+
+How many papers measured attitudes?
+```{r}
+
+```
+
+
+
+
+
+```{r}
+dat %>% 
+  filter(scale_type == "attitudes") %>% 
+  select(unique_study_id, delay) %>% 
+  drop_na(delay) %>% 
+  group_by(unique_study_id) %>% 
+  mutate(max_delay = max(delay),
+         only_short_term = max_delay == 0) %>% 
+  count(only_short_term) %>% 
+  ungroup() %>% 
+  count(only_short_term)
+```
+
+
+
+```{r}
+attitudes_data_no_delay <- dat %>% filter(scale_type == 'attitudes', delay == 0)
+
+
+robust(x = rma(yi = d, 
+               vi = var_d, 
+               data = attitudes_data_no_delay), 
+       cluster = attitudes_data_no_delay$unique_study_id)
+```
+
+```{r}
+attitudes_data_delay <- dat %>% filter(scale_type == 'attitudes', delay != 0)
+
+
+robust(x = rma(yi = d, 
+               vi = var_d, 
+               data = attitudes_data_delay), 
+       cluster = attitudes_data_delay$unique_study_id)
+```
+
+```{r}
+
+```
+
+
+To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
+```{r}
+dat %>% 
+  select(unique_study_id, scale_type, study_design, d) %>% 
+  filter(scale_type == "behavior") %>% 
+  group_by(unique_study_id, study_design) %>% 
+  summarise(mean_d_by_study_x_design = mean(d)) %>% 
+  group_by(study_design) %>% 
+  summarise(n = n(),
+            mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
+  kable(digits = 2, format = "latex", booktabs = T) %>%
+  kableExtra::kable_styling() %>% 
+  clipr::write_clip()
+```
+
+
+```{r}
+dat %>% 
+  select(unique_study_id, scale_type, study_design, d) %>% 
+  filter(scale_type == "attitudes") %>% 
+  group_by(unique_study_id, study_design) %>% 
+  summarise(mean_d_by_study_x_design = mean(d)) %>% 
+  group_by(study_design) %>% 
+  summarise(n = n(),
+            mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
+  kable(digits = 2, format = "latex", booktabs = T) %>%
+  kableExtra::kable_styling() %>% 
+  clipr::write_clip()
+```
+
