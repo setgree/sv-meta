@@ -106,3 +106,6 @@ I think (hope?) that everything else is clear enough for JH to pick up from ther
 
 ### 06-22 
 I think my portion is done for now. I'm stoked about that. I did the forest plot, at leat a first draft of it, and outlined 7 to-dos outstanding. I also wrote two emails, one to the entire group and one to the data analysis subset, about where we stand and outstanding to-dos. Think the project is in good shape! Time to get back to the hike.
+
+### 08-27
+commited existing changes and now re-running from scratch
