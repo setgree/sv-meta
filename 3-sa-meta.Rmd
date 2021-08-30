@@ -21,8 +21,9 @@ source('./functions/dplot.R')
 source('./functions/sum_lm.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d)` = `summary(lm(formula = d ~ se_d, data =  dat))`
+```
 
-
+```{r load_data}
 # read in data, add in two useful variables
 # labels that paste together author and year for plots;  
 # reading later results);
@@ -42,7 +43,6 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 ```
 
 # General Methods 
-
 
 **Initial data exploration**
 ```{r initial_exploration}

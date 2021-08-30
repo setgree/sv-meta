@@ -16,6 +16,7 @@ Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',
 Rscript -e "rmarkdown::render('./4-ggplot-forest-plot.R', 
   output_dir = './results', clean = T)"
 
+# step 5: descriptives
 Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd', 
   output_dir = './results', clean = T)"
 
