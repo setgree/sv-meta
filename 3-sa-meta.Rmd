@@ -134,7 +134,7 @@ dat %>%
 behavioral_data <- dat %>% 
   filter(scale_type == 'behavior') %>%
   mutate(scale_name = str_to_lower(scale_name),
-  ç = as.factor(case_when(
+  behavior_type = as.factor(case_when(
     str_detect(scale_name, 
                'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
     str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
