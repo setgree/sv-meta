@@ -120,11 +120,7 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
          study_design, scale_name, is_red)
-## TODO: every one of the above studies needs a closer look; Fortunately they're all
-# either quasi-experimental or prepost (except for two from Foshee but that's just that)
-# the redline thing isn't working consistently, some studies are coming through as
-# is_red = 'loading' 
-# Probably a lot of these should have been reported as unspecified nulls
+## Fixed all these!! Thank goodness (08-31-2021)
 
 #' FOR NOW: drop all the messy stuff for now as we prepare for meta-analysis
 
@@ -148,9 +144,9 @@ raw_dat$n_c_group <-  gsub(pattern = '-', replacement = NA, x = raw_dat$n_c_grou
 raw_dat$n_c_group <-  gsub(pattern = 'not given', replacement = NA, x = raw_dat$n_c_group)
 raw_dat$n_t_group <-  gsub(pattern = 'not given', replacement = NA, x = raw_dat$n_t_group)
 
-# class(raw_dat$n_c_post)
-# table(raw_dat$n_c_post)
-# table(raw_dat$n_t_pre)
+class(raw_dat$n_c_post)
+table(raw_dat$n_c_post)
+table(raw_dat$n_t_pre)
 
 Ns <- raw_dat %>%
   select(n_t_pre, n_t_post, n_c_pre, n_c_post, n_t_group, n_c_group)
@@ -160,6 +156,7 @@ raw_dat <- raw_dat %>%
   mutate(u_s_d = as.numeric(u_s_d)) %>%
   mutate(anticipated_direction = as.numeric(anticipated_direction)))
 # TODO: revisit these warnings
+
 na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |
                                 is.na(across(.cols = c(starts_with('n_'))))) %>%
     select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,
@@ -167,8 +164,8 @@ na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
          study_design, scale_name)
-# these are all fine -- enough info to calculate Cohen's D
-rm(na_vals)
+# None (08-31-2021)!
+rm(na_vals, na_dat, Ns)
 
 # check lab/field variable
 unique(raw_dat$lab_field)
@@ -189,7 +186,6 @@ raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 raw_dat <- raw_dat %>% 
   select(-lab_or_field)
-# ADD IS_RED at the end
 
 # scale type
 raw_dat$scale_type <- as.factor(raw_dat$scale_type)
@@ -214,9 +210,6 @@ raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 
 table(raw_dat$study_design)
-# Foshee 1998 -- should be 7 and 7 in n_t and n_c
-# so the D calculation needs to be modified to say, if cluster + rct, 
-# n = n_t_group, n_c_group
 ```
 
 ### unique study id
@@ -254,7 +247,7 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ```
 
 ### is_red: loading?
-```{r is_red}
+```{r is_red, eval=F}
 raw_dat %>% filter(is_red == "Loading...")
 # GENERAL CHECK: make sure there are no rows that meet this condition
 
@@ -263,10 +256,9 @@ raw_dat <- raw_dat %>% select(-is_red)
 
 ```
 
-There's more cleaning that could be done -- All marked with TODOs in the above text, or in subsequent files -- , but if I'm not mistaken, we can go ahead with the core parts of the analysis and return to this.
-
-For now, save as clean data and start the Cohen's D script
+### save as clean data and start the Cohen's D script
 ```{r save_clean_data}
 
 saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
+
 ```

@@ -59,7 +59,7 @@ sum_lm(dat, d, study_design)
 
 # scale type?
 sum_lm(dat, d, scale_type)
-# that is a substantial difference
+# that is a HUGE difference
 
 # now, an overall meta-analysis
 
@@ -126,7 +126,7 @@ dat %>%
   split(dat$scale_type) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-# behavioral effects are 60% smaller than attitudinal effects
+# behavioral effects are *much* smaller than attitude results
 
 ### CATEGORIZE BEHAVIOR:
 # perpetration, victimization, intervention are the big three intervention measures.
@@ -134,14 +134,14 @@ dat %>%
 behavioral_data <- dat %>% 
   filter(scale_type == 'behavior') %>%
   mutate(scale_name = str_to_lower(scale_name),
-  behavior_type = as.factor(case_when(
+  ç = as.factor(case_when(
     str_detect(scale_name, 
                'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
     str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
     str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
     TRUE ~ 'other')))
-
+table(behavioral_data$behavior_type)
 # TODO: this was crude, because the scale_names weren't written with this analysis in mind. 
 #I think we should rewrite each of the scale names to clearly state which of the
 # four categories it falls into, and I will discuss this with JH & Roni.
