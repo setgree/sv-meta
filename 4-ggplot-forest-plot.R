@@ -21,6 +21,14 @@ dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                          year, " ", "(", scale_type, ")")) %>%
   filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
+  mutate(scale_name = str_to_lower(scale_name),
+         behavior_type = as.factor(case_when(
+           str_detect(scale_name, 
+                      'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
+           str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
+           str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
+           str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
+           TRUE ~ 'other'))) %>%
   group_by(unique_paper_id, scale_type) %>%
   mutate(d = mean(d), 
          var_d = mean(var_d),
@@ -31,7 +39,7 @@ dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>
   arrange(desc(mean_se)) %>%
   ungroup() %>%
   mutate(index = row_number()) %>%
-  select(index, study_names, d, se_d, scale_type, unique_paper_id)
+  select(index, study_names, d, se_d, scale_type, unique_paper_id, behavior_type)
 
 # overall effect size
 overall <- dat_for_forest_plot %>%
@@ -39,7 +47,7 @@ overall <- dat_for_forest_plot %>%
   map(~robust(x = rma(yi = .$d, 
                           sei = .$se_d),
                   cluster = .$unique_paper_id))
-  # plot 
+# plot 
 
 p <- dat_for_forest_plot %>%
   ggplot(mapping = aes(y = study_names, x = d, xmin = d - (1.96 * se_d),
@@ -56,6 +64,10 @@ p <- dat_for_forest_plot %>%
   labs(color = "Attitudes or behaviors") +
 theme_minimal()
 p
+
+# what if we limit this just to perpetration and victimization outcomes?
+# TODO: this is complex, have to group studies together and then drop them if 
+# behavior type = bystander or volunteer
 
 # This was really useful for figuring out colors and such: `ggplot_build(p)$data`
 
