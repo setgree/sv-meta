@@ -20,7 +20,7 @@ library(tidyr, warn.conflicts = F)
 source('./functions/dplot.R')
 source('./functions/sum_lm.R')
 # NOTE ON SUM_LM: 
-# `sum_lm(dat, d, se_d)` = `summary(lm(formula = d ~ se_d, data =  dat))`
+# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, data =  dat))$coefficients`
 ```
 
 ```{r load_data}
@@ -39,7 +39,6 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) %>%
   ungroup() 
-
 ```
 
 # General Methods 
@@ -49,18 +48,10 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 # first, is there a relationship between effect size and se?
 
-sum_lm(dat, d, se_d)
-
-# This is less of a relationship than I (Seth) expected;
-# Roni is not very surprised because public health is 
-# in general less p-hacked than psych
-# JH agrees and there's an interesting point about
-# not going for flashy journals
+sum_lm(dat, d, se_d,coefs_only = T)
 
 # how about the overall relationship between lab/field and d? 
 sum_lm(dat, d, lab_field)
-# this is equivalent to `
-# essentially no difference at all
 
 # study type?
 sum_lm(dat, d, study_design)
@@ -87,7 +78,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
        cluster = dat_grouped$unique_study_id)
 rma(yi = d, vi = var_d, data = dat_grouped)
 
-# once we've already grouped by study_id, clustering changes the SE by just 0.0001
+# once we've grouped by study_id, clustering changes the SE by just 0.0001
 
 # How about not grouping by scale_type?s
 dat_grouped_two <- dat %>%
@@ -130,7 +121,7 @@ dat %>%
 "... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ```{r outcome_type}
-# First, just behavior vs attitudes:
+# First, behavior vs attitudes:
 dat %>% 
   split(dat$scale_type) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
@@ -145,9 +136,9 @@ behavioral_data <- dat %>%
   mutate(scale_name = str_to_lower(scale_name),
   behavior_type = as.factor(case_when(
     str_detect(scale_name, 
-               'perp|perpetration|agression|comitted') ~ 'perpetration',
+               'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
     str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
-    str_detect(scale_name, 'bystander|observing') ~ 'bystander',
+    str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
     TRUE ~ 'other')))
 
