@@ -50,7 +50,7 @@ dplot  <- function(sa_data = dat, dot_size = 3, condense = F,
     geom_smooth(method = 'lm') +
     xlab("Standard Errors") + 
     ylab("Effect Sizes") +
-    guides(size = F) +
+    guides(size = "none") +
     {if(isTRUE(title)) ggtitle("Effect sizes by Standard Errors")} +
     {if(dot_informative) labs(colour = "Study Design", 
                               shape = "Attitudes or Behaviors")} +
