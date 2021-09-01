@@ -1,7 +1,7 @@
 ---
 title: "3-SA-meta-analyis.Rmd"
 author: "Seth Green"
-date: "8/19/2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -23,15 +23,19 @@ source('./functions/sum_lm.R')
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, data =  dat))$coefficients`
 ```
 
-```{r load_data}
+```{r load_data, include=F, echo=F}
 # read in data, add in two useful variables
 # labels that paste together author and year for plots;  
 # reading later results);
-# and attitudes_behaviors (for studies that have both), onem or the other.
+# add attitudes_behaviors (for studies that have both), one or the other;
+# new var for random assignment (probably should remove 'contains randomization')
 
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
-  mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
+  mutate(labels = paste(tools::toTitleCase(word(author)), year),
+         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic rct', 
+                     TRUE,
+                     FALSE)) %>%
   group_by(unique_study_id) %>%
   mutate(
     attitudes_behaviors = case_when(
@@ -46,9 +50,27 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 **Initial data exploration**
 ```{r initial_exploration}
 
-# first, is there a relationship between effect size and se?
+# first, wht is the relationship between effect size and se?
 
 sum_lm(dat, d, se_d,coefs_only = T)
+
+# by study type?
+dat %>% 
+  split(.$study_design) %>% 
+  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
+# visualize this?
+dat %>% 
+  split(.$study_design) %>% 
+  map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F, dot_informative = T))
+# so basically there's little relationship in the quasi and pragmatic rcts -- 
+# there is actually a negative relationship in the quasi experimental studies? -- 
+# but a meaningful relationship in the RCTs and pre-post studies. 
+# What if we separate into randomized and not-randomized
+
+dat %>% 
+  split(.$ra) %>% 
+  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
+
 
 # how about the overall relationship between lab/field and d? 
 sum_lm(dat, d, lab_field)
@@ -76,6 +98,7 @@ dat_grouped <- dat %>%
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
        cluster = dat_grouped$unique_study_id)
+# alternative specification 
 rma(yi = d, vi = var_d, data = dat_grouped)
 
 # once we've grouped by study_id, clustering changes the SE by just 0.0001
@@ -90,6 +113,7 @@ dat_grouped_two <- dat %>%
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
   cluster = dat_grouped_two$unique_study_id)
+
 # again, very similar.
 # NOTE FOR TEAM: should we average within studies?
 # in the prejudice meta, y'all averaged all the Ds and var_ds
@@ -142,7 +166,7 @@ behavioral_data <- dat %>%
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
     TRUE ~ 'other')))
 table(behavioral_data$behavior_type)
-# TODO: triple-check that thewse are right.
+# TODO: triple-check that thesse are right.
 
 # how do effect sizes compare across behavioral types?
 sum_lm(behavioral_data, d, behavior_type)
@@ -163,7 +187,8 @@ behavioral_rcts %>%
        cluster = .x$unique_study_id)) 
 
 robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts), cluster = behavioral_rcts$unique_study_id)
-# in general, the effects on victimization and  perpetration are larger in the rcts, which is encouraging (and surprising to me).
+# in general, the effects on victimization and  perpetration are larger in the rcts, 
+# which is encouraging (and surprising to me).
 ```
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
