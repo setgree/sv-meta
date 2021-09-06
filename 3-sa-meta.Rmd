@@ -233,7 +233,7 @@ behavioral_data %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
-obj <- behavioral_data %>% 
+behavioral_data %>% 
   mutate(study_group = if_else(
     study_design %in% c('pragmatic rct', 'rct'), 'randomized', 'observational'),) %>%
     mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
