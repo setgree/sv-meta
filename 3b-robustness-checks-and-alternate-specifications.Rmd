@@ -134,4 +134,47 @@ behavioral_rcts  %>%
       .f = ~robust(x = rma(yi = .x$d, vi = .x$var_d), 
                    cluster = .x$unique_study_id))
 # ~.027 for perp, ~ 0.0441 for victimization
+
+# what's the standard error? 
+# thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
+cor.test.plus <- function(x) {
+  list(x, 
+       Standard.Error = unname(sqrt((1 - x$estimate^2)/x$parameter)))
+}
+cor.test.plus(
+  cor.test(
+    x = has_both$mean_d_attitudes, 
+    y = has_both$mean_d_behavior))
+
+```
+
+
+```{r incomplete behavior_type_atitude_cor_tests}
+# THIS DOES NOT WORK 
+# pivot wider is hard
+# by outcome type
+has_both_behavior_types <- dat %>% 
+  filter(attitudes_behaviors == 0) %>%
+  group_by(unique_study_id, scale_type, behavior_type) %>%
+  mutate(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, intervention_name,
+         study_design, mean_d, mean_var_d, mean_se_d,
+         ra, labels, scale_type, behavior_type) %>%  
+  slice(1) %>% 
+  pivot_wider(
+    id_cols = c(author, year, paper_title, unique_study_id,
+                intervention_name,
+                unique_study_id, study_design, ra, labels),
+    names_from = c(scale_type, , behavior_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d)) # %>%
+#  select(-behavior_type_attitudes) %>% 
+ # rename(behavior_type = behavior_type_behavior)
+
+has_both %>% 
+  split(.$behavior_type) %>%
+  map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
+
+
 ```
