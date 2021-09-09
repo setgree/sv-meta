@@ -1,0 +1,119 @@
+---
+title: "4b-robustness-checks-and-alternative-specifications"
+author: "Seth Green"
+date: "9/7/2021"
+output: html_document
+---
+
+```{r setup, include=F, echo=F}
+rm(list = ls())
+library(dplyr, warn.conflicts = F)
+library(metafor, quietly = T)
+library(ggplot2, warn.conflicts = F)
+library(ggrepel, warn.conflicts = F)
+library(purrr)
+library(stringr)
+library(tidyr, warn.conflicts = F)
+
+source('./functions/dplot.R')
+source('./functions/sum_lm.R')
+# NOTE ON SUM_LM: 
+# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
+#                                          data = dat))$coefficients`
+```
+
+```{r load_data, include=F, echo=F}
+# read in data, add in two useful variables
+# labels that paste together author and year for plots;  
+# reading later results);
+# add attitudes_behaviors (for studies that have both), one or the other;
+# new var for random assignment (probably should remove 'contains randomization')
+
+dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+  select(unique_study_id, scale_type, everything()) %>%
+  mutate(labels = paste(tools::toTitleCase(word(author)), year),
+         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic rct', 
+                     TRUE,
+                     FALSE)) %>%
+  group_by(unique_study_id) %>%
+  mutate(
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2)) %>%
+  ungroup() 
+
+behavioral_data <- dat %>% filter(scale_type == 'behavior')
+
+```
+
+```{r grouping rbustness checks}
+
+# robustness check: group by study AND scale_type and average the results
+dat_grouped <- dat %>%
+  group_by(unique_study_id, scale_type) %>%
+  mutate(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
+  slice(1)
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
+       cluster = dat_grouped$unique_study_id)
+# alternative specification 
+rma(yi = d, vi = var_d, data = dat_grouped)
+
+# once we've grouped by study_id, clustering changes the SE by just 0.0001
+
+# How about not grouping by scale_type?s
+dat_grouped_two <- dat %>%
+  group_by(unique_study_id) %>%
+  mutate(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
+  slice(1)
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
+  cluster = dat_grouped_two$unique_study_id)
+
+# again, very similar.
+# NOTE FOR TEAM: should we average within studies?
+# in the prejudice meta, y'all averaged all the Ds and var_ds
+# within each (to create a single point estimate representing each
+# study). But here, we are looking for a lot more within-study variance (e.g. to
+# attitudes predict # behavior? What about perp/victimization? So I personally
+# vote that we not average but take everything. As a robustness check above, I found
+# that averaging doesn't change the overall results (it didn't
+# in the prejudice meta that much either if I recall correctly). Another
+# approach would be, JH, to create a function that has "average within study" as
+# an input each time to replace the functions I am using. My intuition is that
+# we should not average, because it's more trouble than it's worth to then parse
+# out within-study correlations; but I defer to the group.
+```
+
+
+```{r sum_lm checks}
+dat %>% 
+  split(.$ra) %>% 
+  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
+
+
+# how about the overall relationship between lab/field and d? 
+sum_lm(dat, d, lab_field)
+
+# study type?
+sum_lm(dat, d, study_design)
+# yep, meaningful relationship
+
+# scale type?
+sum_lm(dat, d, scale_type)
+# that is a HUGE difference
+
+
+sum_lm(dat, d, behavior_type)
+
+sum_lm(dat, d, scale_type)
+
+behavioral_rcts %>% 
+  filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
+
+```

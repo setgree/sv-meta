@@ -13,6 +13,7 @@ rm(list = ls())
 library(dplyr, warn.conflicts = FALSE)
 library(googledrive)
 library(readr)
+library(stringr)
 library(tidyr)
 options(scipen = 99)
 ```
@@ -246,6 +247,31 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ```
 
+```{r}
+### CATEGORIZE BEHAVIOR:
+# perpetration, victimization, intervention are the big three intervention measures.
+# Also, there's involvement, and then things that are harder to classify.
+#behavioral_data <- dat %>% 
+  
+raw_dat <- raw_dat %>%
+#  filter(scale_type == 'behavior') %>%
+  mutate(scale_name = str_to_lower(scale_name),
+  behavior_type = as.factor(case_when(
+    scale_type == 'behavior' & 
+    str_detect(scale_name, 
+               'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
+    scale_type == 'behavior' & 
+    str_detect(scale_name, 'vict|victimization|completed rape|underwent
+               |ses-past year|survivor') ~ 'victimization',
+    scale_type == 'behavior' & 
+    str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
+    scale_type == 'behavior' & 
+    str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
+#    scale_type == 'behavior' ~ 'other',
+    TRUE ~ NA_character_)))
+
+
+```
 ### is_red: loading?
 ```{r is_red, eval=F}
 raw_dat %>% filter(is_red == "Loading...")
@@ -261,4 +287,6 @@ raw_dat <- raw_dat %>% select(-is_red)
 
 saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
 
+## remove raw data
+file.remove('./data/sa_meta_data.csv')
 ```
