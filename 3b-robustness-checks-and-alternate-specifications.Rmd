@@ -45,6 +45,10 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 behavioral_data <- dat %>% filter(scale_type == 'behavior')
 
+behavioral_rcts <- dat %>%
+  filter(scale_type == 'behavior', 
+         study_design == 'rct')
+
 ```
 
 ```{r grouping rbustness checks}
@@ -116,4 +120,18 @@ sum_lm(dat, d, scale_type)
 behavioral_rcts %>% 
   filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
 
+robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts),
+       cluster = behavioral_rcts$unique_study_id)
+
+
+## how much are behavioral effects driven by Taylor 2013
+behavioral_rcts  %>% 
+  filter(behavior_type %in% c('victimization', 'perpetration'), .preserve = F) %>%
+  droplevels() %>%
+  filter(paper_title != 'Shifting Boundaries: An Experimental Evaluation of a Dating Violence Prevention Program in Middle Schools') %>%
+  split(.$behavior_type) %>% 
+  map(.x = .,
+      .f = ~robust(x = rma(yi = .x$d, vi = .x$var_d), 
+                   cluster = .x$unique_study_id))
+# ~.027 for perp, ~ 0.0441 for victimization
 ```

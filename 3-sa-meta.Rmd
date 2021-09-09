@@ -44,6 +44,9 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) %>%
   ungroup() 
+
+behavioral_data <- dat %>% filter(scale_type == 'behavior')
+
 ```
 
 # General Methods 
