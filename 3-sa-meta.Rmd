@@ -2,7 +2,7 @@
 title: "3-SA-meta-analyis.Rmd"
 author: "Seth Green"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: pdf_document
+output: html_document
 editor_options: 
   chunk_output_type: console
 ---
@@ -109,6 +109,12 @@ dat %>%
 table(dat$behavior_type)
 # TODO: triple-check that thesse are right.
 
+# ra vs not:
+dat %>% 
+  split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
 # how do effect sizes compare across behavioral types?
 dat %>% 
   split(.$behavior_type) %>% 
@@ -128,6 +134,13 @@ behavioral_rcts %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id)) 
 
+# now ra (to encompass pragmatic cluster designs)
+
+dat %>% 
+  split(list(.$ra, .$behavior_type)) %>%
+          map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) 
+  
 # in general, the effects on victimization and  perpetration are larger in the rcts, 
 # which is encouraging (and surprising to me).
 
@@ -140,13 +153,17 @@ behavioral_rcts %>%
 robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
        cluster = behavioral_data$unique_study_id)
 
-# meta-analysis with a split for delay, yes, no
+# meta-analysis with a split for delay, yes, no, separate by behavior category
 behavioral_data %>% 
-  split(as.factor(behavioral_data$delay > 0)) %>%
+  split(list(.$behavior_type, as.factor(.$delay > 0))) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# a delay leads to substantial decline
+# a delay leads to substantial decline, but interpret with caution
+# for just attitudes:
+dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
+                map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
 
 ```
 
