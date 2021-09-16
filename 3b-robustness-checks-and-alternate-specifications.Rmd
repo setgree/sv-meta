@@ -218,4 +218,6 @@ dat %>% split(list(.$ra, .$scale_type)) %>%
   map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
         geom_point() + 
         geom_smooth(method = 'lm'))
+
+# these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
 ```
