@@ -278,10 +278,14 @@ raw_dat %>% filter(is_red == "Loading...")
 # GENERAL CHECK: make sure there are no rows that meet this condition
 
 raw_dat <- raw_dat %>% select(-is_red)
-
-
 ```
 
+### add useful levels
+```{r levels}
+levels(raw_dat$publication_type) <- c("published", "dissertation", "government report", "unpublished", "formal evaluation")
+levels(raw_dat$origin) <- c("DeGue", "online search", "sent to us by authors")
+
+```
 ### save as clean data and start the Cohen's D script
 ```{r save_clean_data}
 

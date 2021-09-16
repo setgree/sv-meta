@@ -5,7 +5,6 @@ date: "9/7/2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
-
 ---
 
 ```{r setup, include=F, echo=F}
@@ -133,8 +132,10 @@ sum_lm(dat, d, study_design)
 sum_lm(dat, d, scale_type)
 # that is a HUGE difference
 
+# publication status?
+sum_lm(dat, d, publication_type)
 
-sum_lm(dat, d, behavior_type)
+sum_lm(dat, d, behavior_type)dat
 
 sum_lm(dat, d, scale_type)
 
@@ -145,16 +146,6 @@ robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts),
        cluster = behavioral_rcts$unique_study_id)
 
 
-## how much are behavioral effects driven by Taylor 2013
-behavioral_rcts  %>% 
-  filter(behavior_type %in% c('victimization', 'perpetration'), .preserve = F) %>%
-  droplevels() %>%
-  filter(paper_title != 'Shifting Boundaries: An Experimental Evaluation of a Dating Violence Prevention Program in Middle Schools') %>%
-  split(.$behavior_type) %>% 
-  map(.x = .,
-      .f = ~robust(x = rma(yi = .x$d, vi = .x$var_d), 
-                   cluster = .x$unique_study_id))
-# ~.027 for perp, ~ 0.0441 for victimization
 
 # what's the standard error? 
 # thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
