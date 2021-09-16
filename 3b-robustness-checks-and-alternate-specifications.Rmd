@@ -3,6 +3,9 @@ title: "4b-robustness-checks-and-alternative-specifications"
 author: "Seth Green"
 date: "9/7/2021"
 output: html_document
+editor_options: 
+  chunk_output_type: console
+
 ---
 
 ```{r setup, include=F, echo=F}
@@ -48,6 +51,24 @@ behavioral_data <- dat %>% filter(scale_type == 'behavior')
 behavioral_rcts <- dat %>%
   filter(scale_type == 'behavior', 
          study_design == 'rct')
+
+has_both <- dat %>% 
+  filter(attitudes_behaviors == 0) %>%
+  group_by(unique_study_id, scale_type) %>%
+  mutate(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, intervention_name,
+         study_design, mean_d, mean_var_d, mean_se_d,
+         ra, labels, scale_type) %>%  
+  slice(1) %>% 
+  pivot_wider(
+    id_cols = c(author, year, paper_title, unique_study_id,
+                intervention_name,
+                unique_study_id, study_design, ra, labels),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d))
+
 
 ```
 
@@ -149,7 +170,7 @@ cor.test.plus(
 ```
 
 
-```{r incomplete behavior_type_atitude_cor_tests}
+```{r incomplete behavior_type_atitude_cor_tests, eval = F}
 # THIS DOES NOT WORK 
 # pivot wider is hard
 # by outcome type
@@ -184,4 +205,17 @@ behavioral_rcts %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id)) 
 
+```
+
+### are effect sizes changing over time?
+
+```{r}
+dat %>% ggplot( (aes(x = year, y = d))) + geom_point() +   geom_smooth(method='lm')
+# basically no slope
+
+dat %>% sum_lm(d, year)
+dat %>% split(list(.$ra, .$scale_type)) %>%
+  map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
+        geom_point() + 
+        geom_smooth(method = 'lm'))
 ```
