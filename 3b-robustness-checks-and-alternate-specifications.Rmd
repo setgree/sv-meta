@@ -177,4 +177,11 @@ has_both %>%
   map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
 
 
+# What about just the RCTs?
+  
+behavioral_rcts %>%
+  split(behavioral_rcts$behavior_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) 
+
 ```

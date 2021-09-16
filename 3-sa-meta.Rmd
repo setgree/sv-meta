@@ -47,6 +47,12 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 behavioral_data <- dat %>% filter(scale_type == 'behavior')
 
+behavioral_rcts <- dat %>%
+  filter(scale_type == 'behavior', 
+         study_design == 'rct') %>%
+  select(author, year, paper_title, behavior_type, scale_name, 
+         intervention_name,d, se_d, n_t_post, n_c_post, everything())
+
 ```
 
 # General Methods 
@@ -122,18 +128,6 @@ dat %>%
        cluster = .x$unique_study_id)) 
 # this suggests that moving the needle on perpetration is effectively unsolved problem
 
-# What about just the RCTs?
-behavioral_rcts <- dat %>%
-  filter(scale_type == 'behavior', 
-         study_design == 'rct') %>%
-  select(author, year, paper_title, behavior_type, scale_name, 
-         intervention_name,d, se_d, n_t_post, n_c_post, everything())
-  
-behavioral_rcts %>%
-  split(behavioral_rcts$behavior_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-
 # now ra (to encompass pragmatic cluster designs)
 
 dat %>% 
@@ -190,10 +184,8 @@ behavioral_data %>%
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
 behavioral_data %>% 
-  mutate(study_group = if_else(
-    study_design %in% c('pragmatic rct', 'rct'), 'randomized', 'observational'),) %>%
     mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
-  split(list(.$study_group, .$yes_delay)) %>%
+  split(list(.$ra, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 # TODO: This and the above chunk are syntactically elegant but maybe there's an easier way to present results; really just need the model Results. 

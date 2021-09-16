@@ -17,18 +17,18 @@ library(stringr)
 
 # Prep Data
 dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+  select(unique_study_id, scale_type, everything()) %>%
+  group_by(unique_study_id) %>%
+  mutate(
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2)) %>%
+  ungroup()  %>%
   filter(study_design == 'rct') %>%
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                          year, " ", "(", scale_type, ")")) %>%
-  filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
-  mutate(scale_name = str_to_lower(scale_name),
-         behavior_type = as.factor(case_when(
-           str_detect(scale_name, 
-                      'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
-           str_detect(scale_name, 'vict|victimization|completed rape|underwent|ses-past year|survivor') ~ 'victimization',
-           str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
-           str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
-           TRUE ~ 'other'))) %>%
+  filter(attitudes_behaviors == 0) %>%
   group_by(unique_paper_id, scale_type) %>%
   mutate(d = mean(d), 
          var_d = mean(var_d),
