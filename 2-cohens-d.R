@@ -14,7 +14,7 @@ source('./functions/var_d_calc.R')
 
 dat_clean <- dat %>%
   mutate(d = case_when(
-    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic rct') ~ 
+    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic cluster rct') ~ 
       mapply(
         FUN = d_calc,
         stat_type = eff_type,
@@ -31,7 +31,7 @@ dat_clean <- dat %>%
       n_c = n_c_post))) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
   mutate(var_d = case_when(
-    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic rct') ~
+    !is.na(n_t_group) & study_design %in% c('rct', 'pragmatic cluster rct') ~
       mapply(
         FUN = var_d_calc,
         d = d,
