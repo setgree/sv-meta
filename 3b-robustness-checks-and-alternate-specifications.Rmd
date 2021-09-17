@@ -212,3 +212,37 @@ dat %>% split(list(.$ra, .$scale_type)) %>%
 
 # these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
 ```
+
+### appendix analysis
+
+We did not anticipate, however, the quantity of cluster-assigned studies in our sample (X of Y studies, and X of Y featuring random assignment)
+
+```{r}
+
+dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
+
+ dat %>% filter(ra) %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
+
+```
+
+
+
+*Robustness check of reclassifying pragmatic cluster RCTs as quasi-experimental studies*
+
+```{r}
+
+dat_robust <- dat %>%
+  mutate(study_design = if_else(study_design == 'pragmatic cluster rct',
+                                'quasi-experimental', 
+                                as.character(study_design)),
+         ra = ifelse(study_design == 'rct', TRUE,FALSE))
+
+dat_robust %>% split(.$ra) %>%
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+dat_robust %>% split(.$study_design) %>%
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+```
