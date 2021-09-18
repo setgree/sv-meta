@@ -246,3 +246,24 @@ dat_robust %>% split(.$study_design) %>%
        cluster = .x$unique_study_id))
 
 ```
+
+### illustration of difference between d_i_p estimator and odds_ratio estimator
+```{r}
+dip_calc <- function(p1, p2){
+  diff <- p1 - p2
+  sd <- sqrt(p2 * (1 - p2))
+  d <- round(diff/sd, digits = 3)
+  d
+}
+
+odds_ratio_to_d <- function(p1, p2){
+  odds_ratio <- p1 / p2
+  d <- log(odds_ratio) * sqrt(3) / pi
+  d
+}
+
+odds_ratio_to_d(.6, .3)
+dip_calc(.6, .3)
+odds_ratio_to_d(.6, .3) == odds_ratio_to_d(.06, .03)
+dip_calc(.6, .3) - dip_calc(.06, .03)
+```
