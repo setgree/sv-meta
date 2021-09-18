@@ -266,4 +266,12 @@ odds_ratio_to_d(.6, .3)
 dip_calc(.6, .3)
 odds_ratio_to_d(.6, .3) == odds_ratio_to_d(.06, .03)
 dip_calc(.6, .3) - dip_calc(.06, .03)
+
+### distribution of SD of Bernoulli SD
+
+proportions <- seq(from = 0, to = 1, by = 0.01)
+SDs <- as.numeric(lapply(X = props, FUN = function(p){sqrt(p * (1 - p))}))
+
+ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
+
 ```
