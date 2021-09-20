@@ -3315,3 +3315,12 @@ fischer_did <- did_calculator(mean_treatment_pre = treat_pre, mean_treatment_pos
 
 stand_result(eff_type = "d_i_d", ctrl_sd = .8, raw_effect_size = fischer_did, n_t = 3, n_c = 1)
 
+
+## Taylor 2016
+# I'm recording how the SDs were done so we can translate them to plain text
+# in the spreadsheet and then download the dataset correctly
+# =CI2SD(-0.11, 0.1,AR392,AP392)
+# =CI2SD(-0.09, 0.12, AR393,AP393)
+# =CI2SD(-0.12, 0.17,AR394,AP394)
+# =CI2SD(0, 0.07,AR395,AP395)
+# =CI2SD(-0.09, 0.12, AR393,AP393)
