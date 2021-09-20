@@ -125,7 +125,6 @@ dat %>%
        cluster = .x$unique_study_id))
 # behavioral effects are *much* smaller than attitude results
 
-
 table(dat$behavior_type)
 # TODO: triple-check that thesse are right.
 
@@ -142,36 +141,16 @@ dat %>%
     study_design == 'pragmatic cluster rct',
     'rct', as.character(study_design))) %>%
   split(list(.$scale_type, .$study_design)) %>%
-  imap(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 # TODO (optional): extract the needed elements from the list and 
-# format it into a nice table
+# format it into a nice table rather than filling in table by hands
 
-# how do effect sizes compare across behavioral types?
-
-# ra vs not:
-dat %>% 
-  split(list(.$scale_type, .$ra)) %>%   
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-
-dat %>% 
-  split(.$behavior_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-# this suggests that moving the needle on perpetration is effectively unsolved problem
-
-# now ra (to encompass pragmatic cluster designs)
-
-dat %>% 
-  split(list(.$ra, .$behavior_type)) %>%
-          map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-  
-# in general, the effects on victimization and  perpetration are larger in the rcts, 
-# which is encouraging (and surprising to me).
-
+# We note from this that effect sizes are basically the same for us as they are for 
+# Andersoon 2005 paper; is there a relationship between publication year and 
+# either average behavioral or attitudinal results?
+dat %>% sum_lm(d, year)
+dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
 ```
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 

@@ -10,6 +10,7 @@ editor_options:
 ```{r setup, include=F, echo=F}
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
+library(lubridate)
 library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
@@ -114,7 +115,37 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
 # out within-study correlations; but I defer to the group.
 ```
 
+Robustness checks for different ways to break down main results:
+```{r}
 
+# ra vs not:
+dat %>% 
+  split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+
+dat %>% 
+  split(.$behavior_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) 
+# this suggests that moving the needle on perpetration is effectively unsolved problem
+
+# now ra (to encompass pragmatic cluster designs)
+
+dat %>% 
+  split(list(.$ra, .$behavior_type)) %>%
+          map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) 
+  
+# in general, the effects on victimization and  perpetration are larger in the rcts, 
+# which is encouraging (and surprising to me).
+
+
+
+```
+
+Sum lm() checks that don't make it into the final paper
 ```{r sum_lm checks}
 dat %>% 
   split(.$ra) %>% 
@@ -226,7 +257,6 @@ dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$c
 ```
 
 
-
 *Robustness check of reclassifying pragmatic cluster RCTs as quasi-experimental studies*
 
 ```{r}
@@ -276,4 +306,21 @@ ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 
 # what's a DIP that corresponds to d = 0.28
 dip_calc(0.05, 0.015)
+```
+
+visualizing how little attitudes and behavioral outcomes have changed over time 
+```{r change_over_time}
+# visualize average within  year and outcome type
+dat %>% 
+  group_by(year, scale_type) %>% 
+  summarise(mean_d = mean(d), 
+            mean_se_d = mean(se_d)) %>%
+  ggplot(aes(x = year, y = mean_d, 
+             group = scale_type)) +
+  geom_point(aes(color = scale_type)) +
+  geom_smooth(method = 'lm', aes(color = scale_type), se = F) + 
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1986, 2018, 5)) +
+  labs(color = "Attitudes or behaviors")# +  ylab(expression(paste("Glass's", " ", Delta)))
+  
 ```
