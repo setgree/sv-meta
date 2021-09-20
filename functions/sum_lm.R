@@ -7,6 +7,4 @@ sum_lm <- function(dataset = dat, y = d, x = se_d, coefs_only = T, dgts = 5) {
   
   if(coefs_only) round(print_obj$coefficients, digits = dgts)
   else round(print_obj, digits = dgts)
-  # TODO: why is ifelse(coefs, print_obj$coefficients, print_obj) 
-  # not equivalent to this
   }

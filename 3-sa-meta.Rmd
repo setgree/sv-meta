@@ -66,6 +66,10 @@ sum_lm(dat, d, se_d,coefs_only = T)
 
 # by study type?
 dat %>% 
+  mutate(study_design = if_else(
+    study_design == 'pragmatic cluster rct',
+    'rct', 
+    as.character(study_design))) %>%
   split(.$study_design) %>% 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
 # visualize this?
@@ -93,9 +97,19 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
 
 ```{r study_type}
+# group the pragmatic RCTs with the RCTs for now; as robustness check, 
+# group them with the quasi-experiments, or ungroup them; fundamentally the same
+# results, but risks distracting from main conclusions in the paper
+# also the effect sizes between RCTs, pragmatic, & quasi-experiments are
+# really similar so adding the pragmatics to the quasi group affects overall 
+# estimates basically not at all (see robustness check)
 dat %>% 
-  split(dat$study_design) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+  mutate(study_design = if_else(
+    study_design == 'pragmatic cluster rct',
+    'rct', 
+    as.character(study_design))) %>%
+      split(.$study_design) %>% 
+      map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 ```
 
@@ -121,7 +135,27 @@ dat %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
+# FOR INCLUSION in PAPER: divide into observational, quasi, and RCT
+# and split into behavioral/attitudes and select
+dat %>%   
+  mutate(study_design = if_else(
+    study_design == 'pragmatic cluster rct',
+    'rct', as.character(study_design))) %>%
+  split(list(.$scale_type, .$study_design)) %>%
+  imap(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# TODO (optional): extract the needed elements from the list and 
+# format it into a nice table
+
 # how do effect sizes compare across behavioral types?
+
+# ra vs not:
+dat %>% 
+  split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+
 dat %>% 
   split(.$behavior_type) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
