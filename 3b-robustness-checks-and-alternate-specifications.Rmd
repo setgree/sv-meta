@@ -72,6 +72,24 @@ has_both <- dat %>%
 
 ```
 
+Some initial visualizations
+```{viz_attempts}
+# visualize this?
+dat %>% 
+  split(.$study_design) %>% 
+  map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
+                          dot_informative = T))
+# TODO: modify this so that text is lined up properly and so that color = 
+# attitude/behavior
+# 
+# so basically there's little relationship in the quasi and pragmatic rcts -- 
+# there is actually a negative relationship in the quasi experimental studies? -- 
+# but a meaningful relationship in the RCTs and pre-post studies. 
+# What if we separate into randomized and not-randomized
+
+
+
+```
 ```{r grouping rbustness checks}
 
 # robustness check: group by study AND scale_type and average the results
