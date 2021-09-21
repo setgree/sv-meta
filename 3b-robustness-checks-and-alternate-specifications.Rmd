@@ -160,6 +160,24 @@ dat %>%
 # which is encouraging (and surprising to me).
 
 
+## ROBUSTNESS CHECKS (probably remove)
+
+# First, behavior vs attitudes:
+dat %>% 
+  split(.$scale_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# behavioral effects are *much* smaller than attitude results
+
+table(dat$behavior_type)
+# TODO: triple-check that thesse are right.
+
+# ra vs not:
+dat %>% 
+  split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
 
 ```
 
@@ -193,6 +211,7 @@ behavioral_rcts %>%
 
 robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts),
        cluster = behavioral_rcts$unique_study_id)
+
 
 
 
@@ -342,3 +361,4 @@ dat %>%
   labs(color = "Attitudes or behaviors")# +  ylab(expression(paste("Glass's", " ", Delta)))
   
 ```
+

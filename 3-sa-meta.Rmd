@@ -36,7 +36,8 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
          ra = ifelse(study_design == 'rct' | study_design == 'pragmatic cluster rct', 
                      TRUE,
-                     FALSE)) %>%
+                     FALSE),
+         yes_delay = as.factor(delay > 0)) %>%
   group_by(unique_study_id) %>%
   mutate(
     attitudes_behaviors = case_when(
@@ -55,7 +56,7 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 # first, wht is the relationship between effect size and se?
 
-sum_lm(dat, d, se_d,coefs_only = T)
+sum_lm(dat, d, se_d, coefs_only = T)
 
 # by study type?
 dat %>% 
@@ -99,21 +100,6 @@ dat %>%
 "... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ```{r outcome_type}
-# First, behavior vs attitudes:
-dat %>% 
-  split(dat$scale_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-# behavioral effects are *much* smaller than attitude results
-
-table(dat$behavior_type)
-# TODO: triple-check that thesse are right.
-
-# ra vs not:
-dat %>% 
-  split(list(.$scale_type, .$ra)) %>%   
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
 
 # FOR INCLUSION in PAPER: divide into observational, quasi, and RCT
 # and split into behavioral/attitudes and select
@@ -132,22 +118,30 @@ dat %>%
 # either average behavioral or attitudinal results?
 dat %>% sum_lm(d, year)
 dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
+
 ```
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
 ```{r results_over_time}
 
+# overall relationship?
+dat %>% sum_lm(y = d, x = delay) # nothing there
+# ggplot(dat, aes(x = delay, y = d)) + stat_smooth() + geom_point() 
 
-# behavioral results overall
-dat %>% filter(scale_type == 'behavior') %>%
-  robust(x = rma(yi = d, vi = var_d, data = .), 
-       cluster = .$unique_study_id)
+# split meta-analysis by delay or not:
+dat %>% split(.$yes_delay) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# and further b scale type
+dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
 
-# meta-analysis with a split for delay, yes, no, separate by behavior category
+ # meta-analysis with a split for delay, yes, no, separate by behavior category
 dat %>% 
   filter(scale_type == 'behavior') %>% 
-  split(list(.$behavior_type, as.factor(.$delay > 0))) %>%
+  split(list(.$behavior_type, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
