@@ -34,7 +34,7 @@ source('./functions/sum_lm.R')
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
-         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic rct', 
+         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic cluster rct', 
                      TRUE,
                      FALSE)) %>%
   group_by(unique_study_id) %>%
@@ -45,13 +45,6 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
       scale_type == 'behavior' ~ 2)) %>%
   ungroup() 
 
-behavioral_data <- dat %>% filter(scale_type == 'behavior')
-
-behavioral_rcts <- dat %>%
-  filter(scale_type == 'behavior', 
-         study_design == 'rct') %>%
-  select(author, year, paper_title, behavior_type, scale_name, 
-         intervention_name,d, se_d, n_t_post, n_c_post, everything())
 
 ```
 
@@ -155,13 +148,17 @@ dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
-```{r behavioral_over_time}
+```{r results_over_time}
 
-robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
-       cluster = behavioral_data$unique_study_id)
+
+# behavioral results overall
+dat %>% filter(scale_type == 'behavior') %>%
+  robust(x = rma(yi = d, vi = var_d, data = .), 
+       cluster = .$unique_study_id)
 
 # meta-analysis with a split for delay, yes, no, separate by behavior category
-behavioral_data %>% 
+dat %>% 
+  filter(scale_type == 'behavior') %>% 
   split(list(.$behavior_type, as.factor(.$delay > 0))) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -177,9 +174,12 @@ dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
 * Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term.
 
 ```{r experimental_quasi_vs_non_experimental_delay_and_not}
-behavioral_data %>% 
+dat %>% 
+    filter(scale_type == 'behavior', 
+  select(author, year, paper_title, behavior_type, scale_name, 
+         intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
   mutate(study_group = if_else
-         (study_design %in% c('quasi-experimental', 'pragmatic rct', 'rct'),
+         (study_design %in% c('quasi-experimental', 'pragmatic cluster rct', 'rct'),
            'randomized and quasis',  'observational'),
          yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   split(list(.$study_group, .$yes_delay)) %>%
@@ -196,7 +196,10 @@ behavioral_data %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
-behavioral_data %>% 
+dat %>% 
+    filter(scale_type == 'behavior') %>%
+  select(author, year, paper_title, behavior_type, scale_name, 
+         intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
     mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
   split(list(.$ra, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
@@ -209,8 +212,10 @@ behavioral_data %>%
 
 ```{r perpetration outcomes}
 
-rct_perp <- behavioral_rcts %>% 
-  filter(behavior_type == 'perpetration')
+rct_perp <- dat %>%
+  filter(scale_type == 'behavior',
+                   behavior_type == 'perpetration', 
+                   study_design %in% c('rct', 'pragmatic cluster rct'))
 
 # now an overall meta. behavioral data need time to accumulate 
 # so instead of delay, yes/no, how about delay > 1 month (30 days)
@@ -243,7 +248,7 @@ ggplot(mapping = aes(x = se_d, y = d)) +
 ```{r}
 
 rcts_and_quasi <- dat %>% 
-  filter(study_design %in% c('rct', 'pragmatic_rct', 'quasi-experimental')) 
+  filter(study_design %in% c('rct', 'pragmatic cluster rct', 'quasi-experimental')) 
 
 # overall effect size difference between attitudes and behaviors?
 rcts_and_quasi %>%
