@@ -361,3 +361,19 @@ dat %>%
   
 ```
 
+additional ways to look at rct perp outcomes
+
+```{r rct_perp}
+# not a big difference
+
+rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) + 
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+
+rct_perp %>% filter(delay >30) %>%
+ggplot(mapping = aes(x = se_d, y = d)) + 
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+# a stronger relationship

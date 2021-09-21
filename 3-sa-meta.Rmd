@@ -164,8 +164,7 @@ dat %>%
          intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
   mutate(study_group = if_else
          (study_design %in% c('quasi-experimental', 'pragmatic cluster rct', 'rct'),
-           'randomized and quasis',  'observational'),
-         yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
+           'randomized and quasis',  'observational')) %>%
   split(list(.$study_group, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -181,15 +180,17 @@ dat %>%
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
 dat %>% 
-    filter(scale_type == 'behavior') %>%
-  select(author, year, paper_title, behavior_type, scale_name, 
-         intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
-    mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
-  split(list(.$ra, .$yes_delay)) %>%
+    filter(scale_type == 'behavior',
+           study_design != 'pre-post') %>%
+    mutate(study_group = if_else
+         (study_design %in% c('pragmatic cluster rct', 'rct'),
+           'randomized','quasis')) %>%
+  split(list(.$study_group, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-# TODO: This and the above chunk are syntactically elegant but maybe there's an easier way to present results; really just need the model Results. 
-# this is unexpectedly complex
+# TODO: This and the above chunk are syntactically elegant but maybe there's 
+# an easier way to present results; really just need the model Results. 
+# this is complex; I'm just moving everything into latex tables by hand
 ```
 
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
@@ -208,22 +209,6 @@ rct_perp %>%
   split(.$delay > 30) %>%
   map(.f = ~robust(rma(yi = .x$d, vi = .x$var_d), 
                    cluster = .x$unique_study_id))
-# no difference
-
-rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) + 
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-
-# one story here is the range of Ds -- what's this -0.5 increase in perpetration?
-# TODO: double-check that we coded this in the right direction
-
-rct_perp %>% filter(delay >30) %>%
-ggplot(mapping = aes(x = se_d, y = d)) + 
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-# a strong relationship
 
 ```
 
