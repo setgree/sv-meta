@@ -11,6 +11,7 @@
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
+library(ggtext)
 library(metafor)
 library(purrr)
 library(stringr)
@@ -50,21 +51,25 @@ overall <- dat_for_forest_plot %>%
 # plot 
 
 p <- dat_for_forest_plot %>%
-  ggplot(mapping = aes(y = study_names, x = d, xmin = d - (1.96 * se_d),
+  ggplot(mapping = aes(y = index, x = d, xmin = d - (1.96 * se_d),
                        xmax = d + (1.96 * se_d))) +  
            geom_point(size = 1) +
   geom_errorbarh(height = .1, aes(color = scale_type)) +
   geom_vline(xintercept = 0, 
              color = "black",  alpha = .5) +
   scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
+  scale_y_continuous(name = "", , breaks=1:40, # , trans = "reverse"
+                     labels = dat_for_forest_plot$study_names) + 
   ylab("Study") +
   geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
   geom_vline(xintercept = overall$behavior$beta, color = '#00BFC4', lty = 'dashed') +
-  
   labs(color = "Attitudes or behaviors") +
-theme_minimal()
+theme_minimal() + 
+  theme(axis.text.y = element_text(face = "bold"))
 p
-
+png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
+p
+dev.off()
 # what if we limit this just to perpetration and victimization outcomes?
 # TODO: this is complex, have to group studies together and then drop them if 
 # behavior type = bystander or volunteer
