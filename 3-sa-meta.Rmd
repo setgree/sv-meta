@@ -163,7 +163,7 @@ dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
 
 ```{r experimental_quasi_vs_non_experimental_delay_and_not}
 dat %>% 
-    filter(scale_type == 'behavior', 
+    filter(scale_type == 'behavior') %>%
   select(author, year, paper_title, behavior_type, scale_name, 
          intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
   mutate(study_group = if_else
