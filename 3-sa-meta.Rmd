@@ -113,6 +113,12 @@ dat %>%
 # TODO (optional): extract the needed elements from the list and 
 # format it into a nice table rather than filling in table by hands
 
+# split by both RA and behavior type
+dat %>% 
+  split(list(.$ra, .$behavior_type)) %>%
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
 # We note from this that effect sizes are basically the same for us as they are for 
 # Andersoon 2005 paper; is there a relationship between publication year and 
 # either average behavioral or attitudinal results?
@@ -131,10 +137,6 @@ dat %>% sum_lm(y = d, x = delay) # nothing there
 
 # split meta-analysis by delay or not:
 dat %>% split(.$yes_delay) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-# and further b scale type
-dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
@@ -264,6 +266,7 @@ has_both <- dat %>%
                 unique_study_id, study_design, ra, labels),
     names_from = c(scale_type), 
     values_from = c(mean_d, mean_var_d, mean_se_d))
+
 cor.test(x = has_both$mean_d_attitudes, 
          y = has_both$mean_d_behavior)
 
@@ -277,7 +280,7 @@ has_both %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 has_both %>% filter(study_design == 'rct') %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 ```
 
-
+### Behavior cats (perp, victimization, bystander, involvement) & study design
 ### Plotting
 ```{r plotting}
 

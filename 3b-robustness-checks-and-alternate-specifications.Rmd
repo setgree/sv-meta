@@ -149,13 +149,6 @@ dat %>%
        cluster = .x$unique_study_id)) 
 # this suggests that moving the needle on perpetration is effectively unsolved problem
 
-# now ra (to encompass pragmatic cluster designs)
-
-dat %>% 
-  split(list(.$ra, .$behavior_type)) %>%
-          map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-  
 # in general, the effects on victimization and  perpetration are larger in the rcts, 
 # which is encouraging (and surprising to me).
 
@@ -175,6 +168,12 @@ table(dat$behavior_type)
 # ra vs not:
 dat %>% 
   split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# scale type and delay
+# and further by scale type
+dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
