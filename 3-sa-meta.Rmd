@@ -49,12 +49,11 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 ```
 
-# General Methods 
+## Overall results and publication bias 
 
-**Initial data exploration**
 ```{r initial_exploration}
 
-# first, wht is the relationship between effect size and se?
+# first, what is the relationship between effect size and se?
 
 sum_lm(dat, d, se_d, coefs_only = T)
 
@@ -73,6 +72,9 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 
 ```
+
+
+## Heterogeneity across designs and outcomes
 
 ### By study type:
 
@@ -112,125 +114,43 @@ dat %>%
        cluster = .x$unique_study_id))
 # TODO (optional): extract the needed elements from the list and 
 # format it into a nice table rather than filling in table by hands
-
-# split by both RA and behavior type
-dat %>% 
-  split(list(.$ra, .$behavior_type)) %>%
-   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-# We note from this that effect sizes are basically the same for us as they are for 
-# Andersoon 2005 paper; is there a relationship between publication year and 
-# either average behavioral or attitudinal results?
-dat %>% sum_lm(d, year)
-dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
-
 ```
+
+
+## Do effects attenuate over time?
 
 * Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
 ```{r results_over_time}
 
-# overall relationship?
+# didn't pre-register relationship between year of publication and delta; 
+# but it occurred once we observed how clsoe our estimates were to those
+# of prior meta-analyses
 dat %>% sum_lm(y = d, x = delay) # nothing there
 # ggplot(dat, aes(x = delay, y = d)) + stat_smooth() + geom_point() 
+# dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
 
 # split meta-analysis by delay or not:
 dat %>% split(.$yes_delay) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
- # meta-analysis with a split for delay, yes, no, separate by behavior category
+# split for delay and behaviors/attitudes
+dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
+                map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# split for delay and behavioral categories
 dat %>% 
   filter(scale_type == 'behavior') %>% 
   split(list(.$behavior_type, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-
-# a delay leads to substantial decline, but interpret with caution
-# for just attitudes:
-dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
-                map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
 ```
 
-* Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term.
+## A closer look at behavioral outcomes
 
-```{r experimental_quasi_vs_non_experimental_delay_and_not}
-dat %>% 
-    filter(scale_type == 'behavior') %>%
-  select(author, year, paper_title, behavior_type, scale_name, 
-         intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
-  mutate(study_group = if_else
-         (study_design %in% c('quasi-experimental', 'pragmatic cluster rct', 'rct'),
-           'randomized and quasis',  'observational')) %>%
-  split(list(.$study_group, .$yes_delay)) %>%
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-# TODO: what is driving the large effect sizes 
-# for no delay quasi and randomized studies?
-# what even does no delay measurement mean in this context? Presumably there's no delay
-# from onset of treatment rather than conclusion otherwise you couldn't measure 
-# anything behavioral, unless it's entirely driven by 'intent' stuff
-```
-
-* Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
-
-```{r experimental_stricti_vs_non_experimental_delay_and_not}
-dat %>% 
-    filter(scale_type == 'behavior',
-           study_design != 'pre-post') %>%
-    mutate(study_group = if_else
-         (study_design %in% c('pragmatic cluster rct', 'rct'),
-           'randomized','quasis')) %>%
-  split(list(.$study_group, .$yes_delay)) %>%
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-# TODO: This and the above chunk are syntactically elegant but maybe there's 
-# an easier way to present results; really just need the model Results. 
-# this is complex; I'm just moving everything into latex tables by hand
-```
-
-* Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
-
-```{r perpetration outcomes}
-
-rct_perp <- dat %>%
-  filter(scale_type == 'behavior',
-                   behavior_type == 'perpetration', 
-                   study_design %in% c('rct', 'pragmatic cluster rct'))
-
-# now an overall meta. behavioral data need time to accumulate 
-# so instead of delay, yes/no, how about delay > 1 month (30 days)
-
-rct_perp %>%
-  split(.$delay > 30) %>%
-  map(.f = ~robust(rma(yi = .x$d, vi = .x$var_d), 
-                   cluster = .x$unique_study_id))
-
-```
-
-* Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
-
-```{r}
-
-rcts_and_quasi <- dat %>% 
-  filter(study_design %in% c('rct', 'pragmatic cluster rct', 'quasi-experimental')) 
-
-# overall effect size difference between attitudes and behaviors?
-rcts_and_quasi %>%
-  sum_lm(d, scale_type)
-
-# meta-analyze attitudes and behaviors separately, short and long term
-rcts_and_quasi %>% 
-    mutate(yes_delay = if_else(delay == 0, '& no delay', '& delay')) %>%
-  split(list(.$scale_type, .$yes_delay)) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-```
+### Do attitudinal changes predict behavioral changes?
 
 What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
 
@@ -265,41 +185,84 @@ has_both %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 has_both %>% filter(study_design == 'rct') %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 ```
 
-### Behavior cats (perp, victimization, bystander, involvement) & study design
-### Plotting
-```{r plotting}
+### Forest Plot 
+```{forest_plot}
+dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+  select(unique_study_id, scale_type, everything()) %>%
+  group_by(unique_study_id) %>%
+  mutate(
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2)) %>%
+  ungroup()  %>%
+  filter(study_design == 'rct') %>%
+  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
+                         year, " ", "(", scale_type, ")")) %>%
+  filter(attitudes_behaviors == 0) %>%
+  group_by(unique_paper_id, scale_type) %>%
+  mutate(d = mean(d), 
+         var_d = mean(var_d),
+         se_d = mean(se_d)) %>%
+  slice(1) %>%
+  ungroup(scale_type) %>% 
+  mutate(mean_se = mean(se_d)) %>%
+  arrange(desc(mean_se)) %>%
+  ungroup() %>%
+  mutate(index = row_number()) %>%
+  select(index, study_names, d, se_d, scale_type, unique_paper_id, behavior_type)
 
-# overall linear plot
-ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
+# overall effect size
+overall <- dat_for_forest_plot %>%
+  split(.$scale_type) %>%
+  map(~robust(x = rma(yi = .$d, 
+                          sei = .$se_d),
+                  cluster = .$unique_paper_id))
+# plot 
 
-#### Visualizing this: plot D and SE, with color corresponding to
-#### study type and shape corresponding to lab or field
-dplot(condense = T)
+p <- dat_for_forest_plot %>%
+  ggplot(mapping = aes(y = index, x = d, xmin = d - (1.96 * se_d),
+                       xmax = d + (1.96 * se_d))) +  
+           geom_point(size = 1) +
+  geom_errorbarh(height = .1, aes(color = scale_type)) +
+  geom_vline(xintercept = 0, 
+             color = "black",  alpha = .5) +
+  scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
+  scale_y_continuous(name = "", , breaks=1:40, # , trans = "reverse"
+                     labels = dat_for_forest_plot$study_names) + 
+  ylab("Study") +
+  geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
+  geom_vline(xintercept = overall$behavior$beta, color = '#00BFC4', lty = 'dashed') +
+  labs(color = "Attitudes or behaviors") +
+theme_minimal() + 
+  theme(axis.text.y = element_text(face = "bold"))
+p
+png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
+p
+dev.off()
+# what if we limit this just to perpetration and victimization outcomes?
+# TODO: this is complex, have to group studies together and then drop them if 
+# behavior type = bystander or volunteer
 
-# I had really thought there was more of a relationship
-dplot(condense = F)
-# not especially informative
+# This was really useful for figuring out colors and such: `ggplot_build(p)$data`
 
-## Relationship between attitudes and behaviors 
+# TODO: create another point at the bottom that's the overall effect size and
+# SE, a la the bottom point you get from the stata equivalent. 
 
-has_both %>%
-  select(author, year, mean_d_attitudes, mean_d_behavior) %>%
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
-  geom_point(size = 3) + 
-  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
-  theme_minimal()
-
-# now same with RCTs 
-has_both %>% filter(study_design == 'rct') %>% 
-  select(author, year, mean_d_attitudes, mean_d_behavior, labels) %>%
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
-  geom_point(size = 3) + 
-  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE, 
-              method = "lm",
-              show.legend = FALSE, alpha = .1, se = F) + 
-  geom_label_repel(mapping = aes(label = labels)) +
-  theme_minimal()
+# Plus just make it nicer overall
 ```
+
+### Assessing differences between categories of behavioral outcomes
+
+```{r heterogeneity_study_design_behavior_type}
+# split by both RA and behavior type
+dat %>% 
+  split(list(.$ra, .$behavior_type)) %>%
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# We note from this that effect sizes are basically the same for us as they are for 
+# Andersoon 2005 paper; is there a relationship between publication year and 
+# either average behavioral or attitudinal results?
+```
+
