@@ -112,6 +112,15 @@ dat %>%
   split(list(.$scale_type, .$study_design)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
+
+# behavior vs attitudes for the 'overall' column
+dat %>% 
+  split(.$scale_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# behavioral effects are *much* smaller than attitude results
+
 # TODO (optional): extract the needed elements from the list and 
 # format it into a nice table rather than filling in table by hands
 ```
@@ -215,9 +224,8 @@ dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>
 # overall effect size
 overall <- dat_for_forest_plot %>%
   split(.$scale_type) %>%
-  map(~robust(x = rma(yi = .$d, 
-                          sei = .$se_d),
-                  cluster = .$unique_paper_id))
+  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
+              cluster = .$unique_paper_id))
 # plot 
 
 p <- dat_for_forest_plot %>%

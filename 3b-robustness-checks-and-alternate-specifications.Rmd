@@ -7,6 +7,9 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+## Libraries and data 
+
 ```{r setup, include=F, echo=F}
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
@@ -144,218 +147,7 @@ rct_perp %>%
 
 ```
 
-## robustness checks, alternate specifications, and alternate visualizations
-
-Some initial visualizations
-```{r viz_attempts}
-# visualize this?
-dat %>% 
-  split(.$study_design) %>% 
-  map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
-                          dot_informative = T))
-# TODO: modify this so that text is lined up properly and so that color = 
-# attitude/behavior
-# 
-# so basically there's little relationship in the quasi and pragmatic rcts -- 
-# there is actually a negative relationship in the quasi experimental studies? -- 
-# but a meaningful relationship in the RCTs and pre-post studies. 
-# What if we separate into randomized and not-randomized
-
-
-
-```
-
-```{r grouping rbustness checks}
-
-# robustness check: group by study AND scale_type and average the results
-dat_grouped <- dat %>%
-  group_by(unique_study_id, scale_type) %>%
-  mutate(mean_d = mean(d),
-         mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
-  slice(1)
-
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
-       cluster = dat_grouped$unique_study_id)
-# alternative specification 
-rma(yi = d, vi = var_d, data = dat_grouped)
-
-# once we've grouped by study_id, clustering changes the SE by just 0.0001
-
-# How about not grouping by scale_type?s
-dat_grouped_two <- dat %>%
-  group_by(unique_study_id) %>%
-  mutate(mean_d = mean(d),
-         mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
-  slice(1)
-
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
-  cluster = dat_grouped_two$unique_study_id)
-
-# again, very similar.
-# NOTE FOR TEAM: should we average within studies?
-# in the prejudice meta, y'all averaged all the Ds and var_ds
-# within each (to create a single point estimate representing each
-# study). But here, we are looking for a lot more within-study variance (e.g. to
-# attitudes predict # behavior? What about perp/victimization? So I personally
-# vote that we not average but take everything. As a robustness check above, I found
-# that averaging doesn't change the overall results (it didn't
-# in the prejudice meta that much either if I recall correctly). Another
-# approach would be, JH, to create a function that has "average within study" as
-# an input each time to replace the functions I am using. My intuition is that
-# we should not average, because it's more trouble than it's worth to then parse
-# out within-study correlations; but I defer to the group.
-```
-
-Robustness checks for different ways to break down main results:
-```{r}
-
-# ra vs not:
-dat %>% 
-  split(list(.$scale_type, .$ra)) %>%   
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-
-dat %>% 
-  split(.$behavior_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-# this suggests that moving the needle on perpetration is effectively unsolved problem
-
-# in general, the effects on victimization and  perpetration are larger in the rcts, 
-# which is encouraging (and surprising to me).
-
-
-## ROBUSTNESS CHECKS (probably remove)
-
-# First, behavior vs attitudes:
-dat %>% 
-  split(.$scale_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-# behavioral effects are *much* smaller than attitude results
-
-table(dat$behavior_type)
-# TODO: triple-check that thesse are right.
-
-# ra vs not:
-dat %>% 
-  split(list(.$scale_type, .$ra)) %>%   
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-# scale type and delay
-# and further by scale type
-dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-
-```
-
-Sum lm() checks that don't make it into the final paper
-```{r sum_lm checks}
-dat %>% 
-  split(.$ra) %>% 
-  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
-
-
-# how about the overall relationship between lab/field and d? 
-sum_lm(dat, d, lab_field)
-
-# study type?
-sum_lm(dat, d, study_design)
-# yep, meaningful relationship
-
-# scale type?
-sum_lm(dat, d, scale_type)
-# that is a HUGE difference
-
-# publication status?
-sum_lm(dat, d, publication_type)
-
-sum_lm(dat, d, behavior_type)dat
-
-sum_lm(dat, d, scale_type)
-
-behavioral_rcts %>% 
-  filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
-
-robust(rma(yi = d, vi = var_d, mods = behavior_type, data = behavioral_rcts),
-       cluster = behavioral_rcts$unique_study_id)
-
-
-
-
-# what's the standard error? 
-# thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
-cor.test.plus <- function(x) {
-  list(x, 
-       Standard.Error = unname(sqrt((1 - x$estimate^2)/x$parameter)))
-}
-cor.test.plus(
-  cor.test(
-    x = has_both$mean_d_attitudes, 
-    y = has_both$mean_d_behavior))
-
-```
-
-
-```{r incomplete behavior_type_atitude_cor_tests, eval = F}
-# THIS DOES NOT WORK 
-# pivot wider is hard
-# by outcome type
-has_both_behavior_types <- dat %>% 
-  filter(attitudes_behaviors == 0) %>%
-  group_by(unique_study_id, scale_type, behavior_type) %>%
-  mutate(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>%
-  select(author, year, paper_title, unique_study_id, intervention_name,
-         study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type, behavior_type) %>%  
-  slice(1) %>% 
-  pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels),
-    names_from = c(scale_type, , behavior_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) # %>%
-#  select(-behavior_type_attitudes) %>% 
- # rename(behavior_type = behavior_type_behavior)
-
-has_both %>% 
-  split(.$behavior_type) %>%
-  map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
-
-
-# What about just the RCTs?
-  
-behavioral_rcts %>%
-  split(behavioral_rcts$behavior_type) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-
-```
-
-### are effect sizes changing over time?
-
-```{r}
-dat %>% ggplot( (aes(x = year, y = d))) + geom_point() +   geom_smooth(method='lm')
-# basically no slope
-
-dat %>% sum_lm(d, year)
-dat %>% split(list(.$ra, .$scale_type)) %>%
-  map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
-        geom_point() + 
-        geom_smooth(method = 'lm'))
-
-# these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
-```
-
-### appendix analysis
+### additional appendix analyses
 
 We did not anticipate, however, the quantity of cluster-assigned studies in our sample (X of Y studies, and X of Y featuring random assignment)
 
@@ -419,6 +211,228 @@ ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 dip_calc(0.05, 0.015)
 ```
 
+## robustness checks, alternate specifications, and alternate visualizations
+
+### Plotting
+
+```{r viz_attempts}
+dat %>% 
+  split(.$study_design) %>% 
+  map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
+                          dot_informative = T))
+# TODO: modify this so that text is lined up properly and so that color = 
+# attitude/behavior
+# 
+# so basically there's little relationship in the quasi and pragmatic rcts -- 
+# there is actually a negative relationship in the quasi experimental studies? -- 
+# but a meaningful relationship in the RCTs and pre-post studies. 
+# What if we separate into randomized and not-randomized
+
+# overall linear plot
+ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+
+#### Visualizing this: plot D and SE, with color corresponding to
+#### study type and shape corresponding to lab or field
+dplot(condense = T)
+
+# I had really thought there was more of a relationship
+dplot(condense = F)
+# not especially informative
+
+## Relationship between attitudes and behaviors 
+
+has_both %>%
+  select(author, year, mean_d_attitudes, mean_d_behavior) %>%
+  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  geom_point(size = 3) + 
+  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
+  theme_minimal()
+
+# now same with RCTs 
+has_both %>% filter(study_design == 'rct') %>% 
+  select(author, year, mean_d_attitudes, mean_d_behavior, labels) %>%
+  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  geom_point(size = 3) + 
+  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE, 
+              method = "lm",
+              show.legend = FALSE, alpha = .1, se = F) + 
+  geom_label_repel(mapping = aes(label = labels)) +
+  theme_minimal()
+
+
+```
+
+### Robustness checks
+
+Group results within study
+
+```{r grouping rbustness checks}
+
+# robustness check: group by study AND scale_type and average the results
+dat_grouped <- dat %>%
+  group_by(unique_study_id, scale_type) %>%
+  mutate(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
+  slice(1)
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
+       cluster = dat_grouped$unique_study_id)
+# alternative specification 
+rma(yi = d, vi = var_d, data = dat_grouped)
+
+# once we've grouped by study_id, clustering changes the SE by just 0.0001
+
+# How about not grouping by scale_type?s
+dat_grouped_two <- dat %>%
+  group_by(unique_study_id) %>%
+  mutate(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
+  slice(1)
+
+robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
+  cluster = dat_grouped_two$unique_study_id)
+
+# again, very similar.
+# NOTE FOR TEAM: should we average within studies?
+# in the prejudice meta, y'all averaged all the Ds and var_ds
+# within each (to create a single point estimate representing each
+# study). But here, we are looking for a lot more within-study variance (e.g. to
+# attitudes predict # behavior? What about perp/victimization? So I personally
+# vote that we not average but take everything. As a robustness check above, I found
+# that averaging doesn't change the overall results (it didn't
+# in the prejudice meta that much either if I recall correctly). Another
+# approach would be, JH, to create a function that has "average within study" as
+# an input each time to replace the functions I am using. My intuition is that
+# we should not average, because it's more trouble than it's worth to then parse
+# out within-study correlations; but I defer to the group.
+```
+
+different ways to break down main results:
+```{r}
+
+# ra vs not (in paper we break down by study)
+dat %>% 
+  split(list(.$scale_type, .$ra)) %>%   
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# We *would* include this next outcome if our behavioral category table 
+# included an 'overall' row
+
+dat %>% 
+  split(.$behavior_type) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id)) 
+# this suggests that moving the needle on perpetration is effectively unsolved problem
+
+# in general, the effects on victimization and  perpetration are larger in the rcts, 
+# which is encouraging (and surprising to me).
+
+table(dat$behavior_type)
+# TODO: triple-check that thesse are right.
+
+# scale type and delay
+dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+```
+
+sum_lm() checks that don't make it into the final paper
+
+```{r sum_lm checks}
+dat %>% 
+  split(.$ra) %>% 
+  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
+
+
+# how about the overall relationship between lab/field and d? 
+sum_lm(dat, d, lab_field)
+
+# study type?
+sum_lm(dat, d, study_design)
+# yep, meaningful relationship
+
+# scale type?
+sum_lm(dat, d, scale_type)
+# that is a HUGE difference
+
+# publication status?
+sum_lm(dat, d, publication_type)
+
+sum_lm(dat, d, behavior_type)dat
+
+sum_lm(dat, d, scale_type)
+
+behavioral_rcts %>% 
+  filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
+```
+
+Correlation between attitudes and behaviors -- standard errors of estimates
+
+```{r attitude_behavior_correlation_standard_error}
+
+# thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
+cor.test.plus <- function(x) {
+  list(x, 
+       Standard.Error = unname(sqrt((1 - x$estimate^2)/x$parameter)))
+}
+cor.test.plus(
+  cor.test(
+    x = has_both$mean_d_attitudes, 
+    y = has_both$mean_d_behavior))
+
+```
+
+The following doesn't work yet but it's an idea
+```{r incomplete behavior_type_atitude_cor_tests, eval = F}
+# THIS DOES NOT WORK 
+# pivot wider is hard
+# by outcome type
+has_both_behavior_types <- dat %>% 
+  filter(attitudes_behaviors == 0) %>%
+  group_by(unique_study_id, scale_type, behavior_type) %>%
+  mutate(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, intervention_name,
+         study_design, mean_d, mean_var_d, mean_se_d,
+         ra, labels, scale_type, behavior_type) %>%  
+  slice(1) %>% 
+  pivot_wider(
+    id_cols = c(author, year, paper_title, unique_study_id,
+                intervention_name,
+                unique_study_id, study_design, ra, labels),
+    names_from = c(scale_type, , behavior_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d)) # %>%
+#  select(-behavior_type_attitudes) %>% 
+ # rename(behavior_type = behavior_type_behavior)
+
+has_both %>% 
+  split(.$behavior_type) %>%
+  map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
+```
+
+Different ways of assessing effect size change over time
+
+```{r}
+dat %>% ggplot( (aes(x = year, y = d))) + geom_point() +   geom_smooth(method='lm')
+# basically no slope
+
+dat %>% sum_lm(d, year)
+dat %>% split(list(.$ra, .$scale_type)) %>%
+  map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
+        geom_point() + 
+        geom_smooth(method = 'lm'))
+
+# these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
+```
+
+
 visualizing how little attitudes and behavioral outcomes have changed over time 
 ```{r change_over_time}
 # visualize average within  year and outcome type
@@ -452,3 +466,6 @@ ggplot(mapping = aes(x = se_d, y = d)) +
   geom_smooth(method = 'lm') + 
   theme_minimal()
 # a stronger relationship
+```
+
+
