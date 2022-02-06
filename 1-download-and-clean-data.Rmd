@@ -1,7 +1,7 @@
 ---
 title: "1-download-and-clean-data.Rmd"
 author: "Seth Green and John-Henry Pezzuto"
-date: "8/14/2020"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -192,25 +192,30 @@ raw_dat <- raw_dat %>%
 raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 ```
 
-### add pragmatic rct designation
-Also make some just quasi-experimental because t=otherwise they really won't work for calculating variance
+### Provisional: make everything under 10 clusters quasi-experimental
+As Paluck et al. note in 'progress and challenges'
+> in cluster-randomized experiments, groups of people, rather than individuals, are randomly assigned to experimental conditions. Reliably estimating standard errors requires at least 10 clusters, but many intervention studies do not approach even this minimal number.
+So the cutoff is tens
+
 ```{r pragmatic_rct}
 raw_dat$study_design <- as.character(raw_dat$study_design)
+
 table(raw_dat$study_design)
+
 raw_dat <- raw_dat %>%
-  mutate(study_design = case_when(
+  mutate(study_design = if_else(
     !is.na(n_t_group) &
       study_design == 'rct' &
-      n_t_group + n_c_group <= 3 ~ 'quasi-experimental',
-    !is.na(n_t_group) &
-      study_design == 'rct' & 
-      between(n_t_group + n_c_group, 4, 10) ~ 'pragmatic cluster rct',
-    TRUE ~ study_design))
+      n_t_group + n_c_group < 10,  'quasi-experimental',
+    study_design))
 
+# how many did that affect
+table(raw_dat$study_design)
+#22 got redesignated.
+# TODO: check that these are really all RCTs, it's not that many
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 
-table(raw_dat$study_design)
 ```
 
 ### unique study id
@@ -272,11 +277,12 @@ raw_dat <- raw_dat %>%
 
 
 ```
+
 ### is_red: loading?
 ```{r is_red, eval=F}
 raw_dat %>% filter(is_red == "Loading...")
 # GENERAL CHECK: make sure there are no rows that meet this condition
-
+# ARGH that this is almost all of them??
 raw_dat <- raw_dat %>% select(-is_red)
 ```
 

@@ -263,9 +263,20 @@ dev.off()
 ### Assessing differences between categories of behavioral outcomes
 
 ```{r heterogeneity_study_design_behavior_type}
+# split for RA
+dat %>% 
+  split(.$ra) %>%
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
 # split by both RA and behavior type
 dat %>% 
   split(list(.$ra, .$behavior_type)) %>%
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+dat %>% 
+  split(.$behavior_type) %>%
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
