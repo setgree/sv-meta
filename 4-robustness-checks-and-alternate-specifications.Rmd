@@ -40,7 +40,8 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
          ra = ifelse(study_design == 'rct' | study_design == 'pragmatic rct', 
                      TRUE,
-                     FALSE)) %>%
+                     FALSE),
+         yes_delay = as.factor(delay > 0)) %>%
   group_by(unique_study_id) %>%
   mutate(
     attitudes_behaviors = case_when(
@@ -85,7 +86,7 @@ dat %>%
   select(author, year, paper_title, behavior_type, scale_name, 
          intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
   mutate(study_group = if_else
-         (study_design %in% c('quasi-experimental', 'pragmatic cluster rct', 'rct'),
+         (study_design %in% c('quasi-experimental', 'rct'),
            'randomized and quasis',  'observational')) %>%
   split(list(.$study_group, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
