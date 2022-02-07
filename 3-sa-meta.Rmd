@@ -34,9 +34,7 @@ source('./functions/sum_lm.R')
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
-         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic cluster rct', 
-                     TRUE,
-                     FALSE),
+         ra = ifelse(study_design == 'rct', TRUE, FALSE),
          yes_delay = as.factor(delay > 0)) %>%
   group_by(unique_study_id) %>%
   mutate(
@@ -59,13 +57,10 @@ sum_lm(dat, d, se_d, coefs_only = T)
 
 # by study type?
 dat %>% 
-  mutate(study_design = if_else(
-    study_design == 'pragmatic cluster rct',
-    'rct', 
-    as.character(study_design))) %>%
   split(.$study_design) %>% 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
 
+# strong evidence of publication bias in the pre-post studies
 # now, an overall meta-analysis
 
 robust(x = rma(yi = d, vi = var_d, data = dat),
@@ -88,10 +83,6 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 # really similar so adding the pragmatics to the quasi group affects overall 
 # estimates basically not at all (see robustness check)
 dat %>% 
-  mutate(study_design = if_else(
-    study_design == 'pragmatic cluster rct',
-    'rct', 
-    as.character(study_design))) %>%
       split(.$study_design) %>% 
       map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -106,9 +97,6 @@ dat %>%
 # FOR INCLUSION in PAPER: divide into observational, quasi, and RCT
 # and split into behavioral/attitudes and select
 dat %>%   
-  mutate(study_design = if_else(
-    study_design == 'pragmatic cluster rct',
-    'rct', as.character(study_design))) %>%
   split(list(.$scale_type, .$study_design)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -132,17 +120,18 @@ dat %>%
 
 ```{r results_over_time}
 
-# didn't pre-register relationship between year of publication and delta; 
-# but it occurred once we observed how clsoe our estimates were to those
-# of prior meta-analyses
-dat %>% sum_lm(y = d, x = delay) # nothing there
-# ggplot(dat, aes(x = delay, y = d)) + stat_smooth() + geom_point() 
-# dat %>% split(.$scale_type) %>% map(.f = ~sum_lm(y = d, x = year, dataset = .))
+dat %>% sum_lm(y = d, x = delay) # nothing obvious there
+# didn't pre-register this, but year of publication and delta; 
+ggplot(dat, aes(x = year, y = d)) + 
+  stat_smooth(method = "lm") + geom_point()  # nothing obvious
+dat %>% split(.$scale_type)  %>% 
+  map(.f = ~sum_lm(y = d, x = year, dataset = .))
 
 # split meta-analysis by delay or not:
 dat %>% split(.$yes_delay) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
+# stronger relationship
 
 # split for delay and behaviors/attitudes
 dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
