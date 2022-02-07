@@ -13,7 +13,7 @@ Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',
   output_dir = './results', clean = T)"
 
 # step 4: robustness checks
-Rscript -e "rmarkdown::render('./3b-robustness-checks-and-alternate-specifications.Rmd', 
+Rscript -e "rmarkdown::render('./4-robustness-checks-and-alternate-specifications.Rmd', 
   output_dir = './results', clean = T)"
 
 
