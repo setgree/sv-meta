@@ -280,7 +280,7 @@ raw_dat <- raw_dat %>%
 
 ### is_red: loading?
 ```{r is_red, eval=F}
-raw_dat %>% filter(is_red == "Loading...")
+raw_dat %>% filter(is_red == "Loading...") %>% select(author, year, unique_study_id, is_red)
 # GENERAL CHECK: make sure there are no rows that meet this condition
 # ARGH that this is almost all of them??
 raw_dat <- raw_dat %>% select(-is_red)
