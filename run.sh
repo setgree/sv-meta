@@ -12,9 +12,10 @@ Rscript 2-cohens-d.R
 Rscript -e "rmarkdown::render('./3-sa-meta.Rmd', 
   output_dir = './results', clean = T)"
 
-# step 4: forest plot
-Rscript -e "rmarkdown::render('./4-ggplot-forest-plot.R', 
+# step 4: robustness checks
+Rscript -e "rmarkdown::render('./3b-robustness-checks-and-alternate-specifications.Rmd', 
   output_dir = './results', clean = T)"
+
 
 # step 5: descriptives
 Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd', 
