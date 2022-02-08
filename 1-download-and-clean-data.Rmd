@@ -173,9 +173,7 @@ sum(is.na(raw_dat$lab_field)) # 0 as of 09/19
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 ```
 
-# fix study_design var
-and scale type
-
+# fix study_design var and scale type
 
 ```{r study_design}
 raw_dat$study_design <- gsub(pattern = 'cross sectional', 
