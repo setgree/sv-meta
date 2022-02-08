@@ -1,5 +1,5 @@
 ---
-title: "3b-robustness-checks-and-alternative-specifications"
+title: "4-robustness-checks-and-alternative-specifications"
 author: "Seth Green"
 date: "9/7/2021"
 output: html_document
@@ -365,7 +365,7 @@ sum_lm(dat, d, scale_type)
 # publication status?
 sum_lm(dat, d, publication_type)
 
-sum_lm(dat, d, behavior_type)dat
+sum_lm(dat, d, behavior_type)
 
 sum_lm(dat, d, scale_type)
 
