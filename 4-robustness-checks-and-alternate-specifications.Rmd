@@ -116,7 +116,6 @@ dat %>%
 # this is complex; I'm just moving everything into latex tables by hand
 ```
 
-
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
 
 ```{r perpetration outcomes}
@@ -161,13 +160,13 @@ dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$c
 ```
 
 
-*Robustness check of reclassifying pragmatic cluster RCTs as quasi-experimental studies*
+*Robustness check of reclassifying the low cluster studies  as RCTS*
 
 ```{r}
 
 dat_robust <- dat %>%
-  mutate(study_design = if_else(study_design == 'pragmatic cluster rct',
-                                'quasi-experimental', 
+  mutate(study_design = if_else(robust_quasi_check == 1,
+                                'rct', 
                                 as.character(study_design)),
          ra = ifelse(study_design == 'rct', TRUE,FALSE))
 
