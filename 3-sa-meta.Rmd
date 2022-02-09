@@ -7,6 +7,14 @@ editor_options:
   chunk_output_type: console
 ---
 
+### Overview
+
+This document will work through our results, and its aim is to both reflect the pre-analyis plan as it was written in 2018 and the most up-to-date version of the text. Everything in our pre-analsis plan will be included in either the main results section or an appendix, but not necessarily in the order it was drafted up.
+
+This document will precede chunks with quotes prepended either a "*paper*" or a "*PAP* to denote whether the text is from the paper or the pre-analysis plan.
+
+### Setup
+
 ```{r setup, include=F, echo=F}
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
@@ -47,10 +55,20 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 ```
 
-## Overall results and publication bias 
+## Results 
 
-```{r initial_exploration}
+### Overall results and publication bias 
 
+*paper*: "We estimate an overall effect size of..."
+```{r overall_meta}
+
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_study_id)
+```
+
+*paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
+
+```{publication_bias_overall}
 # first, what is the relationship between effect size and se?
 
 sum_lm(dat, d, se_d, coefs_only = T)
@@ -59,71 +77,60 @@ sum_lm(dat, d, se_d, coefs_only = T)
 dat %>% 
   split(.$study_design) %>% 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
-
-# strong evidence of publication bias in the pre-post studies
-# now, an overall meta-analysis
-
-robust(x = rma(yi = d, vi = var_d, data = dat),
-       cluster = dat$unique_study_id)
-
 ```
-
 
 ## Heterogeneity across designs and outcomes
 
 ### By study type:
 
-"Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods)..."
+*pap*: "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement"
+
+*paper*: "The picture becomes murkier, however, when we break effect size estimates down by study design and attitudes vs. behaviors"
 
 ```{r study_type}
-# group the pragmatic RCTs with the RCTs for now; as robustness check, 
-# group them with the quasi-experiments, or ungroup them; fundamentally the same
-# results, but risks distracting from main conclusions in the paper
-# also the effect sizes between RCTs, pragmatic, & quasi-experiments are
-# really similar so adding the pragmatics to the quasi group affects overall 
-# estimates basically not at all (see robustness check)
-dat %>% 
-      split(.$study_design) %>% 
-      map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-```
 
-### By outcome type:
-
-"... and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
-
-```{r outcome_type}
-
-# FOR INCLUSION in PAPER: divide into observational, quasi, and RCT
-# and split into behavioral/attitudes and select
+# main body of table
 dat %>%   
   split(list(.$scale_type, .$study_design)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# behavior vs attitudes for the 'overall' column
+# behavior vs attitudes for the 'overall' row
 dat %>% 
   split(.$scale_type) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# behavioral effects are *much* smaller than attitude results
+# study designs for the "overall" column
+dat %>% 
+      split(.$study_design) %>% 
+      map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# overall/overall text comes from overall_meta chunk
 
 # TODO (optional): extract the needed elements from the list and 
-# format it into a nice table rather than filling in table by hands
+# format it into a nice table rather than filling in table by hand
 ```
 
+*paper* (footnote): "In keeping with the consistency between available meta-analyses' estimates, we also observe little relationship between effect size and year of publication"
+
+```{r effect_size_and_pub_year}
+dat %>% sum_lm(y = d, x = year)
+dat %>% ggplot(aes(x = year,y = d)) + geom_point() + stat_smooth(method = "lm") + theme_minimal()
+```
 
 ## Do effects attenuate over time?
 
-* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
+*pap* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
 ```{r results_over_time}
 
-dat %>% sum_lm(y = d, x = delay) # nothing obvious there
-# didn't pre-register this, but year of publication and delta; 
-ggplot(dat, aes(x = year, y = d)) + 
-  stat_smooth(method = "lm") + geom_point()  # nothing obvious
+# split for delay and behaviors/attitudes
+dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
+                map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+# get overall averages for categories
 dat %>% split(.$scale_type)  %>% 
   map(.f = ~sum_lm(y = d, x = year, dataset = .))
 
@@ -133,11 +140,6 @@ dat %>% split(.$yes_delay) %>%
        cluster = .x$unique_study_id))
 # stronger relationship
 
-# split for delay and behaviors/attitudes
-dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
-                map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
 # split for delay and behavioral categories
 dat %>% 
   filter(scale_type == 'behavior') %>% 
@@ -145,6 +147,10 @@ dat %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 ```
+
+### By outcome type:
+
+*pap*"...(i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ## A closer look at behavioral outcomes
 
