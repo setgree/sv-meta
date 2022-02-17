@@ -35,11 +35,10 @@ source('./functions/sum_lm.R')
 ```{r load_data, include=F, echo=F}
 # read in data, add in two useful variables
 # labels that paste together author and year for plots;  
-# reading later results);
 # add attitudes_behaviors (for studies that have both), one or the other;
-# new var for random assignment (probably should remove 'contains randomization')
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+raw_dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+dat <- raw_dat %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
          ra = ifelse(study_design == 'rct', TRUE, FALSE),
@@ -67,10 +66,8 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 ```
 
 *paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
-
+TODO: insert text about variation by publication type
 ```{publication_bias_overall}
-# first, what is the relationship between effect size and se?
-
 sum_lm(dat, d, se_d, coefs_only = T)
 
 # by study type?
@@ -116,21 +113,24 @@ dat %>%
 
 ```{r effect_size_and_pub_year}
 dat %>% sum_lm(y = d, x = year)
-dat %>% ggplot(aes(x = year,y = d)) + geom_point() + stat_smooth(method = "lm") + theme_minimal()
+# this graph isn't in the paper but making sure there's no obvious relationship:
+dat %>% ggplot(aes(x = year,y = d)) + geom_point() +
+  stat_smooth(method = "lm") + theme_minimal() +
+  ggtitle('Effect sizes over time')
 ```
 
 ## Do effects attenuate over time?
 
 *pap* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
-```{r results_over_time}
+```{r do_effect_sizes_decay}
 
-# split for delay and behaviors/attitudes
+# split for delay and behaviors/attitudes 
 dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
                 map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# get overall averages for categories
+ # get overall averages for categories
 dat %>% split(.$scale_type)  %>% 
   map(.f = ~sum_lm(y = d, x = year, dataset = .))
 
@@ -138,7 +138,6 @@ dat %>% split(.$scale_type)  %>%
 dat %>% split(.$yes_delay) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-# stronger relationship
 
 # split for delay and behavioral categories
 dat %>% 
@@ -156,7 +155,7 @@ dat %>%
 
 ### Do attitudinal changes predict behavioral changes?
 
-What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’
+*pap*: "What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’"
 
 ```{r}
 has_both <- dat %>% 
@@ -189,9 +188,9 @@ has_both %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 has_both %>% filter(study_design == 'rct') %>% sum_lm(mean_d_behavior, mean_d_attitudes)
 ```
 
-### Forest Plot 
+### Forest Plot (Figure)
 ```{forest_plot}
-dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
   group_by(unique_study_id) %>%
   mutate(
@@ -244,7 +243,7 @@ png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 10
 p
 dev.off()
 # what if we limit this just to perpetration and victimization outcomes?
-# TODO: this is complex, have to group studies together and then drop them if 
+# TODO: this is complex, but group studies together and then drop them if 
 # behavior type = bystander or volunteer
 
 # This was really useful for figuring out colors and such: `ggplot_build(p)$data`
@@ -256,7 +255,7 @@ dev.off()
 ```
 
 ### Assessing differences between categories of behavioral outcomes
-
+I *believe* that this is duplicative
 ```{r heterogeneity_study_design_behavior_type}
 # split for RA
 dat %>% 
@@ -275,8 +274,5 @@ dat %>%
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# We note from this that effect sizes are basically the same for us as they are for 
-# Andersoon 2005 paper; is there a relationship between publication year and 
-# either average behavioral or attitudinal results?
 ```
 
