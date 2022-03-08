@@ -181,7 +181,7 @@ raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 # fix study_design var and scale type
 
 ```{r study_design}
-raw_dat$study_design <- gsub(pattern = 'cross sectional', 
+raw_dat$study_design <- gsub(pattern = 'cross sectional',
                              replacement = 'cross-sectional',  
                              x = raw_dat$study_design)
 raw_dat$study_design <- gsub(pattern = 'prepost', replacement = 'pre-post',  x = raw_dat$study_design)
@@ -218,7 +218,7 @@ table(raw_dat$study_design)
 raw_dat <- raw_dat %>%
   mutate(robust_quasi_check = if_else(!is.na(n_t_group) &
       study_design == 'rct' &
-      n_t_group + n_c_group < 10, 1, 0)) %>%
+      n_t_group + n_c_group < 10, TRUE, FALSE)) %>%
   mutate(study_design = if_else(
     !is.na(n_t_group) &
       study_design == 'rct' &
@@ -226,15 +226,14 @@ raw_dat <- raw_dat %>%
     study_design))
 
 # how many did that affect
-table(raw_dat$study_design)
-#22 got redesignated.
+redesignated <- raw_dat %>% filter(robust_quasi_check) %>%
+  select(author, year, intervention_name, scale_name, delay)
 # TODO: check that these are really all RCTs, it's not that many
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
 
 ```
 
-```
 ### fix delay
 
 ```{r delay}
