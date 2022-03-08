@@ -18,7 +18,7 @@ library(tidyr)
 options(scipen = 99)
 ```
 
-### Download most up to date dataset
+### Download most up-to-date dataset
 ```{r download_data}
 ## download sheet from google -----------------------------------
 drive_auth(email = T)
@@ -31,13 +31,13 @@ drive_download("Primary Prevention Meta 2020",
 
 ```{r clean_data}
 raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA")) %>% as_tibble()
-readr::problems(raw_dat)
-# drop redline studies and add unique paper ID
+readr::problems(raw_dat) # none as of March 2022
 
+# drop 'eliminate' studies & add unique paper ID
 raw_dat <- raw_dat %>%
   fill(paper_title) %>%
   replace_na(list(eliminiate = 0)) %>% 
-  filter(!eliminiate == 1) %>%  # drop red rows
+  filter(!eliminiate == 1) %>%
   group_by(paper_title) %>%
   mutate(first_line = row_number() == 1) %>%
   ungroup() %>%
@@ -59,13 +59,11 @@ raw_dat$eff_type <- gsub(pattern = 'd.i.d', replacement = 'd_i_d', x = raw_dat$e
 raw_dat$eff_type <- gsub(pattern = 'f.test', replacement = 'f_test', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'd.i.m', replacement = 'd_i_m', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'difference_in_proportion', replacement = 'd_i_p', x = raw_dat$eff_type)
-# raw_dat$eff_type <- gsub(pattern = 'reg.coef (B)', replacement = 'reg_coef', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'reg.coef', replacement = 'reg_coef', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 't.test', replacement = 't_test', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'beta', replacement = 'reg_coef', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'log.odds.ratio', replacement = 'log_odds_ratio', x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'odds.ratio', replacement = 'odds_ratio', x = raw_dat$eff_type)
-# raw_dat$eff_type <- gsub(pattern = '', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'NA', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'did', replacement = "d_i_d", x = raw_dat$eff_type)
@@ -73,18 +71,19 @@ raw_dat$eff_type <- gsub(pattern = 'dim', replacement = "d_i_m", x = raw_dat$eff
 raw_dat$eff_type <- gsub(pattern = "^$|^ $", replacement =  NA, x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'd.i.p', replacement = "d_i_p", x = raw_dat$eff_type)
 raw_dat$eff_type <- gsub(pattern = 'd.i.p.', replacement = "d_i_p", x = raw_dat$eff_type)
+unique(raw_dat$eff_type)
 
 
 # fix cluster type data
-raw_dat$cluster_type <- gsub('n_groups', 'n groups', raw_dat$cluster_type)
+raw_dat$cluster_type <- gsub('n_groups',
+                             'n groups', raw_dat$cluster_type)
 raw_dat$cluster_type <- gsub('-', NA, raw_dat$cluster_type)
 raw_dat$cluster_type <- gsub("^$|^ $", NA, raw_dat$cluster_type)
 
 ## how many of these are going to require non-standard procedures
 ## or potential re-doing of the recording
-table(raw_dat$eff_type, useNA = 'ifany') # there were 15 NAs but as of 06/18/21
-# everything is accounted for; notes on specifics in slack conversation  with 
-# JH & Roni. For each, I either pinklined them (re: recommended for redline) or filled them in
+table(raw_dat$eff_type, useNA = 'ifany') 
+# As of March 2022 there were none, we've either pinklined/redlined or filled them in
 ```
 
 #' Ns, anticipated directions, and ctrl_SDs
@@ -93,10 +92,9 @@ table(raw_dat$eff_type, useNA = 'ifany') # there were 15 NAs but as of 06/18/21
 class(raw_dat$ctrl_sd)
 table(raw_dat$ctrl_sd)
 
-which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows, because
-# I fixed a bunch of studies' 'is_red' tab not being up to date
+which(raw_dat$ctrl_sd == "")
+# as of 06/18/2021, this is no rows
 
-# TODO: We should just move all the redlined studies to a different tab
 #' convert "no.sd" and "-" to NA
 raw_dat$ctrl_sd <- gsub(pattern = 'no.sd', replacement = NA, x = raw_dat$ctrl_sd)
 raw_dat$ctrl_sd <- gsub(pattern = '-', replacement = NA, x = raw_dat$ctrl_sd)
@@ -121,7 +119,7 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
          n_t_post, n_c_post, n_t_group, n_c_group,
          unique_paper_id, intervention_name,
          study_design, scale_name, is_red)
-## Fixed all these!! Thank goodness (08-31-2021)
+## Fixed all these! Thank goodness (08-31-2021)
 
 table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany')  
 which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 0 as of 06/18/21

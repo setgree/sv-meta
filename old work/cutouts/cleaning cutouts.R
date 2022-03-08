@@ -1,3 +1,8 @@
+# March 2022 cutouts from download and clean script
+# raw_dat$eff_type <- gsub(pattern = 'reg.coef (B)', replacement = 'reg_coef', x = raw_dat$eff_type)
+# raw_dat$eff_type <- gsub(pattern = '', replacement = NA, x = raw_dat$eff_type)
+
+
 ## cleaning cutouts 
 
 # all the below got removed because we're using lab_field rather than lab_or_field
