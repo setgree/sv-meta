@@ -86,9 +86,9 @@ table(raw_dat$eff_type, useNA = 'ifany')
 # As of March 2022 there were none, we've either pinklined/redlined or filled them in
 ```
 
-#' Ns, anticipated directions, and ctrl_SDs
+#'ctrl_SDs
 
-```{r fix_vars }
+```{r ctrl_sds }
 class(raw_dat$ctrl_sd)
 table(raw_dat$ctrl_sd)
 
@@ -123,12 +123,20 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
 
 table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany')  
 which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 0 as of 06/18/21
+```
+
+# Effect Types & Cluster Types
+```{r eff_types}
 table(raw_dat$eff_type)
 range(raw_dat$u_s_d, na.rm = T) 
 
 ## change the cluster randomized var to be factors with an NA rather than a -
 raw_dat$cluster_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$cluster_type)
+```
 
+# Ns
+
+```{r Ns}
 ## make everything else we need numeric
 raw_dat$n_t_pre <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_pre)
 raw_dat$n_t_post <- gsub(pattern = '-', replacement = NA, x = raw_dat$n_t_post)
@@ -149,7 +157,8 @@ Ns <- raw_dat %>%
   select(n_t_pre, n_t_post, n_c_pre, n_c_post, n_t_group, n_c_group)
 
 raw_dat <- raw_dat %>%
-  mutate(across(.cols = c(starts_with(c('n_t_', 'n_c_'))), .fns = as.numeric) %>% 
+  mutate(across(.cols = c(starts_with(c('n_t_', 'n_c_'))), 
+                .fns = as.numeric) %>% 
   mutate(u_s_d = as.numeric(u_s_d)) %>%
   mutate(anticipated_direction = as.numeric(anticipated_direction)))
 # TODO: revisit these warnings
@@ -162,7 +171,7 @@ na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |
          study_design, scale_name)
  # None (08-31-2021)! 
 # ARGH some as of 02/07/
-# TODO: revis at the end but I think these won't matter
+# TODO: revisit at the end but I think these won't matter
 rm(na_vals, na_dat, Ns)
 
 # check lab/field variable
