@@ -1,3 +1,12 @@
+### 2022-03-08
+Really forgot about this but Seth TODOs are
+* make sure that both results sections look right (the preferred and the one that matches the PAP closely)
+* redo the robustness section to include the RCTs that got changed because of too few clusters (think about that one for a moment)
+* make sure that all the numbers are properly aligned in the appendix with the new estimates
+* then email everyone?
+
+I think that might be the wrap on my contributions which would be nice
+
 ### 2020-11-22
 got organized (put everything into asana)
 
