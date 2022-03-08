@@ -9,11 +9,13 @@ editor_options:
 
 ### Overview
 
-This document will work through our results, and its aim is to both reflect the pre-analyis plan as it was written in 2018 and the most up-to-date version of the text. Everything in our pre-analsis plan will be included in either the main results section or an appendix, but not necessarily in the order it was drafted up.
+This document will work through our results, and its aim is to both reflect the pre-analyis plan as it was written in 2018 and the most up-to-date version of the text. Everything in our pre-analysis plan will be included in either the main results section or an appendix, but not necessarily in the order it was drafted up.
 
-This document will precede chunks with quotes prepended either a "*paper*" or a "*PAP* to denote whether the text is from the paper or the pre-analysis plan.
+This document will precede chunks with quotes prepended either a "*paper*" or a "*pap*" to denote whether the text is from the paper or the pre-analysis plan.
 
-### Setup
+## Setup
+
+### load libraries
 
 ```{r setup, include=F, echo=F}
 rm(list = ls())
@@ -31,6 +33,8 @@ source('./functions/sum_lm.R')
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
 ```
+
+### load data
 
 ```{r load_data, include=F, echo=F}
 # read in data, add in two useful variables
@@ -275,4 +279,3 @@ dat %>%
        cluster = .x$unique_study_id))
 
 ```
-
