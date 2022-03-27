@@ -73,7 +73,10 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 TODO: insert text about variation by publication type
 ```{publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
+```
 
+*paper*: "The relationship between SE and $\Delta$ remains insignificant within randomized and quasi-experimental designs, but highly significant within pre-post designs"
+```{r publication_bias_by_study_type}
 # by study type?
 dat %>% 
   split(.$study_design) %>% 
@@ -86,7 +89,7 @@ dat %>%
 
 *pap*: "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement"
 
-*paper*: "The picture becomes murkier, however, when we break effect size estimates down by study design and attitudes vs. behaviors"
+*paper*: "The picture becomes murkier, however, when we break effect size estimates down by study design and attitudes vs. behaviors...Further, the largest behavioral effect sizes are found, on average, within randomized designs"
 
 ```{r study_type}
 
@@ -113,7 +116,7 @@ dat %>%
 # format it into a nice table rather than filling in table by hand
 ```
 
-*paper* (footnote): "In keeping with the consistency between available meta-analyses' estimates, we also observe little relationship between effect size and year of publication"
+*paper* (footnote): "...In keeping with the consistency between available meta-analyses' estimates, we also observe a small, statistically insignificant relationship between effect size and year of publication"
 
 ```{r effect_size_and_pub_year}
 dat %>% sum_lm(y = d, x = year)
