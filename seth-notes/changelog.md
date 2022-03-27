@@ -1,3 +1,7 @@
+### 2022-03-27 
+STOPPED AT LINE 210 in 3.rmd, and added one more to do to look at some other studies again (victimzation with no delays)
+
+
 ### 2022-03-08
 Really forgot about this but Seth TODOs are
 * make sure that both results sections look right (the preferred and the one that matches the PAP closely)

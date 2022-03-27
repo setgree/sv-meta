@@ -70,7 +70,6 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 ```
 
 *paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
-TODO: insert text about variation by publication type
 ```{publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
@@ -121,7 +120,11 @@ dat %>%
 ```{r effect_size_and_pub_year}
 dat %>% sum_lm(y = d, x = year)
 # this graph isn't in the paper but making sure there's no obvious relationship:
-dat %>% ggplot(aes(x = year,y = d)) + geom_point() +
+dat %>% 
+  ggplot(aes(x = year,y = d,  
+             color = study_design,
+             shape = scale_type)) + 
+  geom_point() +
   stat_smooth(method = "lm") + theme_minimal() +
   ggtitle('Effect sizes over time')
 ```
@@ -130,6 +133,12 @@ dat %>% ggplot(aes(x = year,y = d)) + geom_point() +
 
 *pap* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
+*paper*: Overall, the relationship between days of delay and effect size is diminutive and insignificant ($\beta$ = -0.00023). 
+```{r d_and_delays}
+dat %>% sum_lm(d, delay)
+```
+
+*paper*: "An alternative way to assess the overall relationship is to split the sample into outcomes with a delay of at least one day and those without and meta-analyze each separately. Estimates and standard errors for delayed and non-delayed outcomes are presented in table XXX, with separate estimates presented for attitudes and for involvement, bystander, victimization and perpetration behavioral outcomes
 ```{r do_effect_sizes_decay}
 
 # split for delay and behaviors/attitudes 
@@ -137,11 +146,10 @@ dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
                 map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
- # get overall averages for categories
-dat %>% split(.$scale_type)  %>% 
-  map(.f = ~sum_lm(y = d, x = year, dataset = .))
+# note: 'overall' behavioral/attitude measurements taken from 
+# analyses above
 
-# split meta-analysis by delay or not:
+# split meta-analysis by delay/not for 'overall' estimates:
 dat %>% split(.$yes_delay) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -152,17 +160,28 @@ dat %>%
   split(list(.$behavior_type, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
-```
 
-### By outcome type:
+## TODO: revisit these
+dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE') %>% select(author, year, paper_title, d, se_d) # really two negative #s? 
+## TODO also: give readers a sense of how many are in each category
+#
+```
 
 *pap*"...(i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
 
 ## A closer look at behavioral outcomes
 
 ### Do attitudinal changes predict behavioral changes?
+*paper*: A clear majority of interventions in our sample are aimed directly at changing attitudes towards sexual violence, and attitudinal outcomes outnumber behavioral outcomes by about five to two (355 to 145)
+
+```{r attitudes_behaviors_count}
+table(dat$scale_type)
+```
+
 
 *pap*: "What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’"
+
+*paper*: To assess this, we look at studies that measure both behavioral and attitudinal changes and estimate the average correlation. In the entire universe of studies reporting both types of outcomes, we see an average Pearson's product-moment correlation of 0.14; this is a modest, positive relationship, but with a p-value of  0.278, it is not statistically distinguishable from zero. 
 
 ```{r}
 has_both <- dat %>% 
@@ -185,14 +204,23 @@ has_both <- dat %>%
 cor.test(x = has_both$mean_d_attitudes, 
          y = has_both$mean_d_behavior)
 
+```
+
+*paper*:  Breaking down these results by study type, we see a _negative_ correlation between attitudes and behaviors in observational research (-0.615057, p = 0.03329); a stronger, positive relationship within quasi-experimental research (0.3464049, p = 0.1054)); and a middling relationship within RCTs (0.1594935, p = 0.4364).
+
+```{attitude_behavior_correlation_for_rcts_vs_observational}
+
 # by study type?
 has_both %>% 
-  split(.$ra) %>%
+  split(.$study_design) %>%
   map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
 
-# what's the slope of these lines
-has_both %>% sum_lm(mean_d_behavior, mean_d_attitudes)
-has_both %>% filter(study_design == 'rct') %>% sum_lm(mean_d_behavior, mean_d_attitudes)
+# not in paper but what's the slope of these lines
+has_both %>%
+  split(.$study_design) %>%
+  map(~sum_lm(y = mean_d_behavior,
+              x = mean_d_attitudes, 
+              dat = .))
 ```
 
 ### Forest Plot (Figure)
