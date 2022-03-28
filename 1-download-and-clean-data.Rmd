@@ -21,11 +21,12 @@ options(scipen = 99)
 ### Download most up-to-date dataset
 ```{r download_data}
 ## download sheet from google -----------------------------------
-drive_auth(email = T)
-drive_download("Primary Prevention Meta 2020", 
-               path = "./data/sa_meta_data",
-               overwrite = T, 
-               type = 'csv') # dl to csv gets just first sheet
+# drive_auth(email = T)
+# drive_download("Primary Prevention Meta 2020", 
+#                path = "./data/sa_meta_data",
+#                overwrite = T, 
+#                type = 'csv') # dl to csv gets just first sheet
+
 ```
 
 
@@ -280,7 +281,7 @@ raw_dat <- raw_dat %>%
     str_detect(scale_name, 'bystander|observing|intervention|intervene') ~ 'bystander',
     scale_type == 'behavior' & 
     str_detect(scale_name, 'volunteer|support|involvement') ~ 'involvement',
-#    scale_type == 'behavior' ~ 'other',
+    scale_type == 'attitudes' ~ 'attitude',
     TRUE ~ NA_character_)))
 
 
@@ -316,3 +317,4 @@ saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
 ## remove raw data
 # file.remove('./data/sa_meta_data.csv')
 ```
+

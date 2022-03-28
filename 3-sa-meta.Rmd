@@ -39,23 +39,14 @@ source('./functions/sum_lm.R')
 ```{r load_data, include=F, echo=F}
 # read in data, add in two useful variables
 # labels that paste together author and year for plots;  
-# add attitudes_behaviors (for studies that have both), one or the other;
 
 raw_dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+
 dat <- raw_dat %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
          ra = ifelse(study_design == 'rct', TRUE, FALSE),
          yes_delay = as.factor(delay > 0)) %>%
-  group_by(unique_study_id) %>%
-  mutate(
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) %>%
-  ungroup() 
-
-
 ```
 
 ## Results 
@@ -70,7 +61,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 ```
 
 *paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
-```{publication_bias_overall}
+```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
 
@@ -86,7 +77,11 @@ dat %>%
 
 ### By study type:
 
-*pap*: "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement"
+*pap*: "Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement
+
+*pap*: Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term."
+
+...(i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement).
 
 *paper*: "The picture becomes murkier, however, when we break effect size estimates down by study design and attitudes vs. behaviors...Further, the largest behavioral effect sizes are found, on average, within randomized designs"
 
@@ -129,6 +124,7 @@ dat %>%
   ggtitle('Effect sizes over time')
 ```
 
+
 ## Do effects attenuate over time?
 
 *pap* Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
@@ -139,6 +135,7 @@ dat %>% sum_lm(d, delay)
 ```
 
 *paper*: "An alternative way to assess the overall relationship is to split the sample into outcomes with a delay of at least one day and those without and meta-analyze each separately. Estimates and standard errors for delayed and non-delayed outcomes are presented in table XXX, with separate estimates presented for attitudes and for involvement, bystander, victimization and perpetration behavioral outcomes
+
 ```{r do_effect_sizes_decay}
 
 # split for delay and behaviors/attitudes 
@@ -156,7 +153,6 @@ dat %>% split(.$yes_delay) %>%
 
 # split for delay and behavioral categories
 dat %>% 
-  filter(scale_type == 'behavior') %>% 
   split(list(.$behavior_type, .$yes_delay)) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -167,25 +163,31 @@ dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE'
 #
 ```
 
-*pap*"...(i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
-
 ## A closer look at behavioral outcomes
+
+### Behavioral effect sizes by delay and study design
 
 ### Do attitudinal changes predict behavioral changes?
 *paper*: A clear majority of interventions in our sample are aimed directly at changing attitudes towards sexual violence, and attitudinal outcomes outnumber behavioral outcomes by about five to two (355 to 145)
 
 ```{r attitudes_behaviors_count}
 table(dat$scale_type)
+# by study design?
+dat %>% group_by(scale_type, study_design) %>% tally()
+
+# by categories of behavior/attitudes?
+dat %>% group_by(study_design, behavior_type) %>% tally()
 ```
 
 
 *pap*: "What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’"
+...The covariation of attitudes and behaviors will be assessed in the full sample of studies
 
 *paper*: To assess this, we look at studies that measure both behavioral and attitudinal changes and estimate the average correlation. In the entire universe of studies reporting both types of outcomes, we see an average Pearson's product-moment correlation of 0.14; this is a modest, positive relationship, but with a p-value of  0.278, it is not statistically distinguishable from zero. 
 
 ```{r}
 has_both <- dat %>% 
-  filter(attitudes_behaviors == 0) %>%
+  filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
   group_by(unique_study_id, scale_type) %>%
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
@@ -208,7 +210,7 @@ cor.test(x = has_both$mean_d_attitudes,
 
 *paper*:  Breaking down these results by study type, we see a _negative_, statistically significant correlation between attitudes and behaviors in observational research (-0.615057, p = 0.03329); a stronger, positive relationship within quasi-experimental research (0.3464049, p = 0.1054)); and a middling relationship within RCTs (0.1594935, p = 0.4364).
 
-```{attitude_behavior_correlation_for_rcts_vs_observational}
+```{r ttitude_behavior_correlation_for_rcts_vs_observational}
 
 # by study type?
 has_both %>% 
@@ -285,13 +287,23 @@ dev.off()
 ```
 
 ### Assessing differences between categories of behavioral outcomes
-I *believe* that this is duplicative
+
+*paper*: Table XXX presents the effect sizes associated with each category of behavior, separated by random assignment, with attitudinal effect sizes presented as a reference category.
+
 ```{r heterogeneity_study_design_behavior_type}
-# split for RA
+# overall estimates
+# first, how many are in each category?
+dat %>% group_by(study_design, behavior_type) %>% tally()
+# so there are zero pre-post designs that ask about involvement
+dat %>% filter(study_design == 'pre-post', behavior_type == 'involvement') %>% count()
+
+# Two possible solutions to this. 1) group studies into RCT vs non-randomized,
+# and because we specify this in the pre-analysis plan 
+# Or we can combine involvement and bystander behaviors into one category which 
+# we might call 'anti-rape culture' or '
 dat %>% 
-  split(.$ra) %>%
-   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
+  split(list(.$study_design, .$behavior_type)) %>% 
+  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
 
 # split by both RA and behavior type
 dat %>% 

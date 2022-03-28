@@ -80,23 +80,15 @@ has_both <- dat %>%
 
 * Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term.
 
-```{r experimental_quasi_vs_non_experimental_delay_and_not}
-dat %>% 
-    filter(scale_type == 'behavior') %>%
-  select(author, year, paper_title, behavior_type, scale_name, 
-         intervention_name,d, se_d, n_t_post, n_c_post, everything()) %>%
-  mutate(study_group = if_else
-         (study_design %in% c('quasi-experimental', 'rct'),
-           'randomized and quasis',  'observational')) %>%
-  split(list(.$study_group, .$yes_delay)) %>%
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
+```{r behavioral_attenuation_by_study_design}
+dat %>%
+  filter(scale_type == 'behavior') %>%
+split(list(.$study_design, .$yes_delay)) %>% 
+  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
+              cluster = .$unique_paper_id))
+# 'overall' estimates taken from tables in text
+```
 
-# TODO: what is driving the large effect sizes 
-# for no delay quasi and randomized studies?
-# what even does no delay measurement mean in this context? Presumably there's no delay
-# from onset of treatment rather than conclusion otherwise you couldn't measure 
-# anything behavioral, unless it's entirely driven by 'intent' stuff
 ```
 
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
