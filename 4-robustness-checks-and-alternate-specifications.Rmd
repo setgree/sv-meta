@@ -78,7 +78,7 @@ has_both <- dat %>%
 
 ## Pre-registered analyses not in the main text
 
-* Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term.
+* Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 
 ```{r behavioral_attenuation_by_study_design}
 dat %>%
@@ -92,28 +92,43 @@ split(list(.$study_design, .$yes_delay)) %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
+
+# how many in each category? 
 dat %>% 
-    filter(scale_type == 'behavior',
-           study_design != 'pre-post') %>%
-    mutate(study_group = if_else
-         (study_design %in% c('pragmatic cluster rct', 'rct'),
-           'randomized','quasis')) %>%
-  split(list(.$study_group, .$yes_delay)) %>%
+  filter(scale_type == 'behavior', study_design != 'pre-post') %>%
+  group_by(study_design, yes_delay) %>% 
+  tally()
+# The following will fail for reasons that, because of the code below, 
+# don't make sense to me -- might be a metafor bug
+# dat %>% 
+#   filter(scale_type == 'behavior', study_design != 'pre-post') %>%
+#   split(list(.$study_design, .$yes_delay)) %>%
+#   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+#        cluster = .x$unique_study_id))
+
+# so instead...
+dat %>% filter(study_design == 'quasi-experimental',
+               scale_type == 'behavior') %>%
+  split(.$yes_delay) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-# TODO: This and the above chunk are syntactically elegant but maybe there's 
-# an easier way to present results; really just need the model Results. 
-# this is complex; I'm just moving everything into latex tables by hand
+                   cluster = .x$unique_study_id))
+
+dat %>% filter(study_design == 'rct', scale_type == 'behavior') %>%
+  split(.$yes_delay) %>%
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+                   cluster = .x$unique_study_id))
+
 ```
 
 * Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
+
+*paper*: For reasons discussed in the main text, perpetration outcomes with no delay are not necessarily capturing the full effect of treatment. We instead split perpetration outcomes within randomized designs by the presence of a delay of at least 30 days or not.
 
 ```{r perpetration outcomes}
 
 rct_perp <- dat %>%
   filter(scale_type == 'behavior',
-                   behavior_type == 'perpetration', 
-                   study_design %in% c('rct', 'pragmatic cluster rct'))
+                   behavior_type == 'perpetration')
 
 # now an overall meta. behavioral data need time to accumulate 
 # so instead of delay, yes/no, how about delay > 1 month (30 days)
@@ -130,7 +145,7 @@ rct_perp %>%
 ```{r attitudes_behaviors_quasi_random_delay_yes_no}
 
  dat %>% 
-  filter(study_design %in% c('rct', 'pragmatic cluster rct', 'quasi-experimental')) %>%
+  filter(study_design %in% c('rct', 'quasi-experimental')) %>%
   split(list(.$scale_type, .$yes_delay)) %>% 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
@@ -149,7 +164,6 @@ dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$c
  dat %>% filter(ra) %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
 
 ```
-
 
 *Robustness check of reclassifying the low cluster studies  as RCTS*
 

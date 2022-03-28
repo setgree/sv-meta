@@ -1,3 +1,7 @@
+### 2022-03-28
+Stopped at line 155 of the appendix; as far as I know, the main results section and the Rmd are aligned
+
+
 ### 2022-03-27 
 STOPPED AT LINE 210 in 3.rmd, and added one more to do to look at some other studies again (victimzation with no delays)
 
