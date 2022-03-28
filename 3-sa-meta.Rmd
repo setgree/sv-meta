@@ -287,6 +287,7 @@ dev.off()
 ```
 
 ### Assessing differences between categories of behavioral outcomes
+*pap*: Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 *paper*: Table XXX presents the effect sizes associated with each category of behavior, separated by random assignment, with attitudinal effect sizes presented as a reference category.
 
@@ -300,20 +301,23 @@ dat %>% filter(study_design == 'pre-post', behavior_type == 'involvement') %>% c
 # Two possible solutions to this. 1) group studies into RCT vs non-randomized,
 # and because we specify this in the pre-analysis plan 
 # Or we can combine involvement and bystander behaviors into one category which 
-# we might call 'anti-rape culture' or '
+# we might call 'anti-rape culture' or just 'involvement'. As of this writing,
+# March 2022, that's probably what I (Seth) would do; but our PAP says random 
+# vs not. So here we'll do both analyses, and put random vs not in the text
 dat %>% 
-  split(list(.$study_design, .$behavior_type)) %>% 
-  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
-
-# split by both RA and behavior type
-dat %>% 
-  split(list(.$ra, .$behavior_type)) %>%
+  split(list(.$ra, .$behavior_type)) %>% 
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-dat %>% 
-  split(.$behavior_type) %>%
-   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
+# Alternative grouping:
 
+dat %>% 
+  mutate(behavior_type = as.character(behavior_type)) %>%
+  mutate(behavior_type = if_else(
+  behavior_type == 'bystander', 'involvement', behavior_type)) %>% 
+  split(list(.$study_design, .$behavior_type)) %>%
+     map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+# This was trickier than it should have been 
+# https://github.com/ReeceGoding/Frustration-One-Year-With-R#410-factor-variables
 ```

@@ -89,8 +89,6 @@ split(list(.$study_design, .$yes_delay)) %>%
 # 'overall' estimates taken from tables in text
 ```
 
-```
-
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
@@ -138,6 +136,7 @@ rct_perp %>%
        cluster = .x$unique_study_id))
 
 ```
+
 
 ### additional appendix analyses
 
