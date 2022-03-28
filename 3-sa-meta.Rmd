@@ -206,7 +206,7 @@ cor.test(x = has_both$mean_d_attitudes,
 
 ```
 
-*paper*:  Breaking down these results by study type, we see a _negative_ correlation between attitudes and behaviors in observational research (-0.615057, p = 0.03329); a stronger, positive relationship within quasi-experimental research (0.3464049, p = 0.1054)); and a middling relationship within RCTs (0.1594935, p = 0.4364).
+*paper*:  Breaking down these results by study type, we see a _negative_, statistically significant correlation between attitudes and behaviors in observational research (-0.615057, p = 0.03329); a stronger, positive relationship within quasi-experimental research (0.3464049, p = 0.1054)); and a middling relationship within RCTs (0.1594935, p = 0.4364).
 
 ```{attitude_behavior_correlation_for_rcts_vs_observational}
 
@@ -224,31 +224,26 @@ has_both %>%
 ```
 
 ### Forest Plot (Figure)
+
+*paper*: Figure XXX highlights the randomized controlled trials that measure both behavioral and attitudinal outcomes, with horizontal lines for the two categories' average meta-analytic effects.
+
 ```{forest_plot}
 dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
-  group_by(unique_study_id) %>%
-  mutate(
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) %>%
-  ungroup()  %>%
-  filter(study_design == 'rct') %>%
+  filter(study_design == 'rct',
+         all(c('attitudes', 'behavior') %in% scale_type)) %>%
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                         year, " ", "(", scale_type, ")")) %>%
-  filter(attitudes_behaviors == 0) %>%
+                              year, " ", "(", scale_type, ")")) %>%
   group_by(unique_paper_id, scale_type) %>%
-  mutate(d = mean(d), 
-         var_d = mean(var_d),
-         se_d = mean(se_d)) %>%
+  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) %>%
   slice(1) %>%
   ungroup(scale_type) %>% 
   mutate(mean_se = mean(se_d)) %>%
   arrange(desc(mean_se)) %>%
   ungroup() %>%
   mutate(index = row_number()) %>%
-  select(index, study_names, d, se_d, scale_type, unique_paper_id, behavior_type)
+  select(index, study_names, d, se_d, 
+         scale_type, unique_paper_id, behavior_type)
 
 # overall effect size
 overall <- dat_for_forest_plot %>%
