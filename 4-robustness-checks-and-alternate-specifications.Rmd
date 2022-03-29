@@ -35,36 +35,24 @@ source('./functions/sum_lm.R')
 # add attitudes_behaviors (for studies that have both), one or the other;
 # new var for random assignment (probably should remove 'contains randomization')
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+raw_dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds')
+
+dat <- raw_dat %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
-         ra = ifelse(study_design == 'rct' | study_design == 'pragmatic rct', 
-                     TRUE,
-                     FALSE),
-         yes_delay = as.factor(delay > 0)) %>%
-  group_by(unique_study_id) %>%
-  mutate(
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) %>%
-  ungroup() 
-
-behavioral_data <- dat %>% filter(scale_type == 'behavior')
+         ra = ifelse(study_design == 'rct', TRUE, FALSE),
+         yes_delay = as.factor(delay > 0))
 
 behavioral_rcts <- dat %>%
   filter(scale_type == 'behavior', 
          study_design == 'rct')
 
 has_both <- dat %>% 
-  filter(attitudes_behaviors == 0) %>%
+filter(all(c('attitudes', 'behavior') %in% scale_type)) %>% 
   group_by(unique_study_id, scale_type) %>%
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
          mean_se_d = mean(se_d)) %>%
-  select(author, year, paper_title, unique_study_id, intervention_name,
-         study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type) %>%  
   slice(1) %>% 
   pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
@@ -72,7 +60,6 @@ has_both <- dat %>%
                 unique_study_id, study_design, ra, labels),
     names_from = c(scale_type), 
     values_from = c(mean_d, mean_var_d, mean_se_d))
-
 
 ```
 
@@ -98,8 +85,8 @@ dat %>%
   filter(scale_type == 'behavior', study_design != 'pre-post') %>%
   group_by(study_design, yes_delay) %>% 
   tally()
-# The following will fail for reasons that, because of the code below, 
-# don't make sense to me -- might be a metafor bug
+# The following will fail for reasons that  don't make sense to me
+# might be a metafor bug
 # dat %>% 
 #   filter(scale_type == 'behavior', study_design != 'pre-post') %>%
 #   split(list(.$study_design, .$yes_delay)) %>%
@@ -130,7 +117,7 @@ rct_perp <- dat %>%
   filter(scale_type == 'behavior',
                    behavior_type == 'perpetration')
 
-# now an overall meta. behavioral data need time to accumulate 
+# behavioral data need time to accumulate 
 # so instead of delay, yes/no, how about delay > 1 month (30 days)
 
 rct_perp %>%
@@ -140,7 +127,7 @@ rct_perp %>%
 
 ```
 
-* Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
+* Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies.
 
 ```{r attitudes_behaviors_quasi_random_delay_yes_no}
 
@@ -153,40 +140,37 @@ rct_perp %>%
 ```
 
 
-### additional appendix analyses
+### A note on clustered study designs
 
-We did not anticipate, however, the quantity of cluster-assigned studies in our sample (X of Y studies, and X of Y featuring random assignment)
+*paper*: We did not anticipate, however, the quantity of cluster-assigned studies in our sample..
 
-```{r}
+```{r cluster_study_redo}
 
-dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
+dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>%
+  count(is.na(.$cluster_type))
 
  dat %>% filter(ra) %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
 
 ```
 
-*Robustness check of reclassifying the low cluster studies  as RCTS*
-
-```{r}
-
-dat_robust <- dat %>%
+*paper*: In practice, there were 10 studies with fewer than 10 clusters, drawn from 8 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from
+```{r reclassify_low_cluster_rcts}
+dat %>%
   mutate(study_design = if_else(robust_quasi_check == 1,
                                 'rct', 
-                                as.character(study_design)),
-         ra = ifelse(study_design == 'rct', TRUE,FALSE))
-
-dat_robust %>% split(.$ra) %>%
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-dat_robust %>% split(.$study_design) %>%
+                                as.character(study_design))) %>%
+  split(.$study_design) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 ```
 
-### illustration of difference between d_i_p estimator and odds_ratio estimator
-```{r}
+
+### Synthesizing dichotomous and continuous dependent variables
+
+*paper*: Using the conventional conversion formula from odds ratio to Cohen's d, ATEs that correspond in reductions of incidence from...
+
+```{r dip_vs_odds_ratio}
 dip_calc <- function(p1, p2){
   diff <- p1 - p2
   sd <- sqrt(p2 * (1 - p2))
@@ -205,18 +189,20 @@ dip_calc(.6, .3)
 odds_ratio_to_d(.6, .3) == odds_ratio_to_d(.06, .03)
 dip_calc(.6, .3) - dip_calc(.06, .03)
 
-### distribution of SD of Bernoulli SD
+# A visualization of the intuition behind this estimator: 
+# distribution of SDs drawn from Bernoulli distribution
 
 proportions <- seq(from = 0, to = 1, by = 0.01)
 SDs <- as.numeric(lapply(X = proportions, FUN = function(p){sqrt(p * (1 - p))}))
 
 ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 
-# what's a DIP that corresponds to d = 0.28
+# test: what's a DIP that corresponds to approximately d = 0.28
 dip_calc(0.05, 0.015)
 ```
 
 ## robustness checks, alternate specifications, and alternate visualizations
+Everything that follows is exploratory and not included in the paper or appendix
 
 ### Plotting
 
@@ -225,48 +211,33 @@ dat %>%
   split(.$study_design) %>% 
   map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
                           dot_informative = T))
-# TODO: modify this so that text is lined up properly and so that color = 
-# attitude/behavior
-# 
-# so basically there's little relationship in the quasi and pragmatic rcts -- 
-# there is actually a negative relationship in the quasi experimental studies? -- 
-# but a meaningful relationship in the RCTs and pre-post studies. 
-# What if we separate into randomized and not-randomized
-
+ 
 # overall linear plot
 ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
   geom_point() +
   geom_smooth(method = 'lm') + 
   theme_minimal()
 
-#### Visualizing this: plot D and SE, with color corresponding to
-#### study type and shape corresponding to lab or field
-dplot(condense = T)
-
-# I had really thought there was more of a relationship
 dplot(condense = F)
-# not especially informative
-
 ## Relationship between attitudes and behaviors 
 
 has_both %>%
-  select(author, year, mean_d_attitudes, mean_d_behavior) %>%
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior,
+                       color = study_design)) +
   geom_point(size = 3) + 
   geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
   theme_minimal()
 
-# now same with RCTs 
+# now same with RCTs, and with study labels
 has_both %>% filter(study_design == 'rct') %>% 
-  select(author, year, mean_d_attitudes, mean_d_behavior, labels) %>%
   ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
-  geom_point(size = 3) + 
-  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE, 
+  geom_point(size = 3, color = 'blue') + 
+  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
               method = "lm",
-              show.legend = FALSE, alpha = .1, se = F) + 
+              show.legend = FALSE, alpha = .1, se = F) +
   geom_label_repel(mapping = aes(label = labels)) +
   theme_minimal()
-
+# actually kind of a cool plot when you zoom in
 
 ```
 
@@ -286,12 +257,13 @@ dat_grouped <- dat %>%
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
        cluster = dat_grouped$unique_study_id)
+
 # alternative specification 
 rma(yi = d, vi = var_d, data = dat_grouped)
 
 # once we've grouped by study_id, clustering changes the SE by just 0.0001
 
-# How about not grouping by scale_type?s
+# How about not grouping by scale_type/
 dat_grouped_two <- dat %>%
   group_by(unique_study_id) %>%
   mutate(mean_d = mean(d),
@@ -369,10 +341,6 @@ sum_lm(dat, d, scale_type)
 # publication status?
 sum_lm(dat, d, publication_type)
 
-sum_lm(dat, d, behavior_type)
-
-sum_lm(dat, d, scale_type)
-
 behavioral_rcts %>% 
   filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
 ```
@@ -393,54 +361,26 @@ cor.test.plus(
 
 ```
 
-The following doesn't work yet but it's an idea
-```{r incomplete behavior_type_atitude_cor_tests, eval = F}
-# THIS DOES NOT WORK 
-# pivot wider is hard
-# by outcome type
-has_both_behavior_types <- dat %>% 
-  filter(attitudes_behaviors == 0) %>%
-  group_by(unique_study_id, scale_type, behavior_type) %>%
-  mutate(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>%
-  select(author, year, paper_title, unique_study_id, intervention_name,
-         study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type, behavior_type) %>%  
-  slice(1) %>% 
-  pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels),
-    names_from = c(scale_type, , behavior_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) # %>%
-#  select(-behavior_type_attitudes) %>% 
- # rename(behavior_type = behavior_type_behavior)
-
-has_both %>% 
-  split(.$behavior_type) %>%
-  map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
-```
-
 Different ways of assessing effect size change over time
 
-```{r}
-dat %>% ggplot( (aes(x = year, y = d))) + geom_point() +   geom_smooth(method='lm')
+```{r effect_size_over_time}
+
+dat %>% ggplot((aes(x = year, y = d))) + 
+  geom_point() +   
+  geom_smooth(method='lm') + 
+  theme_minimal()
 # basically no slope
 
 dat %>% sum_lm(d, year)
 dat %>% split(list(.$ra, .$scale_type)) %>%
   map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
         geom_point() + 
-        geom_smooth(method = 'lm'))
+        geom_smooth(method = 'lm') +
+        theme_minimal())
 
 # these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
-```
 
-
-visualizing how little attitudes and behavioral outcomes have changed over time 
-```{r change_over_time}
-# visualize average within  year and outcome type
+# visualizing how little attitudes and behavioral outcomes have changed over time 
 dat %>% 
   group_by(year, scale_type) %>% 
   summarise(mean_d = mean(d), 
@@ -452,7 +392,6 @@ dat %>%
   theme_minimal() +
   scale_x_continuous(breaks = seq(1986, 2018, 5)) +
   labs(color = "Attitudes or behaviors")# +  ylab(expression(paste("Glass's", " ", Delta)))
-  
 ```
 
 additional ways to look at rct perp outcomes
@@ -472,5 +411,3 @@ ggplot(mapping = aes(x = se_d, y = d)) +
   theme_minimal()
 # a stronger relationship
 ```
-
-

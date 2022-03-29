@@ -228,10 +228,13 @@ raw_dat <- raw_dat %>%
 
 # how many did that affect
 redesignated <- raw_dat %>% filter(robust_quasi_check) %>%
-  select(author, year, intervention_name, scale_name, delay)
+  select(author, year, intervention_name, scale_name, delay, 
+         unique_study_id, unique_paper_id)
 # TODO: check that these are really all RCTs, it's not that many
 raw_dat$study_design <- as.factor(raw_dat$study_design)
-
+# how many studies, how many papers?
+n_distinct(redesignated$unique_study_id) # 10
+n_distinct(redesignated$unique_paper_id) # 8
 
 ```
 
@@ -261,7 +264,9 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ```
 
-```{r}
+### categorize behavior
+
+```{r categorize_behavior}
 ### CATEGORIZE BEHAVIOR:
 # perpetration, victimization, intervention are the big three intervention measures.
 # Also, there's involvement, and then things that are harder to classify.

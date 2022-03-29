@@ -27,7 +27,6 @@ library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 
-source('./functions/dplot.R')
 source('./functions/sum_lm.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
@@ -46,7 +45,7 @@ dat <- raw_dat %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year),
          ra = ifelse(study_design == 'rct', TRUE, FALSE),
-         yes_delay = as.factor(delay > 0)) %>%
+         yes_delay = as.factor(delay > 0))
 ```
 
 ## Results 

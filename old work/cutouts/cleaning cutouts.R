@@ -26,4 +26,34 @@
  #   select(author, year, intervention_name, lab_or_field, lab_field)
  # write.csv(x = discrepancy_data, file =  '~/Desktop/discrepancies.csv')
  # make study design a factor
+
+The following doesn't work yet but it's an idea
+```{r incomplete behavior_type_atitude_cor_tests, eval = F}
+# THIS DOES NOT WORK 
+# pivot wider is hard
+# by outcome type
+has_both_behavior_types <- dat %>% 
+        filter(attitudes_behaviors == 0) %>%
+        group_by(unique_study_id, scale_type, behavior_type) %>%
+        mutate(mean_d = mean(d), 
+               mean_var_d = mean(var_d), 
+               mean_se_d = mean(se_d)) %>%
+        select(author, year, paper_title, unique_study_id, intervention_name,
+               study_design, mean_d, mean_var_d, mean_se_d,
+               ra, labels, scale_type, behavior_type) %>%  
+        slice(1) %>% 
+        pivot_wider(
+                id_cols = c(author, year, paper_title, unique_study_id,
+                            intervention_name,
+                            unique_study_id, study_design, ra, labels),
+                names_from = c(scale_type, , behavior_type), 
+                values_from = c(mean_d, mean_var_d, mean_se_d)) # %>%
+#  select(-behavior_type_attitudes) %>% 
+# rename(behavior_type = behavior_type_behavior)
+
+has_both %>% 
+        split(.$behavior_type) %>%
+        map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
+```
+
  
