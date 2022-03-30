@@ -43,10 +43,6 @@ dat <- raw_dat %>%
          ra = ifelse(study_design == 'rct', TRUE, FALSE),
          yes_delay = as.factor(delay > 0))
 
-behavioral_rcts <- dat %>%
-  filter(scale_type == 'behavior', 
-         study_design == 'rct')
-
 has_both <- dat %>% 
 filter(all(c('attitudes', 'behavior') %in% scale_type)) %>% 
   group_by(unique_study_id, scale_type) %>%
@@ -341,8 +337,10 @@ sum_lm(dat, d, scale_type)
 # publication status?
 sum_lm(dat, d, publication_type)
 
-behavioral_rcts %>% 
-  filter(behavior_type == 'perpetration') %>% sum_lm(d, se_d)
+dat %>%
+  filter(behavior_type == 'perpetration', 
+         study_design == 'rct') %>% 
+  sum_lm(d, se_d)
 ```
 
 Correlation between attitudes and behaviors -- standard errors of estimates
