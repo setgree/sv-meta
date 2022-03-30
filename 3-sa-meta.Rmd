@@ -304,6 +304,10 @@ dat %>%
   split(list(.$ra, .$behavior_type)) %>% 
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
+# for 'behavior overall' category (to keep consistent with other tables)
+dat %>% split(list(.$ra, .$scale_type)) %>% 
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
 
 # Alternative grouping:
 
