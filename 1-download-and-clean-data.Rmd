@@ -311,7 +311,7 @@ raw_dat %>% group_by(participant_sex) %>% select(author, year, participant_sex, 
 # stage in life
 raw_dat %>% group_by(stage_in_life) %>% select(author, year, participant_sex, paper_title) %>% slice(1) 
 # there are probably others
-## CHECK EVERYTHING AGAINST coding instructions.docx
+## TOOD: CHECK EVERYTHING AGAINST coding instructions.docx
 ```
 
 ### save as clean data and start the Cohen's D script
