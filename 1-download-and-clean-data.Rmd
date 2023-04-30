@@ -56,30 +56,32 @@ making sure that inputs are all what the functions expect: eff_type, cluster_typ
 
 ```{r standardizing_inputs}
 unique(raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'd.i.d', replacement = 'd_i_d', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'f.test', replacement = 'f_test', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'd.i.m', replacement = 'd_i_m', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'difference_in_proportion', replacement = 'd_i_p', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'reg.coef', replacement = 'reg_coef', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 't.test', replacement = 't_test', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'beta', replacement = 'reg_coef', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'log.odds.ratio', replacement = 'log_odds_ratio', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'odds.ratio', replacement = 'odds_ratio', x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'NA', replacement = NA, x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'did', replacement = "d_i_d", x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'dim', replacement = "d_i_m", x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = "^$|^ $", replacement =  NA, x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'd.i.p', replacement = "d_i_p", x = raw_dat$eff_type)
-raw_dat$eff_type <- gsub(pattern = 'd.i.p.', replacement = "d_i_p", x = raw_dat$eff_type)
+raw_dat$eff_type <- str_replace_all(raw_dat$eff_type, 
+                                     c("d.i.d" = "d_i_d", 
+                                       "f.test" = "f_test", 
+                                       "d.i.m" = "d_i_m", 
+                                       "difference_in_proportion" = "d_i_p", 
+                                       "reg.coef" = "reg_coef", 
+                                       "t.test" = "t_test", 
+                                       "beta" = "reg_coef", 
+                                       "log.odds.ratio" = "log_odds_ratio", 
+                                       "odds.ratio" = "odds_ratio", 
+                                       "NA" = NA_character_, 
+                                       "-" = NA_character_, 
+                                       "did" = "d_i_d", 
+                                       "dim" = "d_i_m", 
+                                       "^$|^ $" = NA_character_, 
+                                       "d.i.p" = "d_i_p", 
+                                       "d.i.p." = "d_i_p"))
+# ^$|^ $ matches either an empty string or a string that's just a space
+
 unique(raw_dat$eff_type)
 
-
 # fix cluster type data
-raw_dat$cluster_type <- gsub('n_groups',
-                             'n groups', raw_dat$cluster_type)
-raw_dat$cluster_type <- gsub('-', NA, raw_dat$cluster_type)
-raw_dat$cluster_type <- gsub("^$|^ $", NA, raw_dat$cluster_type)
+raw_dat$cluster_type <- str_replace_all(raw_dat$cluster_type, 
+                                        c("n_groups" = "n groups", 
+                                          "-" = NA, 
+                                          "^$|^ $" = NA))
 
 ## how many of these are going to require non-standard procedures
 ## or potential re-doing of the recording
@@ -125,7 +127,7 @@ na_dat <- raw_dat %>% filter(is.na(ctrl_sd)) %>%
 table(raw_dat[is.na(raw_dat$ctrl_sd),]$eff_type, useNA = 'ifany')  
 which(!is.na(raw_dat$ctrl_sd) & is.na(raw_dat$eff_type)) # 0 as of 06/18/21
 
-if(nrow(na_dat) == 0) {
+if (nrow(na_dat) == 0) {
   rm(na_dat) 
   } else {
   print("Check the NAs")
