@@ -170,22 +170,18 @@ class(raw_dat$n_c_post)
 table(raw_dat$n_c_post)
 table(raw_dat$n_t_pre)
 
-
-raw_dat <- raw_dat %>%
-  mutate(across(.cols = c(starts_with(c('n_t_', 'n_c_'))), 
-                .fns = ~ as.numeric(.x))) %>% 
-  mutate(u_s_d = as.numeric(u_s_d)) %>%
-  mutate(anticipated_direction = as.numeric(anticipated_direction))
-## 04/30/23 Finally fixed warnings, thanks to chatGPT & better cleaning
+cols_to_convert <- c('n_t_pre', 'n_t_post', 'n_c_pre', 
+                     'n_c_post', 'n_t_group', 'n_c_group',
+                     'u_s_d', 'anticipated_direction')
+raw_dat[cols_to_convert] <- lapply(raw_dat[cols_to_convert], as.numeric)
 
 ## Now checking for outstanding NAs where you really need one, which are n_t_post & n_c_post
+
 na_vals <- subset(raw_dat, is.na(anticipated_direction) | 
                       apply(select(raw_dat, c('n_t_post', 'n_c_post')), 1, anyNA)) 
 
-## beautiful
-
-
-
+## beautiful, rm
+rm(na_vals)
 ```
 
 ### check lab/field variable
