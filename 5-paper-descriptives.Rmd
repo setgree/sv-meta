@@ -6,10 +6,11 @@ output:
     smart: true
     theme: spacelab
     number_sections: no
-    toc: true
     toc_float:
       collapsed: true
     toc_depth: 4
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r echo=FALSE}
@@ -167,3 +168,12 @@ dat %>%
   clipr::write_clip()
 ```
 
+**a list of all of the papers either written by foshee or evaluate safe dates**
+
+**a list of studies for this time perios (1985-2000) and where they were published** 
+
+**can we pull some data here to back up these arguments? can we look at 1985-2000 and see the breakdown in terms of labratory vs. field?** 
+
+**Also - can we say how many of these papers are dissertations vs. journal articles?**
+m
+**finally - can we say who are the participants in these interventions? are they mostly targeting men?**
