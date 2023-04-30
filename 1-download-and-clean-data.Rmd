@@ -159,17 +159,19 @@ Ns <- raw_dat %>%
 
 raw_dat <- raw_dat %>%
   mutate(across(.cols = c(starts_with(c('n_t_', 'n_c_'))), 
-                .fns = as.numeric) %>% 
+                .fns = as.numeric)) %>% 
   mutate(u_s_d = as.numeric(u_s_d)) %>%
-  mutate(anticipated_direction = as.numeric(anticipated_direction)))
+  mutate(anticipated_direction = as.numeric(anticipated_direction))
 # TODO: revisit these warnings
 
-na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |is.na(across(.cols = c(starts_with('n_'))))) %>%
-    select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,  anticipated_direction, n_t_pre, n_c_pre,
-         n_t_post, n_c_post, n_t_group, n_c_group,
-         n_conditions, n_items,
-         unique_paper_id, intervention_name,
-         study_design, scale_name)
+# TODO: revisit this next one, I think it stopped working because of a 
+# dplyr update (argh)
+# na_vals <- raw_dat %>% filter(is.na(anticipated_direction) |is.na(across(.cols = c(starts_with('n_'))))) %>%
+#     select(author, year, paper_title, eff_type, u_s_d, ctrl_sd,  anticipated_direction, n_t_pre, n_c_pre,
+#          n_t_post, n_c_post, n_t_group, n_c_group,
+#          n_conditions, n_items,
+#          unique_paper_id, intervention_name,
+#          study_design, scale_name)
 # march 2022 update, they were missing data in the n_items column, which I fixed
 rm(na_vals, na_dat, Ns)
 
