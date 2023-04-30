@@ -52,6 +52,7 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 
 We recovered XXX manuscripts from our search that qualified methodologically and theoretically. 
 
+
 ```{r}
 dat %>% 
   select(unique_study_id, unique_paper_id) %>% 
