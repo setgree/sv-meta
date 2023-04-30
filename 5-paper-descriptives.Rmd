@@ -50,7 +50,6 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   ungroup() 
 ```
 
-
 We recovered XXX manuscripts from our search that qualified methodologically and theoretically. 
 ```{r}
 dat %>% 
