@@ -286,7 +286,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
 ```
 
 different ways to break down main results:
-```{r}
+```{r alternate_breakdowns}
 
 # ra vs not (in paper we break down by study)
 dat %>% 
