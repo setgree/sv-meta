@@ -228,7 +228,7 @@ has_both %>%
 
 *paper*: Figure XXX highlights the randomized controlled trials that measure both behavioral and attitudinal outcomes, with horizontal lines for the two categories' average meta-analytic effects.
 
-```{forest_plot}
+```{r forest_plot}
 dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct',
