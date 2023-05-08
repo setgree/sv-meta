@@ -176,7 +176,7 @@ cols_to_convert <- c('n_t_pre', 'n_t_post', 'n_c_pre',
                      'n_c_post', 'n_t_group', 'n_c_group',
                      'u_s_d', 'anticipated_direction')
 raw_dat[cols_to_convert] <- lapply(raw_dat[cols_to_convert], as.numeric)
-
+rm(cols_to_convert)
 ## Now checking for outstanding NAs where you really need one, which are n_t_post & n_c_post
 
 na_vals <- subset(raw_dat, is.na(anticipated_direction) | 
@@ -196,17 +196,19 @@ raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 
 # fix study_design var and scale type
 ```{r study_design}
-raw_dat$study_design <- gsub(pattern = 'cross sectional',
-                             replacement = 'cross-sectional',  
-                             x = raw_dat$study_design)
-raw_dat$study_design <- gsub(pattern = 'prepost', replacement = 'pre-post',  x = raw_dat$study_design)
-raw_dat$study_design <- as.factor(raw_dat$study_design)
+raw_dat$study_design <- str_replace_all(raw_dat$study_design,
+                                        c('cross sectional' = 'cross-sectional',
+                                        'prepost' = 'pre-post'))
 
-raw_dat <- raw_dat %>% 
-  select(-lab_or_field)
+raw_dat$study_design <- as.factor(raw_dat$study_design)
+raw_dat$scale_type <- as.factor(raw_dat$scale_type)
+
+if ("lab_or_field" %in% colnames(raw_dat)) {
+  raw_dat <- raw_dat %>% 
+    select(-lab_or_field)
+}
 
 # scale type
-raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 ```
 
 
@@ -215,14 +217,13 @@ raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 raw_dat <- raw_dat %>%
   group_by(unique_paper_id, intervention_name) %>% 
   mutate(unique_study_id = cur_group_id())
-# based this on https://stackoverflow.com/questions/62562499/obtain-a-unique-id-by-group-in-mutate-pipeline
-# hope it's right
 
 ```
 
 ### Provisional: make everything under 10 clusters quasi-experimental
-As Paluck et al. note in 'progress and challenges'
+As Paluck et al. note in 'Prejudice Reduction: Progress and Challenges':
 > in cluster-randomized experiments, groups of people, rather than individuals, are randomly assigned to experimental conditions. Reliably estimating standard errors requires at least 10 clusters, but many intervention studies do not approach even this minimal number.
+
 So the cutoff is ten
 
 ```{r too_few_clusters}
@@ -245,10 +246,12 @@ redesignated <- raw_dat %>% filter(robust_quasi_check) %>%
   select(author, year, intervention_name, scale_name, delay, 
          unique_study_id, unique_paper_id)
 # TODO: check that these are really all RCTs, it's not that many
+# still need to do this
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 # how many studies, how many papers?
 n_distinct(redesignated$unique_study_id) # 10
 n_distinct(redesignated$unique_paper_id) # 8
+rm(redesignated)
 
 ```
 
@@ -263,15 +266,14 @@ n_distinct(redesignated$unique_paper_id) # 8
 # raw_dat$delay <- gsub(NA, '0', raw_dat$delay)
 # raw_dat$delay <- gsub('NA', '0', raw_dat$delay
 
-raw_dat$delay <- gsub('4 month', '122', raw_dat$delay)
-raw_dat$delay <- gsub('2.5 years', '912.5', raw_dat$delay)
-raw_dat$delay <- gsub('2 weeks', '14', raw_dat$delay)
-raw_dat$delay <- gsub('3 weeks', '21', raw_dat$delay)
-raw_dat$delay <- gsub('1 month', '30.5', raw_dat$delay)
-raw_dat$delay <- gsub('5 weeks', '35', raw_dat$delay)
-raw_dat$delay <- gsub('14 days', '14', raw_dat$delay)
-
-raw_dat$delay[is.na(raw_dat$delay)] = "0"
+raw_dat$delay <- str_replace_all(raw_dat$delay, c('4 month' = '122',
+                                                   '2.5 years' = '912.5',
+                                                   '2 weeks' = '14',
+                                                   '3 weeks' = '21',
+                                                   '1 month' = '30.5',
+                                                   '5 weeks' = '35',
+                                                   '14 days' = '14'))
+raw_dat$delay[is.na(raw_dat$delay)] <- "0"
 
 table(raw_dat$delay)
 raw_dat$delay <- as.numeric(raw_dat$delay)
@@ -284,15 +286,12 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ### CATEGORIZE BEHAVIOR:
 # perpetration, victimization, intervention are the big three intervention measures.
 # Also, there's involvement, and then things that are harder to classify.
-#behavioral_data <- dat %>% 
-  
+
 raw_dat <- raw_dat %>%
-#  filter(scale_type == 'behavior') %>%
   mutate(scale_name = str_to_lower(scale_name),
   behavior_type = as.factor(case_when(
-    scale_type == 'behavior' & 
-    str_detect(scale_name, 
-               'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
+    scale_type == 'behavior' &  str_detect(scale_name, 
+'perp|perpetration|agression|comitted|aggression|aggressive') ~ 'perpetration',
     scale_type == 'behavior' & 
     str_detect(scale_name, 'vict|victimization|completed rape|underwent
                |ses-past year|survivor') ~ 'victimization',
@@ -316,8 +315,25 @@ raw_dat <- raw_dat %>% select(-is_red)
 
 ### add useful levels
 ```{r levels}
-levels(raw_dat$publication_type) <- c("published", "dissertation", "government report", "unpublished", "formal evaluation")
-levels(raw_dat$origin) <- c("DeGue", "online search", "sent to us by authors")
+raw_dat$publication_type <- factor(raw_dat$publication_type,
+                                   levels = 1:5,
+                                   labels = c("published",
+                                              "dissertation",
+                                              "government report",
+                                              "unpublished",
+                                              "formal evaluation"))
+
+table(raw_dat$publication_type, useNA = "ifany")
+
+# TODO: check the NAs
+na_pub <- raw_dat %>% filter(is.na(publication_type)) %>%   
+  select(author, year, intervention_name, scale_name, delay, 
+         unique_study_id, unique_paper_id)
+
+
+raw_dat$origin <- factor(raw_dat$origin,
+                         levels = c("DeGue", "online search", "sent to us by authors"),
+                         labels = c("DeGue", "Online Search", "Sent by Authors"))
 
 # TODO: cleanup the following variables
 # participant sex
