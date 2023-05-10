@@ -22,8 +22,9 @@ knitr::opts_chunk$set(echo = FALSE,
 ```
 
 ```{r setup_libraries}
-library(clipr)
+# library(clipr)
 library(DT)
+library(dplyr)
 library(ggtext) # figures
 library(glue) # convenience
 library(janitor)
@@ -31,9 +32,10 @@ library(kableExtra)
 library(knitr) # tables
 library(metafor)
 library(patchwork)
+library(stringr)
 library(rstatix) # summary
-library(tidyverse)
-Sys.setenv(CLIPR_ALLOW = TRUE)
+# library(tidyverse)
+# Sys.setenv(CLIPR_ALLOW = TRUE)
 ```
 
 
@@ -178,3 +180,24 @@ dat %>%
 **Also - can we say how many of these papers are dissertations vs. journal articles?**
 m
 **finally - can we say who are the participants in these interventions? are they mostly targeting men?**
+
+```{r roni_questions}
+key_time_period <- dat %>% filter(year >= 1985 & year <= 2000) 
+# look at 1985-2000 and see the breakdown in terms of labratory vs. field?
+table(key_time_period$lab_field)
+
+# publication type?
+table(key_time_period$publication_type)
+
+# gender breakdown? 
+table(key_time_period$participant_sex, useNA = 'ifany')
+### just for my own edification you can also do 
+# dat %>%
+#   filter(year >= 1985 & year <= 2005) %>%
+#   {table(.$publication_type)}
+
+# In this code, {} is used to group the operations within the pipe so that
+# the `.` placeholder represents the filtered dataset. 
+
+
+```

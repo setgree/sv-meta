@@ -217,7 +217,7 @@ if ("lab_or_field" %in% colnames(raw_dat)) {
 raw_dat <- raw_dat %>%
   group_by(unique_paper_id, intervention_name) %>% 
   mutate(unique_study_id = cur_group_id())
-
+# TODO:  do I need an ungroup here? 
 ```
 
 ### Provisional: make everything under 10 clusters quasi-experimental
@@ -315,6 +315,7 @@ raw_dat <- raw_dat %>% select(-is_red)
 
 ### add useful levels
 ```{r levels}
+
 raw_dat$publication_type <- factor(raw_dat$publication_type,
                                    levels = 1:5,
                                    labels = c("published",
@@ -323,7 +324,9 @@ raw_dat$publication_type <- factor(raw_dat$publication_type,
                                               "unpublished",
                                               "formal evaluation"))
 
+
 table(raw_dat$publication_type, useNA = "ifany")
+
 
 # TODO: check the NAs
 na_pub <- raw_dat %>% filter(is.na(publication_type)) %>%   
@@ -337,15 +340,33 @@ raw_dat$origin <- factor(raw_dat$origin,
 
 # TODO: cleanup the following variables
 # participant sex
-raw_dat %>% group_by(participant_sex) %>% select(author, year, participant_sex, paper_title) %>% slice(1) 
+raw_dat %>% group_by(participant_sex) %>% select(author, year, participant_sex, paper_title) %>% slice(2) 
 # stage in life
 raw_dat %>% group_by(stage_in_life) %>% select(author, year, participant_sex, paper_title) %>% slice(1) 
 # there are probably others
 ## TOOD: CHECK EVERYTHING AGAINST coding instructions.docx
 ```
 
-### save as clean data and start the Cohen's D script
+*clean up participant sex*
+```{r participant_sex}
+
+raw_dat$participant_sex <- str_replace_all(raw_dat$participant_sex,
+                                           c("3,4" = "3, 4",
+                                           "4,3" = "3, 4",
+                                           "^$|^ $" = NA))
+table(raw_dat$participant_sex)
+# TODO: look at the 13 studies that are silmultaneously mixed groups (3) and separate groups (4)
+# also all the NAs
+raw_dat %>% filter(participant_sex == "3, 4") %>% 
+    select(author, year, intervention_name, scale_name, delay, 
+        unique_paper_id)
+
+```
+
+
+
 ```{r save_clean_data}
+### save as clean data and start the Cohen's D script
 
 saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
 
