@@ -19,7 +19,7 @@ options(scipen = 99)
 ```
 
 ### Download most up-to-date dataset
-```{r download_data, eval=F}
+```{r download_data, eval=T}
 # download sheet from google -----------------------------------
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020",
@@ -360,6 +360,11 @@ table(raw_dat$participant_sex)
 raw_dat %>% filter(participant_sex == "3, 4") %>% 
     select(author, year, intervention_name, scale_name, delay, 
         unique_paper_id)
+
+## TODO: clean up condition_gender
+raw_dat %>%
+  group_by(condition_gender) %>%
+  summarise(unique_study_count = n_distinct(unique_study_id))
 
 ```
 

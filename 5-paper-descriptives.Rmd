@@ -191,6 +191,11 @@ table(key_time_period$publication_type)
 
 # gender breakdown? 
 table(key_time_period$participant_sex, useNA = 'ifany')
+
+dat %>% filter(year >= 1985 & year <= 2000) %>%
+  group_by(condition_gender) %>%
+  summarise(unique_study_count = n_distinct(unique_study_id))
+
 ### just for my own edification you can also do 
 # dat %>%
 #   filter(year >= 1985 & year <= 2005) %>%

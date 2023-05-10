@@ -4,6 +4,7 @@ set -ex
 # Step 1: clean
 Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd', 
   output_dir = './results', clean = T)"
+# TO DO: add a parm var here for whether to download the data afresh? 
 
 # step 2: Cohens D
 Rscript 2-cohens-d.R
