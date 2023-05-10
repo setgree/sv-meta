@@ -10,6 +10,8 @@ to_fill_in <- dat %>%
   select(author, year, paper_title, unique_paper_id, intervention_name,
          participant_sex, robust_quasi_check, publication_type, stage_in_life)
 
+write.csv(x = to_fill_in, file = './data/studies_to_check.csv')
+
 # TODO (if time really permits): go back to raw_dat (./data/sa_meta_data.csv) &
 # double check everything where delay is NA. I assumed it was zero in every case 
 # but we could check
