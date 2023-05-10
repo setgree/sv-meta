@@ -261,7 +261,7 @@ p <- dat_for_forest_plot %>%
   geom_vline(xintercept = 0, 
              color = "black",  alpha = .5) +
   scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
-  scale_y_continuous(name = "", , breaks=1:40, # , trans = "reverse"
+  scale_y_continuous(name = "", , breaks=1:length(dat_for_forest_plot$study_names),  , trans = "reverse",
                      labels = dat_for_forest_plot$study_names) + 
   ylab("Study") +
   geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
