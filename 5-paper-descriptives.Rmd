@@ -171,6 +171,8 @@ dat %>%
   clipr::write_clip()
 ```
 
+
+### Roni questions
 **a list of all of the papers either written by foshee or evaluate safe dates**
 
 **a list of studies for this time perios (1985-2000) and where they were published** 
@@ -206,3 +208,44 @@ dat %>% filter(year >= 1985 & year <= 2000) %>%
 
 
 ```
+
+### Ana questions
+can we put in a percent of total studies here that use IRMA
+
+```{r IRMA_sum}
+filtered_studies <- dat %>%
+  filter(scale_type == 'attitudes') %>%
+  distinct(unique_study_id, .keep_all = TRUE)
+
+num_with_scale <- sum(grepl("illinois rape myth acceptance", filtered_studies$scale_name, ignore.case = TRUE))
+num_without_scale <- nrow(filtered_studies) - num_with_scale
+
+cat("Number of studies with 'Illinois Rape Myth Acceptance' in scale_name:", num_with_scale, "\n")
+cat("Number of studies without 'Illinois Rape Myth Acceptance' in scale_name:", num_without_scale, "\n")
+
+# double check this in a crude way
+(dat %>%
+  filter(grepl("illinois rape myth acceptance", scale_name, ignore.case = TRUE)) %>%
+  distinct(unique_study_id) %>%
+  nrow()) / (dat %>%
+  filter(scale_type == 'attitudes') %>%
+  distinct(unique_study_id) %>%
+  nrow())
+
+dat %>%
+  filter(scale_type == 'attitudes') %>%
+  group_by(has_irma = grepl("illinois rape myth acceptance", scale_name, ignore.case = TRUE)) %>%
+  summarize(Count = n())
+
+# one other way
+library(knitr)
+dat %>%
+  filter(scale_type == 'attitudes') %>%
+  distinct(unique_study_id, scale_name) %>%
+  group_by(has_irma = grepl("illinois rape myth acceptance", scale_name, ignore.case = TRUE)) %>%
+  summarize(Count = n_distinct(unique_study_id)) %>%
+  kable(format = "markdown")
+
+
+```
+

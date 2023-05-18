@@ -131,6 +131,14 @@ dat %>%
 *paper*: Overall, the relationship between days of delay and effect size is diminutive and insignificant ($\beta$ = -0.00023). 
 ```{r d_and_delays}
 dat %>% sum_lm(d, delay)
+
+### just for attitudes?
+dat %>% filter(behavior_type == 'attitude') %>% sum_lm(d, delay)
+
+
+## What's the longest attitude delay measurement?
+dat %>% filter(behavior_type == 'attitude') %>% pull(delay) %>% max()
+
 ```
 
 *paper*: "An alternative way to assess the overall relationship is to split the sample into outcomes with a delay of at least one day and those without and meta-analyze each separately. Estimates and standard errors for delayed and non-delayed outcomes are presented in table XXX, with separate estimates presented for attitudes and for involvement, bystander, victimization and perpetration behavioral outcomes
