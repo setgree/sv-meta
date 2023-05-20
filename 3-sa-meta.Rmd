@@ -26,6 +26,7 @@ library(ggrepel, warn.conflicts = F)
 library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
+library(tibble)
 
 source('./functions/sum_lm.R')
 # NOTE ON SUM_LM: 
@@ -56,7 +57,7 @@ dat <- raw_dat %>%
 ```{r overall_meta}
 
 overall_results <- robust(x = rma(yi = d, vi = var_d, data = dat),
-       cluster = dat$unique_study_id)
+       cluster = dat$unique_study_id); overall_results
 ```
 
 
@@ -161,8 +162,7 @@ dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
                 map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# note: 'overall' behavioral/attitude measurements taken from 
-# analyses above
+# note: 'overall' behavioral/attitude measurements taken from `overall_results`
 
 # split meta-analysis by delay/not for 'overall' estimates:
 dat %>% split(.$yes_delay) %>% 
@@ -177,8 +177,8 @@ dat %>%
 
 ## TODO: revisit these
 dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE') %>% select(author, year, paper_title, d, se_d) # really two negative #s? 
-## TODO also: give readers a sense of how many are in each category
-#
+## TODO: Maybe work into paper breakdown of behavioral types? 
+table(dat$behavior_type)
 ```
 
 ## A closer look at behavioral outcomes
@@ -196,7 +196,6 @@ dat %>% group_by(scale_type, study_design) %>% tally()
 # by categories of behavior/attitudes?
 dat %>% group_by(study_design, behavior_type) %>% tally()
 ```
-
 
 *pap*: "What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’"
 ...The covariation of attitudes and behaviors will be assessed in the full sample of studies
@@ -261,46 +260,63 @@ dat_for_forest_plot <- raw_dat %>%
   mutate(mean_se = mean(se_d)) %>%
   arrange(desc(mean_se)) %>%
   ungroup() %>%
-  mutate(index = row_number()) %>%
-  select(index, study_names, d, se_d, 
-         scale_type, unique_paper_id, behavior_type)
+  select(study_names, d, se_d, 
+         scale_type, unique_paper_id)
 
 # overall effect size
 overall <- dat_for_forest_plot %>%
   split(.$scale_type) %>%
   map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
               cluster = .$unique_paper_id))
+
+
+dat_for_forest_plot <- dat_for_forest_plot %>% 
+  add_row(study_names = "Overall (Attitudes)",
+          d = overall[[1]]$beta,
+          se_d = overall[[1]]$se,
+          scale_type = "attitudes",
+          unique_paper_id = NA) %>%
+  add_row(study_names = "Overall (Behavior)",
+          d = overall[[2]]$beta,
+          se_d = overall[[2]]$se,
+          scale_type = "behavior",
+          unique_paper_id = NA) %>%
+  mutate(index = row_number()) %>%
+  relocate(index, .before = 1)
+)
+  
 # plot 
 
 p <- dat_for_forest_plot %>%
   ggplot(mapping = aes(y = index, x = d, xmin = d - (1.96 * se_d),
                        xmax = d + (1.96 * se_d))) +  
-           geom_point(size = 1) +
+  geom_point(size = 1) +
   geom_errorbarh(height = .1, aes(color = scale_type)) +
-  geom_vline(xintercept = 0, 
-             color = "black",  alpha = .5) +
+  geom_vline(xintercept = 0, color = "black", alpha = .5) +
   scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
-  scale_y_continuous(name = "", , breaks=1:length(dat_for_forest_plot$study_names),  , trans = "reverse",
-                     labels = dat_for_forest_plot$study_names) + 
+  scale_y_continuous(name = "", breaks = 1:length(dat_for_forest_plot$study_names),
+                     trans = "reverse", labels = dat_for_forest_plot$study_names) + 
   ylab("Study") +
   geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
   geom_vline(xintercept = overall$behavior$beta, color = '#00BFC4', lty = 'dashed') +
   labs(color = "Attitudes or behaviors") +
-theme_minimal() + 
-  theme(axis.text.y = element_text(face = "bold"))
+  theme_minimal() + 
+  theme(axis.text.y = element_text(face = ifelse(
+    dat_for_forest_plot$study_names %in% 
+      c("Overall (Attitudes)", "Overall (Behavior)"), 
+    "bold", "plain"))) +
+  ggtitle("Attitudinal and Behavioral Changes Compared")
+
+# getting a warning message about vectorized input is not officially supported
+# and results may change in future versions of ggplot2. 
+# Guess we'll hope they don't? :)
+
 p
 png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
 p
 dev.off()
-# what if we limit this just to perpetration and victimization outcomes?
 # This was really useful for figuring out colors and such: `ggplot_build(p)$data`
-
-# TODO: create another point at the bottom that's the overall effect size and
-# SE, a la the bottom point you get from the stata equivalent. 
-
-# Plus just make it nicer overall
 ```
-
 ### Assessing differences between categories of behavioral outcomes
 *pap*: Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
