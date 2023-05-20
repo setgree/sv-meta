@@ -317,6 +317,8 @@ p
 dev.off()
 # This was really useful for figuring out colors and such: `ggplot_build(p)$data`
 ```
+
+
 ### Assessing differences between categories of behavioral outcomes
 *pap*: Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
