@@ -1,17 +1,9 @@
 ---
-title: "Descriptives"
-subtitle: ""
-output:
-  rmarkdown::html_document:
-    smart: true
-    theme: spacelab
-    number_sections: no
-    toc_float:
-      collapsed: true
-    toc_depth: 4
-editor_options: 
-  chunk_output_type: console
+title: "5-descriptives"
+author: "Seth Green and Johh-Henry Pezzuto"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 ---
+
 
 ```{r echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
@@ -31,6 +23,7 @@ library(kableExtra)
 library(knitr) # tables
 library(metafor)
 library(patchwork)
+library(purrr)
 library(stringr)
 library(rstatix) # summary
 ```
@@ -107,7 +100,7 @@ dat %>%
 How many papers measured attitudes?
 
 ```{r}
-dat %>% count(scale_type, sort =T )
+dat %>% count(scale_type, sort = T )
 ```
 
 How many of those are short-term measurements?
@@ -136,7 +129,6 @@ dat %>%
        cluster = .$unique_study_id))
 ```
 
-
 To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
 ```{r}
 dat %>% 
@@ -148,7 +140,7 @@ dat %>%
   summarise(n = n(),
             mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
   kable(digits = 2, format = "latex", booktabs = T) %>%
-  kableExtra::kable_styling() %>% 
+  kableExtra::kable_styling()
   
 ```
 
@@ -233,14 +225,12 @@ dat %>%
   summarize(Count = n())
 
 # one other way
-library(knitr)
 dat %>%
   filter(scale_type == 'attitudes') %>%
   distinct(unique_study_id, scale_name) %>%
   group_by(has_irma = grepl("illinois rape myth acceptance", scale_name, ignore.case = TRUE)) %>%
   summarize(Count = n_distinct(unique_study_id)) %>%
   kable(format = "markdown")
-
 
 ```
 
