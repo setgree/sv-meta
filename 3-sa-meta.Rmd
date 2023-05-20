@@ -107,13 +107,16 @@ dat %>%
 # overall/overall text comes from overall_meta chunk
 
 # TODO (maybe): extract the needed elements from the list and 
-# format it into a nice table rather than filling in table by hand
+# format it into a nice table rather than filling in table by hand?
+# EDIT: I tried this with chatGPT and got very complicated code in response
+# is on the backburner
 ```
 
 *paper* (footnote): "...In keeping with the consistency between available meta-analyses' estimates, we also observe a small, statistically insignificant relationship between effect size and year of publication"
 
 ```{r effect_size_and_pub_year}
 dat %>% sum_lm(y = d, x = year)
+
 # this graph isn't in the paper but making sure there's no obvious relationship:
 dat %>%
   ggplot(aes(x = year, y = d, color = study_design)) +
@@ -135,15 +138,17 @@ dat %>%
 
 *paper*: Overall, the relationship between days of delay and effect size is diminutive and insignificant ($\beta$ = -0.00023). 
 ```{r d_and_delays}
-dat %>% sum_lm(d, delay)
+dat %>% sum_lm(d,delay)
 
-### just for attitudes?
-dat %>% filter(behavior_type == 'attitude') %>% sum_lm(d, delay)
+### by scale_type?
+dat %>%
+  split(.$scale_type) %>% 
+  map(.f = ~sum_lm(y = d, x = delay, dat = .))
 
-
-## What's the longest attitude delay measurement?
-dat %>% filter(behavior_type == 'attitude') %>% pull(delay) %>% max()
-
+## What's the longest attitude/behavior delay measurement?
+dat %>%
+  group_by(scale_type) %>%
+  summarize(max_delay = max(delay))
 ```
 
 *paper*: "An alternative way to assess the overall relationship is to split the sample into outcomes with a delay of at least one day and those without and meta-analyze each separately. Estimates and standard errors for delayed and non-delayed outcomes are presented in table XXX, with separate estimates presented for attitudes and for involvement, bystander, victimization and perpetration behavioral outcomes
