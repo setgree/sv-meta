@@ -55,9 +55,10 @@ dat <- raw_dat %>%
 *paper*: "We estimate an overall effect size of..."
 ```{r overall_meta}
 
-robust(x = rma(yi = d, vi = var_d, data = dat),
+overall_results <- robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
+
 
 *paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
 ```{r publication_bias_overall}
