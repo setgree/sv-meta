@@ -211,7 +211,6 @@ if ("lab_or_field" %in% colnames(raw_dat)) {
 # scale type
 ```
 
-
 ### unique study id
 ```{r}
 raw_dat <- raw_dat %>%
@@ -280,6 +279,16 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ```
 
+### Fix interevention_length too
+
+```{r fix_interventio_length}
+
+raw_dat$intervention_length <- ifelse(trimws(raw_dat$intervention_length) %in% c("", "not given"), NA_character_, raw_dat$intervention_length)
+
+table(raw_dat$intervention_length, useNA = "ifany")
+# TODO: check the NAs if time permits, otherwise assume they're all 0
+
+```
 ### categorize behavior
 
 ```{r categorize_behavior}
