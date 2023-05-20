@@ -2,6 +2,17 @@
 title: "5-descriptives"
 author: "Seth Green and Johh-Henry Pezzuto"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  rmarkdown::html_document:
+    smart: true
+    theme: spacelab
+    number_sections: no
+    toc_float:
+      collapsed: true
+    toc_depth: 4
+editor_options: 
+  chunk_output_type: console
+
 ---
 
 
@@ -10,7 +21,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       cache = FALSE,
                       message = FALSE,
                       warning = FALSE, 
-                      results = 'asis')
+                      results = 'markup')
 ```
 
 ```{r setup_libraries}
