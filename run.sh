@@ -18,8 +18,7 @@ Rscript -e "rmarkdown::render('./4-robustness-checks-and-alternate-specification
   output_dir = './results', clean = T)"
 
 # step 5: descriptives
-# This doesn't knit -- something to do with clipr? but when it does, uncomment next two lines:
 
-# Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd', 
-#   output_dir = './results', clean = T)"
+Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd',
+  output_dir = './results', clean = T)"
 
