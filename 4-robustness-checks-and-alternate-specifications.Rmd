@@ -23,6 +23,8 @@ library(tidyr, warn.conflicts = F)
 
 source('./functions/dplot.R')
 source('./functions/sum_lm.R')
+source('./functions/dip_calc.R')
+source('./functions/odds_ratio_to_d.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
@@ -145,7 +147,11 @@ rct_perp %>%
 dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>%
   count(is.na(.$cluster_type))
 
- dat %>% filter(ra) %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>% count(is.na(.$cluster_type))
+ dat %>% 
+   filter(ra) %>% 
+   group_by(unique_study_id) %>% 
+   slice(1) %>% ungroup() %>% 
+   count(is.na(.$cluster_type))
 
 ```
 
@@ -161,25 +167,11 @@ dat %>%
 
 ```
 
-
 ### Synthesizing dichotomous and continuous dependent variables
 
 *paper*: Using the conventional conversion formula from odds ratio to Cohen's d, ATEs that correspond in reductions of incidence from...
 
 ```{r dip_vs_odds_ratio}
-dip_calc <- function(p1, p2){
-  diff <- p1 - p2
-  sd <- sqrt(p2 * (1 - p2))
-  d <- round(diff/sd, digits = 3)
-  d
-}
-
-odds_ratio_to_d <- function(p1, p2){
-  odds_ratio <- p1 / p2
-  d <- log(odds_ratio) * sqrt(3) / pi
-  d
-}
-
 odds_ratio_to_d(.6, .3)
 dip_calc(.6, .3)
 odds_ratio_to_d(.6, .3) == odds_ratio_to_d(.06, .03)
@@ -193,7 +185,8 @@ SDs <- as.numeric(lapply(X = proportions, FUN = function(p){sqrt(p * (1 - p))}))
 
 ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 
-# test: what's a DIP that corresponds to approximately d = 0.28
+# test: what's a DIP that corresponds to approximately d = 0.28,
+# our overall average
 dip_calc(0.05, 0.015)
 ```
 
@@ -232,7 +225,9 @@ has_both %>% filter(study_design == 'rct') %>%
               method = "lm",
               show.legend = FALSE, alpha = .1, se = F) +
   geom_label_repel(mapping = aes(label = labels)) +
-  theme_minimal()
+  theme_minimal() +
+  labs(x = "mean d (attitudes)",
+       y = "mean d (behavior)")
 # actually kind of a cool plot when you zoom in
 
 ```
@@ -365,7 +360,7 @@ Different ways of assessing effect size change over time
 
 dat %>% ggplot((aes(x = year, y = d))) + 
   geom_point() +   
-  geom_smooth(method='lm') + 
+  geom_smooth(method = 'lm') + 
   theme_minimal()
 # basically no slope
 
@@ -389,7 +384,9 @@ dat %>%
   geom_smooth(method = 'lm', aes(color = scale_type), se = F) + 
   theme_minimal() +
   scale_x_continuous(breaks = seq(1986, 2018, 5)) +
-  labs(color = "Attitudes or behaviors")# +  ylab(expression(paste("Glass's", " ", Delta)))
+    labs(x = "year",
+       y = "mean d") +
+  labs(color = "Attitudes or behaviors")
 ```
 
 additional ways to look at rct perp outcomes
@@ -402,7 +399,7 @@ rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) +
   geom_smooth(method = 'lm') + 
   theme_minimal()
 
-rct_perp %>% filter(delay >30) %>%
+rct_perp %>% filter(delay > 30) %>%
 ggplot(mapping = aes(x = se_d, y = d)) + 
   geom_point() +
   geom_smooth(method = 'lm') + 

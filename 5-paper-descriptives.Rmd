@@ -22,7 +22,6 @@ knitr::opts_chunk$set(echo = FALSE,
 ```
 
 ```{r setup_libraries}
-# library(clipr)
 library(DT)
 library(dplyr)
 library(ggtext) # figures
@@ -34,8 +33,6 @@ library(metafor)
 library(patchwork)
 library(stringr)
 library(rstatix) # summary
-# library(tidyverse)
-# Sys.setenv(CLIPR_ALLOW = TRUE)
 ```
 
 
@@ -95,8 +92,7 @@ dat %>%
   summarise(n = n(),
             mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
   kable(digits = 2, format = "latex", booktabs = T) %>%
-  kableExtra::kable_styling() %>% 
-  clipr::write_clip()
+  kableExtra::kable_styling() 
 ```
 
 
@@ -153,7 +149,7 @@ dat %>%
             mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
   kable(digits = 2, format = "latex", booktabs = T) %>%
   kableExtra::kable_styling() %>% 
-  clipr::write_clip()
+  
 ```
 
 
@@ -167,8 +163,7 @@ dat %>%
   summarise(n = n(),
             mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
   kable(digits = 2, format = "latex", booktabs = T) %>%
-  kableExtra::kable_styling() %>% 
-  clipr::write_clip()
+  kableExtra::kable_styling() 
 ```
 
 
