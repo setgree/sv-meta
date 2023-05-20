@@ -174,9 +174,9 @@ dat %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-## TODO: revisit these
+## : revisit these
 dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE') %>% select(author, year, paper_title, d, se_d) # really two negative #s? 
-## TODO also: give readers a sense of how many are in each category
+##  also: give readers a sense of how many are in each category
 #
 ```
 
@@ -294,7 +294,7 @@ dev.off()
 # what if we limit this just to perpetration and victimization outcomes?
 # This was really useful for figuring out colors and such: `ggplot_build(p)$data`
 
-# TODO: create another point at the bottom that's the overall effect size and
+# : create another point at the bottom that's the overall effect size and
 # SE, a la the bottom point you get from the stata equivalent. 
 
 # Plus just make it nicer overall
