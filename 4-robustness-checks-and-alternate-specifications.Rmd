@@ -406,3 +406,15 @@ ggplot(mapping = aes(x = se_d, y = d)) +
   theme_minimal()
 # a stronger relationship
 ```
+
+### Quintile check
+```{r_quintile}
+dat %>% ungroup %>% arrange(n_t_post) %>%
+  mutate(quintile = ntile(n_t_post, 5)) %>% 
+  group_by(unique_paper_id, intervention_name) %>% 
+  split(.$quintile) %>%
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+                   cluster = .x$unique_study_id))
+
+# just reinforces that there's no meaningful relationship between d and se; if anything the highestlargest decile seems to have the largest effect sizes
+```
