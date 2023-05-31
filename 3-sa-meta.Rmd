@@ -58,8 +58,8 @@ dat <- raw_dat %>%
 
 overall_results <- robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id); overall_results
-```
 
+```
 
 *paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
 ```{r publication_bias_overall}
@@ -112,6 +112,9 @@ dat %>%
 # format it into a nice table rather than filling in table by hand?
 # EDIT: I tried this with chatGPT and got very complicated code in response
 # is on the backburner
+
+# double-check Ns;
+dat %>% group_by(scale_type, study_design) %>% tally()
 ```
 
 *paper* (footnote): "...In keeping with the consistency between available meta-analyses' estimates, we also observe a small, statistically insignificant relationship between effect size and year of publication"
