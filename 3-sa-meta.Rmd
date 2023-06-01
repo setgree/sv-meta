@@ -182,6 +182,9 @@ dat %>%
 dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE') %>% select(author, year, paper_title, d, se_d) # really two negative #s? 
 ## TODO: Maybe work into paper breakdown of behavioral types? 
 table(dat$behavior_type)
+
+# just within RCTs
+dat %>% filter(scale_type == 'behavior') %>% group_by(behavior_type) %>% tally()
 ```
 
 ## A closer look at behavioral outcomes
@@ -267,7 +270,7 @@ dat_for_forest_plot <- raw_dat %>%
          scale_type, unique_paper_id)
 
 # overall effect size
-overall <- dat_for_forest_plot %>%
+overall_forest <- dat_for_forest_plot %>%
   split(.$scale_type) %>%
   map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
               cluster = .$unique_paper_id))
@@ -275,24 +278,23 @@ overall <- dat_for_forest_plot %>%
 
 dat_for_forest_plot <- dat_for_forest_plot %>% 
   add_row(study_names = "Overall (Attitudes)",
-          d = overall[[1]]$beta,
-          se_d = overall[[1]]$se,
+          d = overall_forest[[1]]$beta,
+          se_d = overall_forest[[1]]$se,
           scale_type = "attitudes",
           unique_paper_id = NA) %>%
   add_row(study_names = "Overall (Behavior)",
-          d = overall[[2]]$beta,
-          se_d = overall[[2]]$se,
+          d = overall_forest[[2]]$beta,
+          se_d = overall_forest[[2]]$se,
           scale_type = "behavior",
           unique_paper_id = NA) %>%
   mutate(index = row_number()) %>%
   relocate(index, .before = 1)
-)
   
 # plot 
 
 p <- dat_for_forest_plot %>%
-  ggplot(mapping = aes(y = index, x = d, xmin = d - (1.96 * se_d),
-                       xmax = d + (1.96 * se_d))) +  
+  ggplot(aes(y = index, x = d, xmin = d - (1.96 * se_d),
+             xmax = d + (1.96 * se_d))) +  
   geom_point(size = 1) +
   geom_errorbarh(height = .1, aes(color = scale_type)) +
   geom_vline(xintercept = 0, color = "black", alpha = .5) +
@@ -318,7 +320,7 @@ p
 png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
 p
 dev.off()
-# This was really useful for figuring out colors and such: `ggplot_build(p)$data`
+# useful for figuring out colors & such: `ggplot_build(p)$data`
 ```
 
 
@@ -340,6 +342,9 @@ dat %>% filter(study_design == 'pre-post', behavior_type == 'involvement') %>% c
 # we might call 'anti-rape culture' or just 'involvement'. As of this writing,
 # March 2022, that's probably what I (Seth) would do; but our PAP says random 
 # vs not. So here we'll do both analyses, and put random vs not in the text
+
+## I (Seth) am totally forgetting what I was talking about in the 
+## above comment as of May 31 2023
 dat %>% 
   split(list(.$ra, .$behavior_type)) %>% 
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
@@ -360,4 +365,15 @@ dat %>%
        cluster = .x$unique_study_id))
 # This was trickier than it should have been 
 # https://github.com/ReeceGoding/Frustration-One-Year-With-R#410-factor-variables
+```
+
+### Zooming in on Perpetration effects within randomized research}
+just sanity checking the above results via a filter method
+```{r}
+rct_perp <- dat %>% 
+  filter(study_design == 'rct' & behavior_type == 'perpetration') 
+
+robust(x = rma(yi = d, vi = var_d, data = rct_perp),
+       cluster = rct_perp$unique_study_id)
+
 ```

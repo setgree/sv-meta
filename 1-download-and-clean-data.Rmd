@@ -388,6 +388,10 @@ saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
 # file.remove('./data/sa_meta_data.csv')
 ```
 
+
+### Clean dat$country
+todo
+
 **Session info**
 ```{r sesion_info}
 sessioninfo::session_info()
