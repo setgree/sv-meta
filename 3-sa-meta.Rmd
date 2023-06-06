@@ -201,6 +201,24 @@ dat %>% group_by(scale_type, study_design) %>% tally()
 
 # by categories of behavior/attitudes?
 dat %>% group_by(study_design, behavior_type) %>% tally()
+
+### Do behavior outcomes become more likely over time?
+year_plot <- ggplot(dat, aes(x = year, fill = scale_type)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = c("attitudes" = "red", "behavior" = "blue")) +
+  labs(x = "Year", y = "Count", fill = "Scale type") +
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(min(dat$year), max(dat$year), by = 2))
+
+png(filename = './results/year-plot.png', width = 1920/2, height = 1080/2)
+year_plot
+dev.off()
+
+# big split around the year 2000?
+dat %>%
+  group_by(year >= 2010, scale_type) %>%
+  summarize(count = n())
+
 ```
 
 *pap*: "What is the association between attitudes and behaviors (temporal match) – this answers our question of ‘should we care about attitudes?’"
@@ -320,6 +338,7 @@ p
 png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
 p
 dev.off()
+
 # useful for figuring out colors & such: `ggplot_build(p)$data`
 ```
 

@@ -256,5 +256,6 @@ mean(dat$n_t_pre, na.rm = T) + mean(dat$n_c_pre, na.rm = T)
 table(dat$condition_gender)
 
 ## intervention length
-mean(dat$intervention_length) 
+mean(dat$intervention_length, na.rm = T)
+quantile(dat$intervention_length, probs = seq(0, 1, by = 0.2), na.rm = TRUE)
 ```
