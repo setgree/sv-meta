@@ -302,8 +302,8 @@ p <- dat_for_forest_plot %>%
   scale_y_continuous(name = "", breaks = 1:length(dat_for_forest_plot$study_names),
                      trans = "reverse", labels = dat_for_forest_plot$study_names) + 
   ylab("Study") +
-  geom_vline(xintercept = overall$attitudes$beta, color = '#F8766D', lty = 'dashed') +
-  geom_vline(xintercept = overall$behavior$beta, color = '#00BFC4', lty = 'dashed') +
+  geom_vline(xintercept = overall_forest$attitudes$beta, color = '#F8766D', lty = 'dashed') +
+  geom_vline(xintercept = overall_forest$behavior$beta, color = '#00BFC4', lty = 'dashed') +
   labs(color = "Attitudes or behaviors") +
   theme_minimal() + 
   theme(axis.text.y = element_text(face = ifelse(

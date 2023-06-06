@@ -408,7 +408,7 @@ ggplot(mapping = aes(x = se_d, y = d)) +
 ```
 
 ### Quintile check
-```{r_quintile}
+```{r quintile}
 dat %>% ungroup %>% arrange(n_t_post) %>%
   mutate(quintile = ntile(n_t_post, 5)) %>% 
   group_by(unique_paper_id, intervention_name) %>% 
@@ -417,4 +417,16 @@ dat %>% ungroup %>% arrange(n_t_post) %>%
                    cluster = .x$unique_study_id))
 
 # just reinforces that there's no meaningful relationship between d and se; if anything the highestlargest decile seems to have the largest effect sizes
+```
+
+what about things that get tested more than once?
+
+```{r repeat_tests}
+
+dat %>% 
+  filter(intervention_name == "bringing in the bystander") %>% 
+  split(.$scale_type) %>% 
+  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
+              cluster = .$unique_paper_id))
+
 ```

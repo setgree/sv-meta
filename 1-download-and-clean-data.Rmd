@@ -375,6 +375,8 @@ raw_dat %>%
   group_by(condition_gender) %>%
   summarise(unique_study_count = n_distinct(unique_study_id))
 
+# 
+raw_dat$intervention_length <- as.numeric(raw_dat$intervention_length)
 ```
 
 
