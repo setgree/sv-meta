@@ -274,7 +274,7 @@ cor.test(x = has_both$mean_d_attitudes,
 
 *paper*:  Breaking down these results by study type, we see a _negative_, statistically significant correlation between attitudes and behaviors in observational research (-0.615057, p = 0.03329); a stronger, positive relationship within quasi-experimental research (0.3464049, p = 0.1054)); and a middling relationship within RCTs (0.1594935, p = 0.4364).
 
-```{r ttitude_behavior_correlation_for_rcts_vs_observational}
+```{r attitude_behavior_correlation_for_rcts_vs_observational}
 
 # by study type?
 has_both %>% 
@@ -289,11 +289,8 @@ has_both %>%
               dat = .))
 ```
 
-### Forest Plot (Figure)
-
-*paper*: Figure XXX highlights the randomized controlled trials that measure both behavioral and attitudinal outcomes, with horizontal lines for the two categories' average meta-analytic effects.
-
-```{r forest_plot}
+### Dat for forest plot and sign tests
+```{r forest_plot_dat_and_sign_tests}
 dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct') %>%
@@ -349,7 +346,15 @@ raw_dat %>%
   count(comparison) %>%
   rename(Comparison = comparison, Count = n)
 
+```
 
+### Forest Plot (Figure)
+
+*paper*: Figure XXX highlights the randomized controlled trials that measure both behavioral and attitudinal outcomes, with horizontal lines for the two categories' average meta-analytic effects.
+
+```{r forest_plot}
+
+head(dat_for_forest_plot) # checking we've already created subset (chunk above)
 # overall effect size
 overall_forest <- dat_for_forest_plot %>%
   split(.$scale_type) %>%
