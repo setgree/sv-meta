@@ -293,6 +293,7 @@ has_both %>%
 dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct') %>%
+  group_by(unique_study_id) %>%
          filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                               year, " ", "(", scale_type, ")")) %>%
@@ -301,11 +302,10 @@ dat_for_forest_plot <- raw_dat %>%
   slice(1) %>%
   ungroup(scale_type) %>% 
   mutate(mean_se = mean(se_d)) %>%
-  arrange(desc(mean_se)) %>%
+  arrange(mean_se) %>%
   ungroup() %>%
   select(study_names, d, se_d, 
          scale_type, unique_paper_id)
-# TODO: something went wrong here
 
 # overall effect size
 overall_forest <- dat_for_forest_plot %>%
@@ -358,7 +358,7 @@ p
 # Guess we'll hope they don't? :)
 
 p
-png(filename = './results/4-ggplot-forest-plot.png', width = 1920/0.75, height = 1080/0.75)
+png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
 p
 dev.off()
 # figure out how to make this plot legible. Do I need two rows per
