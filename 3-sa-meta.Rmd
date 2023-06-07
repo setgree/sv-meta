@@ -189,20 +189,44 @@ dat %>% filter(scale_type == 'behavior') %>% group_by(behavior_type) %>% tally()
 
 ## A closer look at behavioral outcomes
 
-### Behavioral effect sizes by delay and study design
+### Are attitudinal changes associated with behavioral changes?
 
-### Do attitudinal changes predict behavioral changes?
-*paper*: A clear majority of interventions in our sample are aimed directly at changing attitudes towards sexual violence, and attitudinal outcomes outnumber behavioral outcomes by about five to two (355 to 145)
+*paper*: First, we observe that attitudinal outcomes are much more common in our sample overall, outnumbering behavioral outcomes by 355 to 145
 
 ```{r attitudes_behaviors_count}
 table(dat$scale_type)
+
 # by study design?
 dat %>% group_by(scale_type, study_design) %>% tally()
 
 # by categories of behavior/attitudes?
 dat %>% group_by(study_design, behavior_type) %>% tally()
+```
+
 
 ### Do behavior outcomes become more likely over time?
+
+```{r behavioral_outcomes_by_decade}
+range(dat$year)
+dat <- dat %>%
+  mutate(decade = case_when(
+    year <= 1989 ~ "1980s",
+    year >= 1990 & year <= 1999 ~ "1990s",
+    year >= 2000 & year <= 2009 ~ "2000s",
+    year >= 2010 ~ "2010s",
+    TRUE ~ "Other"
+  ))
+
+dat %>%  group_by(decade, scale_type) %>%
+  summarize(count = n()) %>% 
+    pivot_wider(names_from = scale_type, values_from = count)
+
+# what was the earliest study to measure behavior as we conceive it?
+dat %>% filter(scale_type == 'behavior') %>% 
+  arrange(year) %>% 
+  select(author, year, paper_title) %>% head()
+
+
 year_plot <- ggplot(dat, aes(x = year, fill = scale_type)) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
@@ -213,11 +237,6 @@ year_plot
 png(filename = './results/year-plot.png', width = 1920/2, height = 1080/2)
 year_plot
 dev.off()
-
-# big split around the year 2000?
-dat %>%
-  group_by(year >= 2010, scale_type) %>%
-  summarize(count = n())
 
 ```
 
@@ -273,8 +292,8 @@ has_both %>%
 ```{r forest_plot}
 dat_for_forest_plot <- raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
-  filter(study_design == 'rct',
-         all(c('attitudes', 'behavior') %in% scale_type)) %>%
+  filter(study_design == 'rct') %>%
+         filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                               year, " ", "(", scale_type, ")")) %>%
   group_by(unique_paper_id, scale_type) %>%
@@ -286,6 +305,7 @@ dat_for_forest_plot <- raw_dat %>%
   ungroup() %>%
   select(study_names, d, se_d, 
          scale_type, unique_paper_id)
+# TODO: something went wrong here
 
 # overall effect size
 overall_forest <- dat_for_forest_plot %>%
@@ -327,18 +347,21 @@ p <- dat_for_forest_plot %>%
   theme(axis.text.y = element_text(face = ifelse(
     dat_for_forest_plot$study_names %in% 
       c("Overall (Attitudes)", "Overall (Behavior)"), 
-    "bold", "plain"))) +
+    "bold", "plain"), 
+    margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
   ggtitle("Attitudinal and Behavioral Changes Compared")
+
+p
 
 # getting a warning message about vectorized input is not officially supported
 # and results may change in future versions of ggplot2. 
 # Guess we'll hope they don't? :)
 
 p
-png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
+png(filename = './results/4-ggplot-forest-plot.png', width = 1920/0.75, height = 1080/0.75)
 p
 dev.off()
-
+# figure out how to make this plot legible. Do I need two rows per
 # useful for figuring out colors & such: `ggplot_build(p)$data`
 ```
 

@@ -138,6 +138,11 @@ dat %>%
   map(.f = ~robust(x = rma(yi = .$d, 
                vi = .$var_d), 
        cluster = .$unique_study_id))
+# mean delay?
+mean(dat$delay)
+median(dat$delay)
+range(dat$delay)
+quantile(dat$delay, by =  0.2)
 ```
 
 To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
