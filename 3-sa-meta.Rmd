@@ -320,7 +320,7 @@ dat_for_forest_plot %>%
   )) %>%
   count(comparison) %>%
   rename(Comparison = comparison, Count = n)
-
+binom.test(15, 21, 0.5)
 # now the whole thing but not filtering on RCTs
 raw_dat %>% 
   select(unique_study_id, scale_type, everything()) %>%
@@ -345,7 +345,7 @@ raw_dat %>%
   )) %>%
   count(comparison) %>%
   rename(Comparison = comparison, Count = n)
-
+binom.test(36, (36 + 12 + 1), 0.5)
 ```
 
 ### Forest Plot (Figure)
