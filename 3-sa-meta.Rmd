@@ -205,11 +205,11 @@ dat %>% group_by(study_design, behavior_type) %>% tally()
 ### Do behavior outcomes become more likely over time?
 year_plot <- ggplot(dat, aes(x = year, fill = scale_type)) +
   geom_bar(position = "dodge") +
-  scale_fill_manual(values = c("attitudes" = "red", "behavior" = "blue")) +
+  scale_fill_manual(values = c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
   labs(x = "Year", y = "Count", fill = "Scale type") +
   theme_minimal() +
   scale_x_continuous(breaks = seq(min(dat$year), max(dat$year), by = 2))
-
+year_plot
 png(filename = './results/year-plot.png', width = 1920/2, height = 1080/2)
 year_plot
 dev.off()

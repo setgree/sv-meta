@@ -29,7 +29,7 @@ drive_download("Primary Prevention Meta 2020",
 
 ```
 
-
+## read data and do initial cleaning
 ```{r clean_data}
 raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA")) %>% as_tibble()
 readr::problems(raw_dat) # none as of March 2022
@@ -48,6 +48,16 @@ raw_dat <- raw_dat %>%
 colnames(raw_dat)
 raw_dat <- raw_dat %>% 
   select(-c(coder, page_number, comments, d, var_d, se_d, checked, checker_comment, first_line))
+
+```
+
+### unique study id
+```{r}
+raw_dat <- raw_dat %>%
+  group_by(unique_paper_id, intervention_name) %>% 
+  mutate(unique_study_id = cur_group_id()) %>% 
+  ungroup()
+# TODO:  do I need an ungroup here? 
 ```
 
 #' prepare Cohen's D calcs
@@ -211,13 +221,6 @@ if ("lab_or_field" %in% colnames(raw_dat)) {
 # scale type
 ```
 
-### unique study id
-```{r}
-raw_dat <- raw_dat %>%
-  group_by(unique_paper_id, intervention_name) %>% 
-  mutate(unique_study_id = cur_group_id())
-# TODO:  do I need an ungroup here? 
-```
 
 ### Provisional: make everything under 10 clusters quasi-experimental
 As Paluck et al. note in 'Prejudice Reduction: Progress and Challenges':
@@ -244,6 +247,7 @@ raw_dat <- raw_dat %>%
 redesignated <- raw_dat %>% filter(robust_quasi_check) %>%
   select(author, year, intervention_name, scale_name, delay, 
          unique_study_id, unique_paper_id)
+
 # TODO: check that these are really all RCTs, it's not that many
 # still need to do this
 raw_dat$study_design <- as.factor(raw_dat$study_design)
@@ -281,11 +285,12 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 
 ### Fix interevention_length too
 
-```{r fix_interventio_length}
+```{r fix_intervention_length}
 
 raw_dat$intervention_length <- ifelse(trimws(raw_dat$intervention_length) %in% c("", "not given"), NA_character_, raw_dat$intervention_length)
 
 table(raw_dat$intervention_length, useNA = "ifany")
+
 # TODO: check the NAs if time permits, otherwise assume they're all 0
 
 ```
@@ -347,12 +352,22 @@ raw_dat$origin <- factor(raw_dat$origin,
                          levels = c("DeGue", "online search", "sent to us by authors"),
                          labels = c("DeGue", "Online Search", "Sent by Authors"))
 
+## condition_gender
+table(raw_dat$condition_gender)
+raw_dat <- raw_dat %>%
+  mutate(condition_gender = str_replace_all(condition_gender, 
+                                           c("\\bboys\\b" = "male", 
+                                             "\\bmen\\b" = "male", 
+                                             "\\bwomen\\b" = "female", 
+                                             "\\bgirls\\b" = "female")))
+table(raw_dat$condition_gender)
+
 # TODO: cleanup the following variables
 # participant sex
 raw_dat %>% group_by(participant_sex) %>% select(author, year, participant_sex, paper_title) %>% slice(2) 
 # stage in life
 raw_dat %>% group_by(stage_in_life) %>% select(author, year, participant_sex, paper_title) %>% slice(1) 
-# there are probably others
+
 ## TOOD: CHECK EVERYTHING AGAINST coding instructions.docx
 ```
 
