@@ -221,6 +221,10 @@ dat %>%  group_by(decade, scale_type) %>%
   summarize(count = n()) %>% 
     pivot_wider(names_from = scale_type, values_from = count)
 
+# just for curiousity how many *studiess* are in each decade
+dat %>% group_by(unique_paper_id) %>% slice(1) %>% group_by(decade) %>% tally()
+# sanity check
+6 + 63 + 48 + 109 == length(unique(dat$unique_paper_id)) # passed
 # what was the earliest study to measure behavior as we conceive it?
 dat %>% filter(scale_type == 'behavior') %>% 
   arrange(year) %>% 
@@ -363,6 +367,21 @@ p
 dev.off()
 # figure out how to make this plot legible. Do I need two rows per
 # useful for figuring out colors & such: `ggplot_build(p)$data`
+
+# another way to slice this: how many studies have an attitude d that's > behavior d
+
+dat_for_forest_plot %>%
+  group_by(unique_paper_id) %>%
+  summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
+            mean_d_behavior = mean(d[scale_type == "behavior"])) %>%
+  mutate(comparison = case_when(
+    mean_d_attitude > mean_d_behavior ~ "Higher",
+    mean_d_attitude == mean_d_behavior ~ "Same",
+    mean_d_attitude < mean_d_behavior ~ "Lower"
+  )) %>%
+  count(comparison) %>%
+  rename(Comparison = comparison, Count = n)
+
 ```
 
 
