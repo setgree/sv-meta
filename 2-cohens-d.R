@@ -13,7 +13,7 @@ source('./functions/d_calc.R')
 source('./functions/var_d_calc.R')
 
 dat_clean <- dat %>%
-  mutate(d = case_when(
+  mutate(d = case_when( # calculate d
     !is.na(n_t_group) & study_design %in% c('rct') ~ 
       mapply(
         FUN = d_calc,
@@ -30,7 +30,7 @@ dat_clean <- dat %>%
       n_t = n_t_post,
       n_c = n_c_post))) %>%
   mutate(d = abs(d) * anticipated_direction) %>%
-  mutate(var_d = case_when(
+  mutate(var_d = case_when( # calculate variance
     !is.na(n_t_group) & study_design %in% c('rct') ~
       mapply(
         FUN = var_d_calc,
