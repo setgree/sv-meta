@@ -290,8 +290,9 @@ has_both %>%
 ```
 
 ### Dat for forest plot and sign tests
+
 ```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- raw_dat %>% 
+dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct') %>%
   group_by(unique_study_id) %>%
@@ -322,7 +323,7 @@ dat_for_forest_plot %>%
   rename(Comparison = comparison, Count = n)
 binom.test(15, 21, 0.5)
 # now the whole thing but not filtering on RCTs
-raw_dat %>% 
+readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   group_by(unique_study_id) %>%
          filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
@@ -411,9 +412,18 @@ dev.off()
 # figure out how to make this plot legible. Do I need two rows per
 # useful for figuring out colors & such: `ggplot_build(p)$data`
 
+# what if we make a scatterplot
+dat_for_scatterplot <- dat_for_forest_plot %>%
+  mutate(study_names = sub("^(\\w+\\s\\w+).*", "\\1", study_names),
+         attitudes_or_behaviors = ifelse(scale_type == "attitudes", "attitudes", "behaviors"))
 
+ggplot(dat_for_scatterplot, aes(x = d, y = se_d, color = scale_type, label = study_names)) +
+  geom_point(size = 2) +
+#  geom_text(hjust = 0.5, vjust = -1.5) +
+  scale_color_manual(values = c("#F8766D", "#00BFC4")) +
+  theme_minimal()
+# to do: figure out the labeling
 
-# now without ove
 ```
 
 
