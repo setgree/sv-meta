@@ -20,6 +20,7 @@ This document will precede chunks with quotes prepended either a "*paper*" or a 
 ```{r setup, include=F, echo=F}
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
+library(knitr)
 library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
@@ -87,13 +88,11 @@ dat %>%
 
 ```{r published_vs_unpubished}
 
-dat <- dat %>% 
+dat %>% 
   mutate(published_unpublished = 
            case_when(publication_type == 'published' ~ 'published',
                      NA ~ 'unpublished', 
-                     TRUE ~ 'unpublished'))
-# Ns
-dat %>%
+                     TRUE ~ 'unpublished')) %>%
   group_by(published_unpublished) %>% 
     summarize(count_unique_study_id = n_distinct(unique_study_id))
 
@@ -232,11 +231,25 @@ ggplot(dat, aes(x = decade, fill = scale_type)) +
   theme_minimal()
 ```
 
-Overall, behaviors are much more resistant to change than attitudes. 
+Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
+
 ```{r behaviors_attitudes_overall}
 dat %>% 
-  split(list(.$study_design, .$scale_type)) %>%
+  split(.$scale_type) %>%
   map(.f = map_robust)
+```
+
+This discrepancy is particularly pronounced in observational research, where attitudinal outcomes are more than 20 times larger than behavioral responses; but the discrepancy is substantial across every category of study design. However, it is notable that the largest behavioral effects are found within randomized studies, i.e. the most rigorous designs.
+
+```{r behavior_attitudes_discrepancy_within_study_designs}
+
+# first, Ns
+
+dat %>% group_by(scale_type, study_design) %>% summarize(count_unique_study_id = n_distinct(unique_study_id))
+
+# then effect sizes
+dat %>% split(list(.$scale_type, .$study_design)) %>% map(.f = map_robust)
+
 ```
 # study desig n
 #
