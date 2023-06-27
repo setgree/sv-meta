@@ -176,7 +176,7 @@ dat %>% split(.$study_design) %>%
 In our sample, attitudinal outcomes outnumber behavioral outcomes by 355 to 145. 207 studies measure attitudes only, 36 measure only behaviors, while 61 measure both. 
 
 ```{r att_beh_breakdown}
-table(dat$scale_type)`
+table(dat$scale_type)
 
 dat %>% 
   group_by(unique_study_id) %>% 
