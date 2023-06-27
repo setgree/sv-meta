@@ -206,17 +206,12 @@ dat <- dat %>%
   )))
 
 # how many studies in each decade
-tab_1 <- dat %>% group_by(decade) %>% summarise(count_unique_study_id = n_distinct(unique_study_id))
-
-tab_2 <- dat %>%  group_by(decade, scale_type) %>%
+merge(x = dat %>% group_by(decade) %>% summarise(count_unique_study_id = n_distinct(unique_study_id)), y = dat %>%  group_by(decade, scale_type) %>%
   summarize(count = n()) %>% 
-    pivot_wider(names_from = scale_type, values_from = count)
-
-merge(tab_1, tab_2) %>% 
+    pivot_wider(names_from = scale_type, values_from = count)) %>%
   mutate(ratio = attitudes/behavior) %>% 
   rename('N studies' = count_unique_study_id) %>% 
   knitr::kable(format = 'latex')
-rm(tab_1, tab_2)
 
 # what was the earliest study to measure behavior as we conceive it?
 dat %>% filter(scale_type == 'behavior') %>% 
