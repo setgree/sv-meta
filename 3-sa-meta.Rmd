@@ -221,7 +221,8 @@ dat %>% filter(scale_type == 'behavior') %>%
 # optional histogram
 ggplot(dat, aes(x = decade, fill = scale_type)) +
   geom_bar(position = "dodge") +
-  scale_fill_manual(values = c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
+  scale_fill_manual(values = 
+                      c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
   labs(x = "Decade", y = "Count", fill = "Scale type") +
   theme_minimal()
 ```
