@@ -29,6 +29,7 @@ library(tidyr, warn.conflicts = F)
 library(tibble)
 
 source('./functions/sum_lm.R')
+source('./functions/map_robust.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
@@ -130,6 +131,7 @@ dat %>%
 ## well it's not *nothing*...but it's pretty small
 dat %>% sum_lm(y = d, x = quantile_var) # it's basically nothing
 ```
+
 Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).
 
 ```{r d_and_delays}
@@ -157,15 +159,8 @@ dat %>% group_by(study_design) %>%
 
 # check overall effect sizes
 dat %>%
-  split(list(.$study_design, .$scale_type)) %>%
-  map(.f = function(x) {
-    result <- robust(x = rma(yi = x$d, vi = x$var_d), cluster = x$unique_study_id)
-    data.frame(beta = round(result$beta, 3),
-               se = round(result$se, 3),
-               pval = ifelse(result$pval < 0.0001, "< 0.0001", 
-                             round(result$pval, digits = 4))) %>% 
-      as_tibble()
-    })
+  split(.$study_design) %>%
+  map(.f = map_robust)
 
 #TODO: can we reshape these two objects to be one table and then make them a latex table? 
 # and then eventually a function which just takes dat as its input?
@@ -176,7 +171,74 @@ dat %>% split(.$study_design) %>%
        cluster = .x$unique_study_id))
 
 ```
-# study design
+
+# Attitudinal Change exceeds behavioral change in every category of study
+
+In our sample, attitudinal outcomes outnumber behavioral outcomes by 355 to 145. 207 studies measure attitudes only, 36 measure only behaviors, while 61 measure both. 
+
+```{r att_beh_breakdown}
+table(dat$scale_type)`
+
+dat %>% 
+  group_by(unique_study_id) %>% 
+  mutate(has_both = case_when(all(c('attitudes', 'behavior') %in% scale_type) ~ 'both',
+                              scale_type == 'attitudes' ~ 'attitudes',
+                              scale_type == 'behavior' ~ 'behavior')) %>%
+  ungroup() %>% 
+  group_by(has_both) %>%
+  summarize(count_unique_study_id = n_distinct(unique_study_id))
+# sanity check
+
+length(unique(dat$unique_study_id)) == 207 + 36 + 61 # true
+```
+
+Behavioral measurement has become more common over time, particularly from 2010 onward. 
+
+```{r behavioral_outcomes_by_decade}
+range(dat$year)
+
+dat <- dat %>%
+  mutate(decade = as.factor(case_when(
+    year <= 1989 ~ "1980s",
+    year >= 1990 & year <= 1999 ~ "1990s",
+    year >= 2000 & year <= 2009 ~ "2000s",
+    year >= 2010 ~ "2010s",
+    TRUE ~ "Other"
+  )))
+
+# how many studies in each decade
+tab_1 <- dat %>% group_by(decade) %>% summarise(count_unique_study_id = n_distinct(unique_study_id))
+
+tab_2 <- dat %>%  group_by(decade, scale_type) %>%
+  summarize(count = n()) %>% 
+    pivot_wider(names_from = scale_type, values_from = count)
+
+merge(tab_1, tab_2) %>% 
+  mutate(ratio = attitudes/behavior) %>% 
+  rename('N studies' = count_unique_study_id) %>% 
+  knitr::kable(format = 'latex')
+rm(tab_1, tab_2)
+
+# what was the earliest study to measure behavior as we conceive it?
+dat %>% filter(scale_type == 'behavior') %>% 
+  arrange(year) %>% 
+  select(author, year, paper_title) %>% head()
+
+# optional histogram
+ggplot(dat, aes(x = decade, fill = scale_type)) +
+  geom_bar(position = "dodge") +
+  scale_fill_manual(values = c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
+  labs(x = "Decade", y = "Count", fill = "Scale type") +
+  theme_minimal()
+```
+
+Overall, behaviors are much more resistant to change than attitudes. 
+```{r behaviors_attitudes_overall}
+dat %>% 
+  split(list(.$study_design, .$scale_type)) %>%
+  map(.f = map_robust)
+```
+# study desig n
 #
 ## Heterogeneity across designs and outcomes
 
