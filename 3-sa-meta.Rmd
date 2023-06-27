@@ -53,27 +53,60 @@ dat <- raw_dat %>%
 
 ### Overall results and publication bias 
 
-*paper*: "We estimate an overall effect size of..."
+*paper*: "Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001."
 ```{r overall_meta}
 
 overall_results <- robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id); overall_results
-
+overall_results
 ```
 
-*paper*: "Across the sample as a whole, we do not observe a statistically significant relationship between effect sizes and standard errors"
+"First, we do not observe a significant relationship between effect sizes and standard errors: $\beta$ = 0.145 (se = 0.176),  p = 0.411"
+
 ```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
 
-*paper*: "The relationship between SE and $\Delta$ remains insignificant within randomized and quasi-experimental designs, but highly significant within pre-post designs"
+"Second, the relationship between SE and $\Delta$ remains insignificant within randomized (N = XXX) and quasi-experimental (N = XXX) designs, but highly significant within observational designs (N = XXX)"
 
-```{r publication_bias_by_study_type}
-# by study type?
+```{r publication_bias_by_study_design}
+
+# Ns
+dat %>%
+  group_by(study_design) %>% 
+    summarize(count_unique_study_id = n_distinct(unique_study_id))
+# effect sizes
 dat %>% 
   split(.$study_design) %>% 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
+
 ```
+"Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 186) and those not (N = 118)."
+
+```{r published_vs_unpubished}
+
+dat <- dat %>% 
+  mutate(published_unpublished = 
+           case_when(publication_type == 'published' ~ 'published',
+                     NA ~ 'unpublished', 
+                     TRUE ~ 'unpublished'))
+# Ns
+dat %>%
+  group_by(published_unpublished) %>% 
+    summarize(count_unique_study_id = n_distinct(unique_study_id))
+
+# sanity check
+length(unique(dat$unique_study_id)) == 186 + 118
+
+dat %>% sum_lm(d, published_unpublished)
+
+dat %>% 
+  split(.$published_unpublished) %>% 
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+```
+
 
 ## Heterogeneity across designs and outcomes
 
@@ -412,18 +445,7 @@ dev.off()
 # figure out how to make this plot legible. Do I need two rows per
 # useful for figuring out colors & such: `ggplot_build(p)$data`
 
-# what if we make a scatterplot
-dat_for_scatterplot <- dat_for_forest_plot %>%
-  mutate(study_names = sub("^(\\w+\\s\\w+).*", "\\1", study_names),
-         attitudes_or_behaviors = ifelse(scale_type == "attitudes", "attitudes", "behaviors"))
-
-ggplot(dat_for_scatterplot, aes(x = d, y = se_d, color = scale_type, label = study_names)) +
-  geom_point(size = 2) +
-#  geom_text(hjust = 0.5, vjust = -1.5) +
-  scale_color_manual(values = c("#F8766D", "#00BFC4")) +
-  theme_minimal()
-# to do: figure out the labeling
-
+## TODO:  sctterplot: y = d (behavior), x = d (attitudes)
 ```
 
 
