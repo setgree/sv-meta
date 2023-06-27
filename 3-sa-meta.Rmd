@@ -32,6 +32,8 @@ source('./functions/sum_lm.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
+
+options(scipen = 99)
 ```
 
 ### load data
@@ -70,7 +72,6 @@ sum_lm(dat, d, se_d, coefs_only = T)
 "Second, the relationship between SE and $\Delta$ remains insignificant within randomized (N = XXX) and quasi-experimental (N = XXX) designs, but highly significant within observational designs (N = XXX)"
 
 ```{r publication_bias_by_study_design}
-
 # Ns
 dat %>%
   group_by(study_design) %>% 
@@ -79,8 +80,8 @@ dat %>%
 dat %>% 
   split(.$study_design) %>% 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
-
 ```
+
 "Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 186) and those not (N = 118)."
 
 ```{r published_vs_unpubished}
@@ -97,17 +98,86 @@ dat %>%
 
 # sanity check
 length(unique(dat$unique_study_id)) == 186 + 118
+```
 
+ In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0467), but not at a statistically significant level (p = 0.28).
+ 
+```{r publish_relationship_or_not}
 dat %>% sum_lm(d, published_unpublished)
+```
+
+"Our results are also robust to variation in methodological rigor. The pooled effect size in the largest quintile of studies,  with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
+
+```{r quintile_check}
+# what are the quantiles
+round(quantile(dat$n_t_post + dat$n_c_post))
+
+# overall results largest and smallest
+dat <- dat %>%   
+  mutate(sum_var = n_t_post + n_c_post) %>%
+   mutate(quantile_var = case_when(
+    sum_var < quantile(sum_var, 0.2) ~ 1,
+    sum_var < quantile(sum_var, 0.4) ~ 2,
+    sum_var < quantile(sum_var, 0.6) ~ 3,
+    sum_var < quantile(sum_var, 0.8) ~ 4,
+    TRUE ~ 5))
 
 dat %>% 
-  split(.$published_unpublished) %>% 
+  split(.$quantile_var) %>%
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
+## well it's not *nothing*...but it's pretty small
+dat %>% sum_lm(y = d, x = quantile_var) # it's basically nothing
+```
+Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).
+
+```{r d_and_delays}
+
+dat %>% sum_lm(y = d, x = delay)
+
+# TODO: remove or move to appendix
+# how many delayed outcomes
+table(dat$yes_delay)
+
+dat %>% sum_lm(d, yes_delay)
+## What's the longest attitude/behavior delay measurement?
+dat %>%
+  group_by(scale_type) %>%
+  summarize(max_delay = max(delay))
+
 ```
 
+However,  when pooling all effects, we observe that results vary both significantly and substantively by study design. 
 
+```{r differences_by_study_design}
+# count Ns (again, just for convenience of writing)
+dat %>% group_by(study_design) %>% 
+  summarise(count_unique_study_id = n_distinct(unique_study_id))
+
+# check overall effect sizes
+dat %>%
+  split(list(.$study_design, .$scale_type)) %>%
+  map(.f = function(x) {
+    result <- robust(x = rma(yi = x$d, vi = x$var_d), cluster = x$unique_study_id)
+    data.frame(beta = round(result$beta, 3),
+               se = round(result$se, 3),
+               pval = ifelse(result$pval < 0.0001, "< 0.0001", 
+                             round(result$pval, digits = 4))) %>% 
+      as_tibble()
+    })
+
+#TODO: can we reshape these two objects to be one table and then make them a latex table? 
+# and then eventually a function which just takes dat as its input?
+
+# sanity check
+dat %>% split(.$study_design) %>% 
+   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+       cluster = .x$unique_study_id))
+
+```
+# study design
+#
 ## Heterogeneity across designs and outcomes
 
 ### By study type:
@@ -502,3 +572,6 @@ robust(x = rma(yi = d, vi = var_d, data = rct_perp),
        cluster = rct_perp$unique_study_id)
 
 ```
+
+
+Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat %>% group_by(study_design, behavior_type) %>% summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
