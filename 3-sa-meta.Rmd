@@ -283,6 +283,12 @@ dat %>%
 ```
 # correlation 
 
+Overall, X studies. attitudes Y effect size, Behavior X effect size. Correlation: Z. correlation within RCTs: Q. 
+
+scatterplot demonstrating this
+
+Overall we conclude that
+
 
 
 
