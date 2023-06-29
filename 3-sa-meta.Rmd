@@ -282,8 +282,53 @@ dat %>%
   map_robust()
 ```
 # correlation 
+Another way to assess the discrepancy between attitudes and behaviors is to focus on studies that measure both and look at the association between the two categories.
 
 Overall, X studies. attitudes Y effect size, Behavior X effect size. Correlation: Z. correlation within RCTs: Q. 
+```{r}
+has_both <- dat %>% 
+  group_by(unique_study_id) %>%
+  filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
+  group_by(unique_study_id, scale_type) %>%
+  mutate(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) %>%
+  select(author, year, paper_title, unique_study_id, intervention_name,
+         study_design, mean_d, mean_var_d, mean_se_d,
+         ra, labels, scale_type, decade) %>%  
+  slice(1) %>% 
+  pivot_wider(
+    id_cols = c(author, year, paper_title, unique_study_id,
+                intervention_name,
+                unique_study_id, study_design, ra, labels, decade),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d))
+
+cor.test(x = has_both$mean_d_attitudes, 
+         y = has_both$mean_d_behavior)
+
+# RCTs only?
+rcts_both <- has_both %>% filter(study_design == 'rct')
+cor.test(x = rcts_both$mean_d_attitudes, 
+         y = rcts_both$mean_d_behavior)
+# rly about the same
+
+# ok now scatterplot
+
+has_both %>% ungroup() %>%
+  ggplot(mapping = aes(x = mean_d_attitudes,
+                       y = mean_d_behavior,
+                       )) + 
+  geom_point(aes(color = study_design),
+             size = 3) + 
+  geom_abline(slope = 1, lty = 'dashed') +
+ stat_smooth(aes(x = mean_d_attitudes, 
+                 y = mean_d_behavior),
+             lty = "dashed", 
+              method = "lm", 
+             se = F) +  
+  theme_minimal()
+```
 
 scatterplot demonstrating this
 
