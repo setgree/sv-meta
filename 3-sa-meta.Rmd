@@ -89,6 +89,26 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 dat %>% map_robust()
 ```
 
+
+# Figure 1
+```{r fig_1}
+
+dat %>% ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relatoinship between effect sizes and standard errors") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
 "First, we do not observe a significant relationship between effect sizes and standard errors: $\beta$ = 0.145 (se = 0.176),  p = 0.411"
 
 ```{r publication_bias_overall}
@@ -377,7 +397,7 @@ has_both_reshaped %>%
        x = "Effect size (attitudes)",
        y = "Effect size (behaviors)",
        color = "Study Design") +
-  scale_color_discrete(labels = c("pre-post" = "observational")) +
+#  scale_color_discrete(labels = c("pre-post" = "observational")) +
   guides(color = guide_legend(title = "Study Design")) + 
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
