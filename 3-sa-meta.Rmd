@@ -99,7 +99,7 @@ dat %>% ggplot(mapping = aes(y = d,
              shape = study_design),
              size = 3) + 
   stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relatoinship between effect sizes and standard errors") +
+  ggtitle("Relationship between effect sizes and standard errors") +
   labs(x = "Standard errors",
        y = "Effect size",
        color = "Outcome type",
