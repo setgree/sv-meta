@@ -103,7 +103,7 @@ dat %>% ggplot(mapping = aes(y = d,
   labs(x = "Standard errors",
        y = "Effect size",
        color = "Outcome type",
-       shape = "Study") +
+       shape = "Study Design") +
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5))
 
