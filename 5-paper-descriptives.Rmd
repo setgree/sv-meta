@@ -183,3 +183,11 @@ dat %>%
   kableExtra::kable_styling() 
 ```
 
+```{r}
+dat |> 
+  filter(scale_type == "attitudes") |> 
+  distinct(unique_study_id, scale_name) |> 
+  count(scale_name, sort = T) |> 
+  View()
+```
+

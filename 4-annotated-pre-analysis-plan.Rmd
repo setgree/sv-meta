@@ -25,8 +25,15 @@ source('./functions/dplot.R')
 source('./functions/sum_lm.R')
 source('./functions/dip_calc.R')
 source('./functions/odds_ratio_to_d.R')
+source('./functions/map_robust.R')
+source('./functions/study_count.R')
 # NOTE ON SUM_LM: 
-# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
+# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d))
+
+
+# NOTE ON map_robust:
+# consolidates metafor::robust() into just
+# the key things we report in the paper
 #                                          data = dat))$coefficients`
 ```
 
@@ -82,35 +89,88 @@ filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
 
 ```
 
-## Pre-registered analyses not in the main text
+## Pre-registered analyses (from Prospero Doc)
+
+"Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
+
+"Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term."
+```{r}
+# number of studies that measure behavior
+dat %>% 
+  filter(scale_type == 'behavior') %>%
+  study_count()
+
+# study count with and without a delay?
+dat %>% 
+  filter(scale_type == 'behavior') %>%
+  group_by(yes_delay) %>% 
+  study_count()
+# note that this is larger than the number of studies
+# because some studies have outcome measurements at 
+# multiple points
+
+# now effect sizes
+dat %>% filter(scale_type == 'behavior') %>%
+  split(.$yes_delay) %>%
+  map(.f = map_robust)
+# big diff, but is that just capturing 
+# difference between bystander/involvement
+# and victimization/perpetration?
+
+dat %>% 
+  filter(behavior_type %in% c('victimization', 'perpetration')) %>%
+  split(.$yes_delay) %>%
+  map(.f = map_robust)
+# now the relationship is in the opposite direction
+# how many studies measure vict/perp with no delay?
+
+dat %>% 
+  filter(behavior_type %in% c('victimization', 'perpetration')) %>% group_by(yes_delay) %>%
+  study_count()
+# very few
+
+```
+
 
 * Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 
+## NOTE: EXPLAIN WHY THIS IS NONSENSICAL
 ```{r behavioral_attenuation_by_study_design}
+# N of studies
+dat %>% filter(scale_type == 'behavior') %>%
+  group_by(study_design, yes_delay) %>% 
+  study_count()
+
 dat %>%
   filter(scale_type == 'behavior') %>%
 split(list(.$study_design, .$yes_delay)) %>% 
-  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
-              cluster = .$unique_paper_id))
-# 'overall' estimates taken from tables in text
+  map(map_robust)
+# These results aren't going to be very informative 
+# because A) what do vict/perp outcomes *mean* when
+# there is no delay? b/c no delay = no time to accumulate relatively rare events
+# & B) there are so few studies that *dont* have delays when measuring behavior
+
 ```
 
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
 
-# how many in each category? 
+dat %>% filter(scale_type == 'behavior', 
+               study_design == 'rct',
+               yes_delay == F) %>% 
+  select(author, year, behavior_type, delay)
+
+# N studies
 dat %>% 
   filter(scale_type == 'behavior', study_design != 'pre-post') %>%
   group_by(study_design, yes_delay) %>% 
-  tally()
-# The following will fail for reasons that  don't make sense to me
-# might be a metafor bug
-# dat %>% 
-#   filter(scale_type == 'behavior', study_design != 'pre-post') %>%
-#   split(list(.$study_design, .$yes_delay)) %>%
-#   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-#        cluster = .x$unique_study_id))
+  study_count()
+
+dat %>% 
+  filter(scale_type == 'behavior', study_design != 'pre-post') %>%
+  split(list(.$study_design, .$yes_delay)) %>%
+  map(map_robust)
 
 # so instead...
 dat %>% filter(study_design == 'quasi-experimental',
