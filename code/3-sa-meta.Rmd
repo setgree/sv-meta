@@ -246,6 +246,21 @@ dat %>% ggplot(aes(x = year, color = scale_type)) +
   scale_y_continuous(n.breaks = 10) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
+
+## what if we just do this for behaviors?
+dat %>% filter(scale_type == 'behavior') %>%
+  ggplot(aes(x = year, color = behavior_type)) +
+  geom_line(stat = 'count') + 
+  labs(x = "Year", 
+       y = "Count", 
+       color = "Behavioral type",
+       title = "Categories of behavioral outcomes over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
 ```
 
 Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
