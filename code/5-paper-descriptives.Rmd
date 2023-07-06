@@ -22,22 +22,15 @@ knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE, 
                       results = 'markup')
 
-library(DT)
-library(dplyr)
-library(ggtext) # figures
-library(glue) # convenience
+
+library(tidyverse)
 library(janitor)
 library(kableExtra)
 library(knitr) # tables
 library(metafor)
 library(patchwork)
-library(purrr)
-library(stringr)
 library(rstatix) # summary
-```
 
-
-```{r load_data}
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
@@ -64,6 +57,22 @@ dat |>
             year_max = max(year),
             year_diff = year_max - year_min,
             n_countries = n_distinct(country))
+
+
+dat |>
+  distinct(unique_study_id, intervention_length) |> 
+  mutate(intervention_length = ifelse(intervention_length > 1, 1, 0)) |> 
+  summarise(perc_greater_1 = mean(intervention_length, na.rm = T))
+
+
+## outcomes
+dat |>
+  select(unique_study_id, delay) |> 
+  group_by(unique_study_id) |> 
+  filter(delay == max(delay)) |> 
+  ungroup() |> 
+  mutate(delay = ifelse(delay > 0, 1, 0)) |> 
+  summarise(perc_greatereql_1 = mean(delay))
 ```
 
 
@@ -86,10 +95,132 @@ dat |>
   distinct(unique_paper_id) |> 
   nrow()
 
+
+dat |> 
+  mutate(early = between(year, 1985, 2000)) |> 
+  distinct(unique_paper_id, .keep_all = T) |> 
+  summarise(perc_early = mean(early))
+
 dat |> 
   filter(between(year, 1985, 2000)) |> 
-  distinct(unique_paper_id, publication_type) |> 
-  count(publication_type)
+  distinct(unique_study_id, publication_type) |> 
+  count(publication_type) |> 
+adorn_totals()
+
+
+dat |> 
+  select(scale_name, behavior_type) |> 
+  filter(behavior_type == "Attitude") |> 
+  mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth")) |> 
+  group_by(myth_scale) |> 
+  summarise(n = n())
+  
+```
+
+
+```{r}
+dat |> 
+  group_by(year) |> 
+  summarise(n = n_distinct(unique_paper_id)) |> 
+  add_row(year = 1985, n = 0) |> 
+  ggplot(aes(year, n)) +
+  geom_line(size = 2) +
+  scale_x_continuous(limits = c(1985, 2018), 
+                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  labs(x = NULL, y = "# of papers")
+
+ggsave("results/tt_papers.pdf")
+
+
+dat |> 
+  group_by(year) |> 
+  summarise(n = n_distinct(unique_study_id)) |> 
+  add_row(year = 1985, n = 0) |> 
+  ggplot(aes(year, n)) +
+  geom_line(size = 2) +
+  scale_x_continuous(limits = c(1985, 2018), 
+                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  labs(x = NULL, y = "# of studies")
+
+ggsave("results/tt_studies.pdf")
+```
+
+
+
+
+```{r}
+dat |> 
+  distinct(unique_study_id, country) |> 
+  mutate(country = ifelse(country == "USA", "USA", "Rest of the world")) |> 
+  count(country, sort = T) |> 
+  mutate(country = fct_rev(fct_reorder(factor(country), n)),
+         perc = n / sum(n)) |>
+  # adorn_totals()
+  ggplot(aes(country, n, label = n, fill = country)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  # scale_y_continuous(labels = scales::percent, breaks = seq(0, 1, by = .25), limits = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 300, by = 100), limits = c(0, 300)) +
+  guides(fill = FALSE) +
+  labs(x = NULL, y = "# of studies", col = NULL)
+
+  
+ggsave("results/country.pdf")
+```
+
+```{r}
+dat |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+
+
+dat |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  drop_na(setting) |> 
+  mutate(perc = n / sum(n)) |>
+  ggplot(aes(setting, n)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12)) +
+  labs(x = NULL, y = "# of studies", col = NULL)
+
+ggsave("results/settings.pdf")
+```
+
+```{r}
+dat |> 
+  distinct(unique_paper_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+```
+
+```{r}
+dat |> 
+  mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |> 
+  count(year, participant_sex) |> 
+  add_row(year = 1985, participant_sex = "mixed gender groups") |> 
+  complete(year, participant_sex, fill = list(n = 0)) |> 
+  ggplot(aes(year, n, col = participant_sex)) +
+  geom_line(size = 2) +
+  scale_x_continuous(limits = c(1985, 2018), 
+                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
+  theme_bw() +
+  theme(legend.position="bottom") +
+  labs(x = NULL, y = "# of studies", col = NULL)
+  
+ggsave("results/tt_participant_sex.pdf")
+  
 ```
 
 
@@ -130,6 +261,10 @@ dat %>%
 ### Overview of Studies in the Meta-Analytic Database
 
 ```{r }
+dat |> 
+  select(contains("n_")) |> 
+  View()
+
 # average N?
 mean(dat$n_t_post) + mean(dat$n_c_post)
 mean(dat$n_t_pre, na.rm = T) + mean(dat$n_c_pre, na.rm = T)

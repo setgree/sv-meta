@@ -24,14 +24,15 @@ library(knitr)
 library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
+library(lubridate)
 library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 library(tibble)
 
-source('./functions/sum_lm.R')
-source('./functions/map_robust.R')
-source('./functions/study_count.R')
+source('./code/functions/sum_lm.R')
+source('./code/functions/map_robust.R')
+source('./code/functions/study_count.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
@@ -82,16 +83,16 @@ dat <- dat %>%
 
 *paper*: "Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001."
 ```{r overall_meta}
+dat %>% map_robust()
 
+# more verbose version of
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
-# more verbose version of
-dat %>% map_robust()
 ```
 
 
 # Figure 1
-```{r fig_1}
+```{r figure_1}
 
 dat %>% ggplot(mapping = aes(y = d, 
                              x = se_d)) + 
@@ -234,12 +235,17 @@ dat %>% filter(scale_type == 'behavior') %>%
   select(author, year, paper_title) %>% head()
 
 # optional histogram
-ggplot(dat, aes(x = decade, fill = scale_type)) +
-  geom_bar(position = "dodge") +
-  scale_fill_manual(values = 
-                      c("attitudes" = "#F8766D", "behavior" = "#00BFC4")) +
-  labs(x = "Decade", y = "Count", fill = "Scale type") +
-  theme_minimal()
+dat %>% ggplot(aes(x = year, color = scale_type)) +
+  geom_line(stat = 'count') + 
+  labs(x = "Year", 
+       y = "Count", 
+       color = "Scale type",
+       title = "Attitudinal and behavioral outcomes over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
