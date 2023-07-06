@@ -248,7 +248,7 @@ dat %>% ggplot(aes(x = year, color = scale_type)) +
   theme(plot.title = element_text(hjust = 0.5))
 
 ## what if we just do this for behaviors?
-dat %>% filter(scale_type == 'behavior') %>%
+dat %>%
   ggplot(aes(x = year, color = behavior_type)) +
   geom_line(stat = 'count') + 
   labs(x = "Year", 
@@ -260,6 +260,8 @@ dat %>% filter(scale_type == 'behavior') %>%
   scale_y_continuous(n.breaks = 10) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
+
+# can also filter out attitudes if we want (filter(scale_type == 'attitudes'))
 
 ```
 
