@@ -326,3 +326,16 @@ dat |>
   View()
 ```
 
+how many studies evaluate rape myths?
+```{r}
+dat %>%
+  group_by(unique_study_id) %>%
+  summarise(
+    uses_word = any(str_detect(scale_name, "myth|IRMA|illinois"))
+  ) %>%
+  summarise(
+    studies_with_word = sum(uses_word),
+    studies_without_word = sum(!uses_word)
+  )
+
+```
