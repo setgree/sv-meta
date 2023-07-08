@@ -33,7 +33,7 @@ library(kableExtra)
 library(janitor)
 library(metafor)
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
   mutate(labels = paste(tools::toTitleCase(word(author)), year)) %>%
   group_by(unique_study_id) %>%
@@ -53,7 +53,7 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
 ```
 
 Our present review seeks to summarize all primary prevention efforts over the past X years, from X countries
-```{r}
+```{r years_and_countries}
 dat |> 
   summarise(year_min = min(year),
             year_max = max(year),
