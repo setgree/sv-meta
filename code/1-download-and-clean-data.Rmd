@@ -23,14 +23,14 @@ options(scipen = 99)
 # download sheet from google -----------------------------------
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020",
-               path = "./data/sa_meta_data",
+               path = "../data/sa_meta_data",
                overwrite = T,
                type = 'csv') # dl to csv gets just first sheet
 ```
 
 ## read data and do initial cleaning
 ```{r clean_data}
-raw_dat <- read.csv('./data/sa_meta_data.csv', na.strings = c("NA")) %>% as_tibble()
+raw_dat <- read.csv('../data/sa_meta_data.csv', na.strings = c("NA")) %>% as_tibble()
 readr::problems(raw_dat) # none as of March 2022
 
 # drop 'eliminate' studies & create unique paper ID
@@ -377,7 +377,7 @@ table(raw_dat$study_design)
 
 ## Export 
 ```{r save_clean_data}
-saveRDS(object = raw_dat, file = './data/sa_meta_data_cleaned.rds')
+saveRDS(object = raw_dat, file = '../data/sa_meta_data_cleaned.rds')
 
 ```
 
