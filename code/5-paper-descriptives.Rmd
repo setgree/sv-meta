@@ -24,12 +24,14 @@ knitr::opts_chunk$set(echo = FALSE,
 
 
 library(tidyverse)
-library(janitor)
-library(kableExtra)
-library(knitr) # tables
-library(metafor)
+library(ggtext)
 library(patchwork)
-library(rstatix) # summary
+library(ggthemes)
+library(ggrepel)
+library(knitr) 
+library(kableExtra)
+library(janitor)
+library(metafor)
 
 dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything()) %>%
@@ -40,7 +42,7 @@ dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) %>%
-  ungroup() |> 
+  ungroup() %>% 
   mutate(study_design = case_when(study_design == "pre-post" ~ "Observational",
                                   study_design == "rct" ~ "Randomized Control Trial",
                                   study_design == "quasi-experimental" ~ "Quasi-Experimental"),
@@ -118,59 +120,50 @@ dat |>
 ```
 
 
-```{r}
-dat |> 
-  group_by(year) |> 
-  summarise(n = n_distinct(unique_paper_id)) |> 
-  add_row(year = 1985, n = 0) |> 
-  ggplot(aes(year, n)) +
-  geom_line(size = 2) +
-  scale_x_continuous(limits = c(1985, 2018), 
-                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
-  theme_bw() +
-  theme(axis.text = element_text(size = 12)) +
-  labs(x = NULL, y = "# of papers")
-
-ggsave("results/tt_papers.pdf")
-
-
-dat |> 
-  group_by(year) |> 
-  summarise(n = n_distinct(unique_study_id)) |> 
-  add_row(year = 1985, n = 0) |> 
-  ggplot(aes(year, n)) +
-  geom_line(size = 2) +
-  scale_x_continuous(limits = c(1985, 2018), 
-                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
-  theme_bw() +
-  theme(axis.text = element_text(size = 12)) +
-  labs(x = NULL, y = "# of studies")
-
-ggsave("results/tt_studies.pdf")
-```
 
 
 
 
 ```{r}
-dat |> 
+(country_fig = dat |> 
   distinct(unique_study_id, country) |> 
   mutate(country = ifelse(country == "USA", "USA", "Rest of the world")) |> 
   count(country, sort = T) |> 
   mutate(country = fct_rev(fct_reorder(factor(country), n)),
          perc = n / sum(n)) |>
-  # adorn_totals()
   ggplot(aes(country, n, label = n, fill = country)) +
   geom_col() +
   theme_bw() +
-  theme(axis.text = element_text(size = 12)) +
-  # scale_y_continuous(labels = scales::percent, breaks = seq(0, 1, by = .25), limits = c(0, 1)) +
+  theme(axis.text = element_markdown(size = 12), 
+        plot.title = element_markdown()) +
   scale_y_continuous(breaks = seq(0, 300, by = 100), limits = c(0, 300)) +
-  guides(fill = FALSE) +
-  labs(x = NULL, y = "# of studies", col = NULL)
-
+   scale_fill_manual(values = ggthemes::solarized_pal()(2)) +
+  guides(fill = "none") +
+  labs(title = "**a)** Number of Studies by Country",
+       x = NULL, 
+       y = "# of studies", 
+       col = NULL))
   
-ggsave("results/country.pdf")
+(setting_fig = dat |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  drop_na(setting) |> 
+  mutate(perc = n / sum(n)) |>
+  ggplot(aes(setting, n, fill = setting)) +
+  geom_col() +
+  scale_fill_manual(values = ggthemes::tableau_color_pal('Tableau 10')(6)) +
+  labs(title = "**b)** Number of Studies by Setting",
+       x = NULL, 
+       y = "# of studies", 
+       col = NULL) +
+  theme_bw() +
+    guides(fill = "none") +
+  theme(axis.text = element_markdown(size = 12),
+        plot.title = element_markdown()))
+
+country_fig / setting_fig 
+
+ggsave("results/descriptive.pdf", width = 7, height = 7)
 ```
 
 ```{r}
@@ -179,20 +172,6 @@ dat |>
   count(setting, sort = T) |> 
   mutate(perc = n / sum(n)) |> 
   janitor::adorn_totals()
-
-
-dat |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  drop_na(setting) |> 
-  mutate(perc = n / sum(n)) |>
-  ggplot(aes(setting, n)) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.text = element_text(size = 12)) +
-  labs(x = NULL, y = "# of studies", col = NULL)
-
-ggsave("results/settings.pdf")
 ```
 
 ```{r}
@@ -205,19 +184,97 @@ dat |>
 
 ```{r}
 dat |> 
-  mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |> 
-  count(year, participant_sex) |> 
-  add_row(year = 1985, participant_sex = "mixed gender groups") |> 
-  complete(year, participant_sex, fill = list(n = 0)) |> 
+    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
+  distinct(unique_paper_id, .keep_all = T) |> 
+  count(participant_sex, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+```
+
+```{r}
+dat_participant_sex <-
+  bind_rows(
+    dat |> # overall line
+      group_by(year) |>
+      summarise(n = n_distinct(unique_study_id)) |>
+      add_row(year = 1985, n = 0) |>
+      mutate(participant_sex = "Overall"),
+    
+    dat |> # participant sex lines
+      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |>
+      distinct(unique_study_id, .keep_all = T) |>
+      filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |>
+      count(year, participant_sex) |>
+      add_row(year = 1985, participant_sex = "mixed gender groups") |>
+      complete(year, participant_sex, fill = list(n = 0)) |>
+      mutate(participant_sex = str_to_title(participant_sex))
+  ) |>
+  mutate(participant_sex = factor(participant_sex, levels = c("Overall", "Mixed Gender Groups", "Only Male", "Only Female")))
+
+zeitgeist = 
+dat_participant_sex |> 
+  filter(participant_sex == "Overall", year %in% c(1998, 2000, 2007)) |> 
+  mutate(event = c("Safe dates", "Men's Program", "Bringing in\nthe Bystander"))
+
+dat_participant_sex |>
   ggplot(aes(year, n, col = participant_sex)) +
   geom_line(size = 2) +
-  scale_x_continuous(limits = c(1985, 2018), 
-                     breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
+  geom_segment(aes(x = year, ## add "flag poles"
+                   xend = year,
+                   y = 0,
+                   yend = n,
+                   label = NULL),
+               inherit.aes = F, 
+               linewidth = 1.5,
+               data = zeitgeist) +
+    geom_label_repel(mapping = aes(x = year, ## labels
+                                   y = n,
+                                   label = event),
+                     size = 6,
+                     segment.size	= 1.5,
+                     inherit.aes = F,
+                     data =  zeitgeist,
+                     nudge_x = c(1.5, 2.5, -2),
+                     nudge_y = c(6, 5, 5),
+                     min.segment.length = 0, 
+                     force = 0.3,
+                     size = 2) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  scale_color_manual(values = ggthemes::palette_pander(4)) +
+  #scale_color_manual(values = ggthemes::tableau_color_pal("Color Blind")(4)) +
   theme_bw() +
-  theme(legend.position="bottom") +
-  labs(x = NULL, y = "# of studies", col = NULL)
+  theme(
+    axis.text = element_text(size = 12), 
+    legend.text = element_text(size = 12),
+    legend.position = "bottom"
+  ) +
+  labs(
+    x = NULL,
+    y = "# of studies",
+    col = NULL
+  )
+
+ggsave("results/tt_overall.pdf", height = 5)
+
+
+
+# dat |> 
+#   mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
+#   distinct(unique_study_id, .keep_all = T) |> 
+#   filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |> 
+#   count(year, participant_sex) |> 
+#   add_row(year = 1985, participant_sex = "mixed gender groups") |> 
+#   complete(year, participant_sex, fill = list(n = 0)) |> 
+#   ggplot(aes(year, n, col = participant_sex)) +
+#   geom_line(size = 2) +
+#   scale_x_continuous(limits = c(1985, 2018), 
+#                      breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
+#   theme_bw() +
+#   theme(legend.position="bottom") +
+#   labs(x = NULL, y = "# of studies", col = NULL)
   
 ggsave("results/tt_participant_sex.pdf")
   
@@ -327,15 +384,57 @@ dat |>
 ```
 
 how many studies evaluate rape myths?
-```{r}
+```{r rape_myth_outcome_prevalence}
 dat %>%
   group_by(unique_study_id) %>%
   summarise(
-    uses_word = any(str_detect(scale_name, "myth|IRMA|illinois"))
+    myth_var = any(str_detect(scale_name, "myth|IRMA|illinois"))
   ) %>%
   summarise(
-    studies_with_word = sum(uses_word),
-    studies_without_word = sum(!uses_word)
+    myth_count = sum(myth_var),
+    no_myth_count = sum(!myth_var)
   )
+
+```
+
+what's the distribution of outcome types for bystander interventions
+
+```{r bystander_dv_count}
+
+# filter based on mentioning bystander in either title, description, 
+# intervention name, or program name, or have a stated purpose of "4" (bystander)
+bystander_dat <- dat %>%
+  filter(
+    str_detect(paper_title, "bystander") |
+      str_detect(brief_description_of_the_intervention, "bystander") |
+      str_detect(intervention_name, "bystander") |
+      str_detect(program_name, "bystander") |
+      str_detect(stated_purpose, "4"))
+
+bystander_dat %>%  study_count()
+
+table(bystander_dat$behavior_type)    
+# now what's the DV count for the studies that remain
+
+
+
+## BTW an alternate way to do this
+dat %>%
+  group_by(unique_study_id) %>%
+  summarise(
+    bystander_count = ifelse(
+      any(
+        str_detect(c(
+          brief_description_of_the_intervention, 
+          intervention_name, program_name, paper_title), "bystander")) |
+        any(str_detect(stated_purpose, "4")),
+      TRUE, FALSE)
+  ) %>% 
+  summarise(
+    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
+    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
+  )
+
+
 
 ```

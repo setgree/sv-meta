@@ -21,12 +21,12 @@ library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 
-source('./functions/dplot.R')
-source('./functions/sum_lm.R')
-source('./functions/dip_calc.R')
-source('./functions/odds_ratio_to_d.R')
-source('./functions/map_robust.R')
-source('./functions/study_count.R')
+source('code/functions/dplot.R')
+source('code/functions/sum_lm.R')
+source('code/functions/dip_calc.R')
+source('code/functions/odds_ratio_to_d.R')
+source('code/functions/map_robust.R')
+source('code/functions/study_count.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d))
 
@@ -283,7 +283,8 @@ dat %>%
                           dot_informative = T))
  
 # overall linear plot
-ggplot(data = dat, mapping = aes(x = se_d, y = d)) +
+dat |> 
+ggplot(aes(x = se_d, y = d)) +
   geom_point() +
   geom_smooth(method = 'lm') + 
   theme_minimal()
@@ -292,14 +293,16 @@ dplot(condense = F)
 ## Relationship between attitudes and behaviors 
 
 has_both %>%
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior,
-                       color = study_design)) +
+  ggplot(aes(x = mean_d_attitudes, 
+             y = mean_d_behavior,
+             color = study_design)) +
   geom_point(size = 3) + 
   geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
   theme_minimal()
 
 # now same with RCTs, and with study labels
-has_both %>% filter(study_design == 'rct') %>% 
+has_both %>% 
+  filter(study_design == 'rct') %>% 
   ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
   geom_point(size = 3, color = 'blue') + 
   geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
@@ -363,7 +366,6 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
 
 different ways to break down main results:
 ```{r alternate_breakdowns}
-
 # ra vs not (in paper we break down by study)
 dat %>% 
   split(list(.$scale_type, .$ra)) %>%   
