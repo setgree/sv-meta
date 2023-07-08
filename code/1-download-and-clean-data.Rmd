@@ -164,9 +164,8 @@ sum(is.na(raw_dat$lab_field)) # 0 as of 09/19
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 ```
 
-
 # fix study_design var and scale type
-```{r study_design}
+```{r study_design_and_scale_type}
 raw_dat$study_design <- str_replace_all(raw_dat$study_design,
                                         c('cross sectional' = 'cross-sectional',
                                         'pre-post' = 'observational'))
@@ -181,14 +180,13 @@ if ("lab_or_field" %in% colnames(raw_dat)) {
 
 # scale type
 unique(raw_dat$scale_type) # good 
-
 ```
-
 
 ## Provisional: make everything under 10 clusters quasi-experimental
 
 As Paluck et al. note in 'Prejudice Reduction: Progress and Challenges':
 > in cluster-randomized experiments, groups of people, rather than individuals, are randomly assigned to experimental conditions. Reliably estimating standard errors requires at least 10 clusters, but many intervention studies do not approach even this minimal number.
+
 
 So the cutoff is ten
 
