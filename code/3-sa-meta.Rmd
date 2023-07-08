@@ -30,9 +30,9 @@ library(stringr)
 library(tidyr, warn.conflicts = F)
 library(tibble)
 
-source('./code/functions/sum_lm.R')
-source('./code/functions/map_robust.R')
-source('./code/functions/study_count.R')
+source('./functions/sum_lm.R')
+source('./functions/map_robust.R')
+source('./functions/study_count.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
@@ -45,7 +45,7 @@ options(scipen = 99)
 ```{r load_data, include=F, echo=F}
 # read in data
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything())
 
 # add in useful variables

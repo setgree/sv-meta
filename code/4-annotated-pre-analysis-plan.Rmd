@@ -21,12 +21,12 @@ library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 
-source('code/functions/dplot.R')
-source('code/functions/sum_lm.R')
-source('code/functions/dip_calc.R')
-source('code/functions/odds_ratio_to_d.R')
-source('code/functions/map_robust.R')
-source('code/functions/study_count.R')
+source('./functions/dplot.R')
+source('./functions/sum_lm.R')
+source('./functions/dip_calc.R')
+source('./functions/odds_ratio_to_d.R')
+source('./functions/map_robust.R')
+source('./functions/study_count.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d))
 
@@ -46,7 +46,7 @@ source('code/functions/study_count.R')
 
 # read in data
 
-dat <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything())
 
 # add in useful variables
@@ -287,7 +287,7 @@ dat %>%
                           dot_informative = T))
  
 # overall linear plot
-dat |> 
+dat %>% 
 ggplot(aes(x = se_d, y = d)) +
   geom_point() +
   geom_smooth(method = 'lm') + 
@@ -739,7 +739,7 @@ has_both %>%
 ### Dat for forest plot and sign tests
 
 ```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
+dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct') %>%
   group_by(unique_study_id) %>%
@@ -770,7 +770,7 @@ dat_for_forest_plot %>%
   rename(Comparison = comparison, Count = n)
 binom.test(15, 21, 0.5)
 # now the whole thing but not filtering on RCTs
-readRDS(file = './data/sa_meta_data_for_analysis.rds') %>% 
+readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   group_by(unique_study_id) %>%
          filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
