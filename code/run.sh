@@ -7,7 +7,7 @@ Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd',
 # TO DO: add a parm var here for whether to download the data afresh?
 
 # step 2: Cohens D
-Rscript ./2-cohens-d.R
+Rscript ./2-prep-data-for-analysis.R
 
 # step 3: paper stats
 Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',

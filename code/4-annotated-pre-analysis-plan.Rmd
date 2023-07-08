@@ -49,33 +49,7 @@ source('./functions/study_count.R')
 dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   select(unique_study_id, scale_type, everything())
 
-# add in useful variables
-dat <- dat %>%
-  mutate(decade = as.factor(case_when(
-    year <= 1989 ~ "1980s",
-    year >= 1990 & year <= 1999 ~ "1990s",
-    year >= 2000 & year <= 2009 ~ "2000s",
-    year >= 2010 ~ "2010s",
-    TRUE ~ "Other")),
-    total_n = n_t_post + n_c_post,
-    quantile_var = case_when(
-    total_n < quantile(total_n, 0.2) ~ 1,
-    total_n < quantile(total_n, 0.4) ~ 2,
-    total_n < quantile(total_n, 0.6) ~ 3,
-    total_n < quantile(total_n, 0.8) ~ 4,
-    TRUE ~ 5),
-    labels = paste(tools::toTitleCase(word(author)), year),
-         ra = ifelse(study_design == 'rct', TRUE, FALSE),
-         yes_delay = as.factor(delay > 0),
-    published_unpublished = 
-           case_when(publication_type == 'published' ~ 'published',
-                     NA ~ 'unpublished', 
-                     TRUE ~ 'unpublished')) %>% 
-  group_by(unique_study_id) %>% 
-  mutate(has_both = case_when(all(c('attitudes', 'behavior') %in% scale_type) ~ 'both',
-                              scale_type == 'attitudes' ~ 'attitudes',
-                              scale_type == 'behavior' ~ 'behavior')) %>%
-  ungroup()
+# data for 'has both' analyses
 
 has_both <- dat %>% 
 filter(all(c('attitudes', 'behavior') %in% scale_type)) %>% 
