@@ -26,8 +26,6 @@ drive_download("Primary Prevention Meta 2020",
                path = "./data/sa_meta_data",
                overwrite = T,
                type = 'csv') # dl to csv gets just first sheet
-
-
 ```
 
 ## read data and do initial cleaning
@@ -52,8 +50,8 @@ raw_dat <- raw_dat %>%
   ungroup()
 ```
 
-# prepare Cohen's D calcs
 
+# prepare Cohen's D calcs
 ```{r standardizing_inputs}
 # making sure that inputs are all what the functions expect: eff_type, cluster_type, and checking for NAs
 
@@ -93,9 +91,9 @@ table(raw_dat$eff_type, useNA = 'ifany')
 
 ```
 
-### ctrl_SDs
 
-```{r ctrl_sds }
+### ctrl_SDs
+```{r ctrl_sds}
 class(raw_dat$ctrl_sd)
 which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows
 
@@ -120,7 +118,6 @@ raw_dat %>%
   filter(is.na(ctrl_sd)) %>%
   filter(eff_type == 'd_i_d' | eff_type == 'd_i_m') %>%
     nrow()
-
 ```
 
 
@@ -165,7 +162,6 @@ rm(na_vals)
 unique(raw_dat$lab_field)
 sum(is.na(raw_dat$lab_field)) # 0 as of 09/19
 raw_dat$lab_field <- as.factor(raw_dat$lab_field)
-
 ```
 
 
@@ -173,7 +169,7 @@ raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 ```{r study_design}
 raw_dat$study_design <- str_replace_all(raw_dat$study_design,
                                         c('cross sectional' = 'cross-sectional',
-                                        'prepost' = 'pre-post'))
+                                        'pre-post' = 'observational'))
 
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 raw_dat$scale_type <- as.factor(raw_dat$scale_type)
@@ -181,10 +177,11 @@ raw_dat$scale_type <- as.factor(raw_dat$scale_type)
 if ("lab_or_field" %in% colnames(raw_dat)) {
   raw_dat <- raw_dat %>% 
     select(-lab_or_field)
-}
+  }
 
 # scale type
-unique(raw_dat$scale_type) # good
+unique(raw_dat$scale_type) # good 
+
 ```
 
 
@@ -211,15 +208,12 @@ raw_dat <- raw_dat %>%
 redesignated <- raw_dat %>% filter(robust_quasi_check) %>%
   select(author, year, intervention_name, scale_name, delay, 
          unique_study_id, unique_paper_id)
-nrow(redesignated) # 19 studies
+nrow(redesignated) # 0 as of July 2023
 
-# TODO: check that these are really all RCTs, it's not that many
+rm(redesignated)
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 
-# how many studies, how many papers?
-n_distinct(redesignated$unique_study_id) # 8
-n_distinct(redesignated$unique_paper_id) # 6
-rm(redesignated)
+
 
 ```
 
@@ -243,9 +237,10 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ### Convert interevention_length into numeric
 
 ```{r fix_intervention_length}
-raw_dat$intervention_length <- ifelse(trimws(raw_dat$intervention_length) %in% c("", "not given"), 
-                                      NA_character_, 
-                                      raw_dat$intervention_length)
+raw_dat$intervention_length <- 
+  ifelse(trimws(raw_dat$intervention_length) %in% 
+           c("", "not given"), NA_character_, 
+         raw_dat$intervention_length)
 
 table(raw_dat$intervention_length, useNA = "ifany")
 
@@ -261,6 +256,7 @@ raw_dat$intervention_length <- as.numeric(raw_dat$intervention_length)
 ### CATEGORIZE BEHAVIOR:
 # perpetration, victimization, intervention are the big three intervention measures.
 # Also, there's involvement, and then things that are harder to classify.
+
 raw_dat <- raw_dat %>%
   mutate(scale_name = str_to_lower(scale_name),
          behavior_type = as.factor(
@@ -278,8 +274,8 @@ raw_dat <- raw_dat %>%
 
 ```
 
-### add useful levels
 
+### add useful levels
 ```{r levels}
 
 raw_dat$setting <- factor(raw_dat$setting,
@@ -291,12 +287,7 @@ raw_dat$setting <- factor(raw_dat$setting,
     "work",
     "community",
     "faith based",
-    "other"
-  )
-)
-
-
-
+    "other"))
 
 raw_dat$publication_type <- factor(raw_dat$publication_type,
   levels = 1:5,
@@ -305,19 +296,13 @@ raw_dat$publication_type <- factor(raw_dat$publication_type,
     "unpublished",
     "government report",
     "dissertation",
-    "formal evaluation"
-  )
-)
-
+    "formal evaluation"))
 
 table(raw_dat$publication_type, useNA = "ifany")
 
-
-
 raw_dat$origin <- factor(raw_dat$origin,
   levels = c(1, 2, 3),
-  labels = c("DeGue", "Online Search", "Sent by Authors")
-)
+  labels = c("DeGue", "Online Search", "Sent by Authors"))
 
 ## condition_gender
 table(raw_dat$condition_gender)
@@ -336,34 +321,28 @@ table(raw_dat$condition_gender)
 # participant sex
 raw_dat$participant_sex <- factor(raw_dat$participant_sex,
   levels = 1:7,
-  labels = c("only male", "only female", "male and female in mixed groups", "male and female in separate groups", "male and female with group composition not specified", "not specified", "general population")
-)
+  labels = c("only male", "only female", "male and female in mixed groups", "male and female in separate groups", "male and female with group composition not specified", "not specified", "general population"))
 
 # stage in life
 raw_dat$stage_in_life <- factor(raw_dat$stage_in_life,
   levels = 1:4,
-  labels = c("middle school (5th to 8th grade)", "high school (9th to 12th grade)", "college students", "adults")
-)
+  labels = c("middle school (5th to 8th grade)", "high school (9th to 12th grade)", "college students", "adults"))
 
 
 # control type
 raw_dat$type_of_control <- factor(raw_dat$type_of_control,
   levels = 1:4,
-  labels = c("no treatment/waitlist control", "placebo control", "other treatment", "no control group")
-)
-
+  labels = c("no treatment/waitlist control", "placebo control", "other treatment", "no control group"))
 
 # treatment delivery
 raw_dat$delivery_of_treatment <- factor(raw_dat$delivery_of_treatment,
   levels = 1:9,
-  labels = c("lecture", "interactive presentation", "performance", "film", "active participants", "reading", "online", "not specified", "other")
-)
-
+  labels = c("lecture", "interactive presentation", "performance", "film", "active participants", "reading", "online", "not specified", "other"))
 
 ```
 
-# Clean participant_sex 
 
+### Clean participant_sex 
 ```{r participant_sex}
 
 raw_dat$participant_sex <- str_replace_all(raw_dat$participant_sex,
@@ -371,20 +350,10 @@ raw_dat$participant_sex <- str_replace_all(raw_dat$participant_sex,
                                            "4,3" = "3, 4",
                                            "^$|^ $" = NA))
 table(raw_dat$participant_sex)
-
-# TODO: look at the 13 studies that are silmultaneously mixed groups (3) and separate groups (4)
-# also all the NAs
-raw_dat %>% 
-  filter(participant_sex == "3, 4") %>% 
-    select(author, year, intervention_name, 
-           scale_name, delay, unique_paper_id)
-
-## TODO: clean up condition_gender
 ```
 
 
 ### Clean country
-
 ```{r}
 raw_dat <- raw_dat %>% 
   mutate(country = case_when(country == "MX" ~ "Mexico",
