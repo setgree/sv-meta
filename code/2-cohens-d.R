@@ -9,8 +9,8 @@ rm(list =  ls())
 library(dplyr, warn.conflicts = FALSE)
 
 dat <- readRDS('./data/sa_meta_data_cleaned.rds')
-source('./functions/d_calc.R')
-source('./functions/var_d_calc.R')
+source('./code/functions/d_calc.R')
+source('./code/functions/var_d_calc.R')
 
 dat_clean <- dat %>%
   mutate(d = case_when( # calculate d
