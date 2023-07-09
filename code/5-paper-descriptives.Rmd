@@ -33,6 +33,9 @@ library(kableExtra)
 library(janitor)
 library(metafor)
 
+source('./functions/study_count.R')
+source('./functions/map_robust.R')
+
 dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   mutate(
     attitudes_behaviors = case_when(
@@ -399,13 +402,44 @@ bystander_dat <- dat %>%
       str_detect(brief_description_of_the_intervention, "bystander") |
       str_detect(intervention_name, "bystander") |
       str_detect(program_name, "bystander") |
-      str_detect(stated_purpose, "4"))
+      str_detect(stated_purpose, "4")) %>%
+    select(author, year, paper_title, unique_study_id, study_design,
+           d, var_d, se_d, 
+           behavior_type, has_both) %>%
+  mutate(perp_vict_grouped = case_when(
+    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
+    behavior_type == 'Involvement' ~ 'involvement',
+    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'Bystander' ~ 'Bystander'))
 
 bystander_dat %>%  study_count()
 
-table(bystander_dat$behavior_type)    
-# now what's the DV count for the studies that remain
+bystander_dat %>% group_by(behavior_type) %>% study_count()
 
+bystander_dat %>% group_by(has_both) %>% study_count()
+
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% 
+  split(.$perp_vict_grouped) %>% 
+  map(.f = map_robust)
+
+table(bystander_dat$behavior_type)    
+
+# count studies that measure #just bystander behaviors
+bystander_dat %>%
+  filter(has_both != 'attitudes') %>% group_by(perp_vict_grouped) %>% study_count()
+
+# double-check
+bystander_dat_not_just_atts %>% 
+  group_by(unique_study_id) %>%
+  filter('Bystander' %in% behavior_type & !'perp_vict' %in% perp_vict_grouped) %>% ungroup() %>% study_count()
+
+
+# what kind of effect sizes are we talking about? 
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$behavior_type) %>% map(map_robust)
+
+# group perp and vict outcomes together
+
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$perp_vict_grouped) %>% map(map_robust)
 
 ## BTW an alternate way to do this
 dat %>%
