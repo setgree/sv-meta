@@ -33,20 +33,13 @@ library(kableExtra)
 library(janitor)
 library(metafor)
 
-dat_something <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
   mutate(
     attitudes_behaviors = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) %>%
   ungroup() %>% 
-  mutate(study_design = case_when(study_design == "pre-post" ~ "Observational",
-                                  study_design == "rct" ~ "Randomized Control Trial",
-                                  study_design == "quasi-experimental" ~ "Quasi-Experimental"),
-         study_design = factor(study_design, levels = c("Randomized Control Trial", 
-                                                        "Quasi-Experimental", 
-                                                        "Observational")),
-         behavior_type = str_to_title(behavior_type))
 ```
 
 Our present review seeks to summarize all primary prevention efforts over the past X years, from X countries
@@ -412,7 +405,6 @@ bystander_dat %>%  study_count()
 
 table(bystander_dat$behavior_type)    
 # now what's the DV count for the studies that remain
-
 
 
 ## BTW an alternate way to do this

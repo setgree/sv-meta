@@ -309,7 +309,8 @@ A key question for this literature is: when attitudes change, do behaviors chang
 # such that we could:
 # A) subsequently filter it down just to look at each kind behavior
 # B) color code the scatterplot 
-has_both_means <- dat_has_both %>%
+
+has_both_means <- dat_has_both %>% 
   group_by(unique_study_id, scale_type) %>%
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
@@ -334,10 +335,10 @@ cor.test(x = has_both_reshaped$mean_d_attitudes,
 We find broadly similar results when looking at just at RCTs; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both attitudes and either victimization or perpetration outcomes ($\rho$ (42) = 0.153, p = 0.322); and, finally, within RCTs that measure attitudes as well as either victimization or perpetration outcomes ($\rho$ (59) = 0.141, p = 0.279).
 ```{r attitude_behavior_correlation_subsets}
 # RCTs only?
-rcts_both <- has_both_reshaped %>% filter(study_design == 'rct')
+rcts_both <- has_both_reshaped %>% filter(study_design == 'Randomized Control Trial')
 cor.test(x = rcts_both$mean_d_attitudes, 
          y = rcts_both$mean_d_behavior)
-
+## TODO: Not enough 
 #perp and vict only?
 perp_and_vict_both <- has_both_means %>%
   group_by(unique_study_id) %>%
@@ -357,8 +358,8 @@ cor.test(perp_and_vict_both$mean_d_attitudes,
 
 perp_and_vict_rcts <- has_both_means %>%
   group_by(unique_study_id) %>%
-  filter(if_else(any(behavior_type %in% c('involvement', 'bystander')), F, T)) %>%
-  filter(study_design == 'rct') %>%
+  filter(if_else(any(behavior_type %in% c('Involvement', 'Bystander')), F, T)) %>%
+  filter(study_design == 'Randomized Control Trial') %>%
    pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
