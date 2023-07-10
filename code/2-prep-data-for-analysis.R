@@ -77,7 +77,7 @@ dat_to_save <- dat_clean %>%
                               scale_type == 'attitudes' ~ 'attitudes',
                               scale_type == 'behavior' ~ 'behavior')) %>%
   ungroup() %>%
-  mutate(study_design = case_when(study_design == "pre-post" ~ "Observational",
+  mutate(study_design = case_when(study_design == "observational" ~ "Observational",
                                   study_design == "rct" ~ "Randomized Control Trial",
                                   study_design == "quasi-experimental" ~ "Quasi-Experimental"),
          study_design = factor(study_design, levels = c("Randomized Control Trial", 
