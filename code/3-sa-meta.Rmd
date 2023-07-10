@@ -115,9 +115,9 @@ length(unique(dat$unique_study_id)) == 186 + 118
 ```{r publish_relationship_or_not}
 dat %>% sum_lm(d, published_unpublished)
 
-dat %>% split(.$published_unpublished) %>% map(map_robust)
+# Difference in relationship by published and unpublished
+dat %>% split(.$published_unpublished) %>% map(sum_lm)
 
-# Difference in effect size by published and unpublished
 dat %>% split(.$published_unpublished) %>% map(map_robust)
 ```
 
@@ -227,7 +227,7 @@ dat %>%
   geom_line(stat = 'count') + 
   labs(x = "Year", 
        y = "Count", 
-       color = "Behavioral type",
+       color = "Behavior type",
        title = "Categories of behavioral outcomes over time") +
   # scale_x_date(date_breaks = "2 years") +
   scale_x_continuous(n.breaks = 10) +
@@ -252,7 +252,6 @@ This discrepancy is particularly pronounced in observational research, where att
 ```{r behavior_attitudes_discrepancy_within_study_designs}
 
 # first, Ns
-
 dat %>% 
   group_by(scale_type, study_design) %>% 
   study_count() %>%
@@ -279,8 +278,6 @@ dat %>%
 dat %>% 
   split(.$behavior_type) %>% 
   map(.f = map_robust)
-
-
 ```
 
 Here we see that primary prevention interventions do not, on average, meaningfully reduce victimization or perpetration. This, we think, is the key finding of this meta-analysis. % if I were reading this right now I'd want more zoom in on how different _categories_ of intervention reduce victimization & perpetration. 
@@ -289,7 +286,7 @@ Here we see that primary prevention interventions do not, on average, meaningful
 
 ```{r rct_perpetration}
 dat %>% 
-  filter(study_design == 'rct' & behavior_type == 'perpetration') %>% 
+  filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') %>% 
   map_robust()
 ```
 # correlation between attitudes and behavior
@@ -303,7 +300,8 @@ dat_has_both %>% study_count()
 
 In this subset of studies, the pooled attitudinal effect is $\Delta$ = 0.278 (se = .036), p < .0001, while the pooled behavioral outcome is $\Delta$ = 0.081 (se = .03), p = .009. In other words, the attitudinal effects are slightly lower than the overall attitude effect of 0.367, while the behavioral effects are slightly larger than the overall behavioral effect of 0.072.
 ```{r has_both_behav_att_meta_results}
-dat_has_both %>% split(.$scale_type) %>% map(.f = map_robust)
+dat_has_both %>% split(.$scale_type) %>% 
+  map( map_robust)
 ```
 
 A key question for this literature is: when attitudes change, do behaviors change with them? Unfortunately, in the studies that measure change across both categories, we find a small, statistically insignificant correlation of $\rho$ (59) = 0.141, p = 0.279.
@@ -381,33 +379,33 @@ Figure XXX highlights this lack of correlation. Each point in the scatterplot is
 ```{r correlation_scatterplot}
 dat_has_both <- dat %>% filter(has_both == 'both')
 
-# dat %>% 
-#   filter(has_both == 'both') %>% 
-#   group_by(author, year, study_design, unique_study_id, scale_type) %>%
-#   filter(delay == min(delay)) |> 
-#   summarise(mean_d = mean(d), 
-#          mean_var_d = mean(var_d), 
-#          mean_se_d = mean(se_d)) %>% 
-#   pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
-#     names_from = c(scale_type), 
-#     values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
-#   ggplot(aes(x = mean_d_attitudes,
-#              y = mean_d_behavior)) + 
-#   geom_point(aes(color = study_design),
-#              size = 3) + 
-#   geom_abline(slope = 1, 
-#               lty = 'dashed') +
-#   geom_smooth(lty = "dashed", 
-#               method = "lm", 
-#               se = FALSE,
-#               color = 'grey') +  
-#   labs(#title = "Correlation between attitudinal and behavioral change",
-#        x = "Effect size (attitudes)",
-#        y = "Effect size (behaviors)",
-#        color = "Study Design") +
-#   guides(color = guide_legend(title = "Study Design")) + 
-#   theme_bw() +
-#   theme(plot.title = element_text(hjust = 0.5))
+dat %>%
+  filter(has_both == 'both') %>%
+  group_by(author, year, study_design, unique_study_id, scale_type) %>%
+  filter(delay == min(delay)) |>
+  summarise(mean_d = mean(d),
+         mean_var_d = mean(var_d),
+         mean_se_d = mean(se_d)) %>%
+  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
+    names_from = c(scale_type),
+    values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
+  ggplot(aes(x = mean_d_attitudes,
+             y = mean_d_behavior)) +
+  geom_point(aes(color = study_design),
+             size = 3) +
+  geom_abline(slope = 1,
+              lty = 'dashed') +
+  geom_smooth(lty = "dashed",
+              method = "lm",
+              se = FALSE,
+              color = 'grey') +
+  labs(#title = "Correlation between attitudinal and behavioral change",
+       x = "Effect size (attitudes)",
+       y = "Effect size (behaviors)",
+       color = "Study Design") +
+  guides(color = guide_legend(title = "Study Design")) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 In sum, while attitudes towards rape myths appear to malleable, the problem of rape itself is much more resistant to change. 
