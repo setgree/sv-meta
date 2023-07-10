@@ -46,7 +46,7 @@ source('./functions/study_count.R')
 
 # read in data
 
-dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
   select(unique_study_id, scale_type, everything())
 
 # data for 'has both' analyses
@@ -96,14 +96,15 @@ dat %>% filter(scale_type == 'behavior') %>%
 # and victimization/perpetration?
 
 dat %>% 
-  filter(behavior_type %in% c('victimization', 'perpetration')) %>%
+  filter(behavior_type %in% c('Victimization', 'Perpetration')) %>%
   split(.$yes_delay) %>%
   map(.f = map_robust)
 # now the relationship is in the opposite direction
 # how many studies measure vict/perp with no delay?
 
 dat %>% 
-  filter(behavior_type %in% c('victimization', 'perpetration')) %>% group_by(yes_delay) %>%
+  filter(behavior_type %in% c('Victimization', 'Perpetration')) %>% 
+  group_by(yes_delay) %>%
   study_count()
 # very few
 
@@ -115,13 +116,14 @@ dat %>%
 ## NOTE: EXPLAIN WHY THIS IS NONSENSICAL
 ```{r behavioral_attenuation_by_study_design}
 # N of studies
-dat %>% filter(scale_type == 'behavior') %>%
+dat %>% 
+  filter(scale_type == 'behavior') %>%
   group_by(study_design, yes_delay) %>% 
   study_count()
 
 dat %>%
   filter(scale_type == 'behavior') %>%
-split(list(.$study_design, .$yes_delay)) %>% 
+  split(list(.$study_design, .$yes_delay)) %>% 
   map(map_robust)
 # These results aren't going to be very informative 
 # because A) what do vict/perp outcomes *mean* when
@@ -133,8 +135,8 @@ split(list(.$study_design, .$yes_delay)) %>%
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
-
-dat %>% filter(scale_type == 'behavior', 
+dat %>% 
+  filter(scale_type == 'behavior', 
                study_design == 'rct',
                yes_delay == F) %>% 
   select(author, year, behavior_type, delay)
@@ -299,7 +301,6 @@ has_both %>%
 Group results within study
 
 ```{r grouping rbustness checks}
-
 # robustness check: group by study AND scale_type and average the results
 dat_grouped <- dat %>%
   group_by(unique_study_id, scale_type) %>%
@@ -402,7 +403,6 @@ dat %>%
 Correlation between attitudes and behaviors -- standard errors of estimates
 
 ```{r attitude_behavior_correlation_standard_error}
-
 # thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
 cor.test.plus <- function(x) {
   list(x, 
@@ -418,7 +418,6 @@ cor.test.plus(
 Different ways of assessing effect size change over time
 
 ```{r effect_size_over_time}
-
 dat %>% ggplot((aes(x = year, y = d))) + 
   geom_point() +   
   geom_smooth(method = 'lm') + 
@@ -713,7 +712,7 @@ has_both %>%
 ### Dat for forest plot and sign tests
 
 ```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>% 
+dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_final.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   filter(study_design == 'rct') %>%
   group_by(unique_study_id) %>%
@@ -744,7 +743,7 @@ dat_for_forest_plot %>%
   rename(Comparison = comparison, Count = n)
 binom.test(15, 21, 0.5)
 # now the whole thing but not filtering on RCTs
-readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>% 
+readRDS(file = '../data/sa_meta_data_final.rds') %>% 
   select(unique_study_id, scale_type, everything()) %>%
   group_by(unique_study_id) %>%
          filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%

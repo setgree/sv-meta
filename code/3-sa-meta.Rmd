@@ -42,7 +42,7 @@ options(scipen = 99)
 
 ### load data
 ```{r load_data, include=F, echo=F}
-dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
   select(unique_study_id, scale_type, everything())
 ```
 
@@ -114,6 +114,11 @@ length(unique(dat$unique_study_id)) == 186 + 118
  
 ```{r publish_relationship_or_not}
 dat %>% sum_lm(d, published_unpublished)
+
+dat %>% split(.$published_unpublished) %>% map(map_robust)
+
+# Difference in effect size by published and unpublished
+dat %>% split(.$published_unpublished) %>% map(map_robust)
 ```
 
 "Our results are also robust to variation in methodological rigor. The pooled effect size in the largest quintile of studies,  with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
@@ -374,26 +379,35 @@ cor.test(perp_and_vict_rcts$mean_d_attitudes,
 Figure XXX highlights this lack of correlation. Each point in the scatterplot is a study that measures both attitudes and behaviors, with the attitudinal effect size on the X axis and the behavioral effect size on the Y axis. The dotted black line shows what a perfect correlation would look like, and the dotted gray line shows the correlation that we actually find. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
-# ok now scatterplot
+dat_has_both <- dat %>% filter(has_both == 'both')
 
-has_both_reshaped %>%
-  ggplot(mapping = aes(x = mean_d_attitudes,
-                       y = mean_d_behavior)) + 
-  geom_point(aes(color = study_design),
-             size = 3) + 
-  geom_abline(slope = 1, lty = 'dashed') +
-  stat_smooth(lty = "dashed", 
-              method = "lm", 
-              se = FALSE,
-              color = 'grey') +  
-  labs(title = "Correlation between attitudinal and behavioral change",
-       x = "Effect size (attitudes)",
-       y = "Effect size (behaviors)",
-       color = "Study Design") +
-#  scale_color_discrete(labels = c("pre-post" = "observational")) +
-  guides(color = guide_legend(title = "Study Design")) + 
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+# dat %>% 
+#   filter(has_both == 'both') %>% 
+#   group_by(author, year, study_design, unique_study_id, scale_type) %>%
+#   filter(delay == min(delay)) |> 
+#   summarise(mean_d = mean(d), 
+#          mean_var_d = mean(var_d), 
+#          mean_se_d = mean(se_d)) %>% 
+#   pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
+#     names_from = c(scale_type), 
+#     values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
+#   ggplot(aes(x = mean_d_attitudes,
+#              y = mean_d_behavior)) + 
+#   geom_point(aes(color = study_design),
+#              size = 3) + 
+#   geom_abline(slope = 1, 
+#               lty = 'dashed') +
+#   geom_smooth(lty = "dashed", 
+#               method = "lm", 
+#               se = FALSE,
+#               color = 'grey') +  
+#   labs(#title = "Correlation between attitudinal and behavioral change",
+#        x = "Effect size (attitudes)",
+#        y = "Effect size (behaviors)",
+#        color = "Study Design") +
+#   guides(color = guide_legend(title = "Study Design")) + 
+#   theme_bw() +
+#   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 In sum, while attitudes towards rape myths appear to malleable, the problem of rape itself is much more resistant to change. 

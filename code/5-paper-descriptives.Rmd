@@ -37,7 +37,7 @@ library(metafor)
 source('./functions/study_count.R')
 source('./functions/map_robust.R')
 
-dat <- readRDS(file = '../data/sa_meta_data_for_analysis.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
   mutate(
     attitudes_behaviors = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
@@ -284,6 +284,113 @@ dat |>
             n_studies = n_distinct(unique_study_id)) |> 
   kable(format = "latex", booktabs = T)
 ```
+
+
+
+```{r}
+dat %>%
+  drop_na(study_design) |> 
+  ggplot(aes(x = se_d, y = d)) +
+  geom_point(aes(
+      color = behavior_type,
+      shape = study_design),
+    size = 3
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = F,
+    size = 2
+  ) +
+  #ggtitle("Relationship between effect sizes and standard errors") +
+  labs(
+    x = "Standard errors",
+    y = "Effect size",
+    color = "Outcome type",
+    shape = "Study Design"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+ggsave("results/d_se.pdf", height = 5)
+
+```
+
+
+```{r}
+dat %>% 
+  filter(has_both == 'both') %>% 
+  drop_na(study_design) |> 
+  group_by(author, year, study_design, unique_study_id, scale_type) %>%
+  #filter(delay == min(delay)) |> 
+  summarise(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) %>% 
+  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
+  ggplot(aes(x = mean_d_attitudes,
+             y = mean_d_behavior)) + 
+  geom_point(aes(color = study_design),
+             size = 3) + 
+  geom_abline(slope = 1, 
+              lty = 'dashed',
+              size = 2) +
+  geom_smooth(lty = "dashed", 
+              method = "lm", 
+              se = FALSE,
+              color = 'grey',
+              size = 2) +  
+  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  labs(x = "Effect size (attitudes)",
+       y = "Effect size (behaviors)",
+       color = "Study Design") +
+  guides(color = guide_legend(title = "Study Design")) + 
+  theme_bw() +
+    theme(
+    axis.text = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+
+ggsave("results/att_beh_corr.pdf", width = 7, height = 7)
+```
+
+
+```{r}
+dat %>%
+  filter(behavior_type != "Attitude") |> 
+  distinct(unique_study_id, year, behavior_type) |> 
+  count(year, behavior_type) |> 
+  add_row(year = 1985:1990, behavior_type = "Involvement") |> # start at 0 for all behaviors. here i use arbitrary behavior 
+  complete(year, behavior_type, fill = list(n = 0)) |> 
+  ggplot(aes(x = year, y = n, color = behavior_type)) +
+  geom_line(size = 3) + 
+  labs(title = "**a)** Number of Studies by Country",
+       x = NULL, 
+       y = "# of studies", 
+       col = NULL) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  theme_bw() +
+    theme(
+    axis.text = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+```
+
 
 Table XX details the distribution of behavioral outcomes within studies that employ observational designs (i.e., quasi-experimental and observational studies) and randomized designs (i.e., experiments and horse-race experiments). 
 ```{r}

@@ -9,7 +9,7 @@ rm(list =  ls())
 library(dplyr, warn.conflicts = FALSE)
 library(stringr)
 
-dat <- readRDS('../data/sa_meta_data_cleaned.rds')
+dat <- readRDS('../data/sa_meta_data_intermediate.rds')
 source('./functions/d_calc.R')
 source('./functions/var_d_calc.R')
 
@@ -86,5 +86,5 @@ dat_to_save <- dat_clean %>%
          behavior_type = str_to_title(behavior_type))
 
 
-saveRDS(object = dat_to_save, file = '../data/sa_meta_data_for_analysis.rds')
+saveRDS(object = dat_to_save, file = '../data/sa_meta_data_final.rds')
  

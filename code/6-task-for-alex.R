@@ -1,5 +1,5 @@
 library(dplyr, warn.conflicts = FALSE)
-dat <- readRDS('./data/sa_meta_data_for_analysis.rds')
+dat <- readRDS('./data/sa_meta_data_final.rds')
 
 to_fill_in <- dat %>% 
   filter(is.na(participant_sex) |
