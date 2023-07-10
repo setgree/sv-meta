@@ -281,52 +281,129 @@ ggsave("results/descriptive.pdf", width = 7, height = 7)
 
 ## Zeitgeist Programs
 
+### The first 15 Years
+
+In the first 15 years, we find 110 studies reported in 77 manuscripts (constituting 36% of our database). 
+```{r}
+dat |> 
+  filter(between(year, 1985, 2000)) |> 
+  summarise(n_manuscript = n_distinct(unique_paper_id),
+            n_studies = n_distinct(unique_study_id))
 
 
-Most of the studies we identified in the first 15 years were conducted by students coming from various disciplines including psychology, educational psychology, and counseling psychology. The majority of these studies are laboratory studies (n = 107) as opposed to field studies (n = 78) that encompass the larger programmatic evaluations that dominate the next generation of studies.
+
+dat |> 
+  mutate(early = between(year, 1985, 2000)) |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  summarise(perc_early = mean(early))
+```
+
+
+
+This is also apparent when looking at the type of publication; while 56 of these studies are journal articles, 54 are dissertations
+```{r}
+dat |> 
+  filter(between(year, 1985, 2000)) |> 
+  distinct(unique_study_id, publication_type) |> 
+  count(publication_type)
+```
+
+
+
+The majority of these studies are laboratory studies (n = 61) as opposed to field studies (n = 49) that encompass the larger programmatic evaluations that dominate the next generation of studies.
 ```{r}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
   distinct(unique_study_id, lab_field, publication_type) |> 
   count(lab_field)
+```
 
 
+These studies tend to be smaller than the next generation of studies (with an average of 188 participants)
+
+```{r}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
-  distinct(unique_paper_id, author, year, paper_title, lab_field) |> 
-  View()
-  write_csv("first_15years.csv")
+  group_by(unique_study_id) |> 
+  summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
+  ungroup() |> 
+  summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
+```
 
+
+which constitute 56\% of all studies in this time frame), but a relatively high number of studies that target only men (32 studies, which constitute 29\% of all studies in this time frame).
+```{r}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
-  distinct(unique_paper_id) |> 
-  nrow()
+      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                                             "male and female with group composition not specified", 
+                                                             "male and female in separate groups"), 
+                                      "mixed gender groups", 
+                                      participant_sex)) |>
+      distinct(unique_study_id, participant_sex) |>
+  count(participant_sex, sort = T) |> 
+  mutate(perc = n / sum(n))
+```
+
+## Trends in Measurement in the Database
+
+Overall, mentalizing outcomes outnumber behavioral outcomes in our sample by 355 to 145. 207 studies
+measure mentalizing outcomes only; 36 measure only behaviors; and 61 measure both
+```{r}
+
+```
 
 
-dat |> 
-  mutate(early = between(year, 1985, 2000)) |> 
-  distinct(unique_paper_id, .keep_all = T) |> 
-  summarise(perc_early = mean(early))
+While in the first 15 years, the ratio between mentalizing outcomes and behavior outcomes was
+roughly 1 to 4, after 2010 this ratio drops to 1 to 1.5.
+```{r}
 
-dat |> 
-  filter(between(year, 1985, 2000)) |> 
-  distinct(unique_study_id, publication_type) |> 
-  count(publication_type) |> 
-adorn_totals()
+```
 
 
+Fig XXX displays the relationship between these outcomes over time.
+
+```{r fig_att_beh_corr}
+dat %>% 
+  mutate(scale_type = str_to_title(ifelse(scale_type == "attitudes", "mentalizing", "behavior"))) |> 
+  distinct(year, unique_study_id, scale_type) |> 
+  count(year, scale_type) |> 
+  add_row(year = 1985, scale_type = "Behavior") |> 
+  complete(year, scale_type, fill = list(n = 0)) |> 
+  ggplot(aes(x = year, y = n, color = scale_type)) +
+  geom_line() + 
+  labs(
+    x = NULL,
+    y = "# of studies",
+    col = NULL
+  ) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12), 
+    legend.text = element_text(size = 12),
+    legend.position = "bottom"
+  )
+
+ggsave("output/fig_att_beh_corr.pdf")
+```
+
+
+
+
+
+```{r}
 dat |> 
   select(scale_name, behavior_type) |> 
   filter(behavior_type == "Attitude") |> 
   mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth")) |> 
   group_by(myth_scale) |> 
   summarise(n = n())
-  
+
 ```
-
-
-
-
 
 
 

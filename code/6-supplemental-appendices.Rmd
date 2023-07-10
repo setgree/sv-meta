@@ -3,6 +3,8 @@ title: "6-supplemental-appendices"
 author: "Seth Green"
 date: "2023-07-10"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=F, echo=F}
@@ -29,7 +31,51 @@ options(scipen = 99)
 ```
 
 ### load data
+
 ```{r load_data, include=F, echo=F}
 dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
   select(unique_study_id, scale_type, everything())
+```
+
+### Robustness checks
+
+Our main meta-analytic result comes from a random effects meta-analysis clustering at the level of individual studies.
+
+```{r main_result_for_comparison}
+
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_study_id)
+
+```
+
+Clustering at the level of paper rather than study raises the standard error to 0.0280, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+```{r cluster_paper_level}
+# cluster at paper
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_paper_id)
+
+#no cluster
+rma(yi = d, vi = var_d, data = dat)
+
+```
+
+ Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.331 (se = 0.028), p < .0001,
+```{r collapse_individual_ds}
+
+dat %>% group_by(unique_study_id) %>%
+  mutate(d = mean(d),
+         var_d = mean(var_d)) %>%
+  slice(1) %>%
+  map_robust()
+```
+
+while averaging $\Delta$ within each study's behavioral and mentalizing outcomes separately 
+```{r collapse_ds_within_study_and_scale_type}
+
+
+dat %>% group_by(unique_study_id, scale_type) %>%
+  mutate(d = mean(d),
+         var_d = mean(var_d)) %>%
+  slice(1) %>%
+  map_robust()
 ```
