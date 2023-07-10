@@ -6,14 +6,14 @@ Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd',
   output_dir = '../results', clean = T)"
 # TO DO: add a parm var here for whether to download the data afresh?
 
-# step 2: Cohens D
+# step 2: Cohens D and add necessary variables
 Rscript ./2-prep-data-for-analysis.R
 
 # step 3: paper stats
 Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',
   output_dir = '../results', clean = T)"
 
-# step 4: robustness checks
+# step 4: annotated pre-analysis plan
 Rscript -e "rmarkdown::render('./4-annotated-pre-analysis-plan.Rmd',
   output_dir = '../results', clean = T)"
 
@@ -21,3 +21,8 @@ Rscript -e "rmarkdown::render('./4-annotated-pre-analysis-plan.Rmd',
 
 Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd',
   output_dir = '../results', clean = T)"
+  
+# step 6: appendixes
+Rscript -e "rmarkdown::render('./6-supplemental-appendices.Rmd',
+  output_dir = '../results', clean = T)"
+
