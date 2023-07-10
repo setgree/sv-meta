@@ -658,7 +658,7 @@ year_plot <- ggplot(dat, aes(x = year, fill = scale_type)) +
   theme_minimal() +
   scale_x_continuous(breaks = seq(min(dat$year), max(dat$year), by = 2))
 year_plot
-png(filename = './results/year-plot.png', width = 1920/2, height = 1080/2)
+png(filename = '../results/year-plot.png', width = 1920/2, height = 1080/2)
 year_plot
 dev.off()
 
@@ -826,7 +826,7 @@ p
 # and results may change in future versions of ggplot2. 
 # Guess we'll hope they don't? :)
 
-png(filename = './results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
+png(filename = '../results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
 p
 dev.off()
 # figure out how to make this plot legible. Do I need two rows per
