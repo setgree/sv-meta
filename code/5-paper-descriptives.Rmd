@@ -43,33 +43,244 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) %>%
-  ungroup() %>% 
+  ungroup()
 ```
 
-Our present review seeks to summarize all primary prevention efforts over the past X years, from X countries
+# The Problem of Sexual Violence
+
+Our present review provides empirical results from 13 countries
+
+```{r}
+length(unique(dat$country))
+```
+
+
+## Inclusion and Exclusion Criteria for Study Selection
+
+Table 1 details the number of papers for each study design.
+
+```{r}
+dat |> 
+  distinct(unique_paper_id, unique_study_id, study_design) |> 
+  group_by(study_design) |> 
+  summarise(n_papers = n_distinct(unique_paper_id),
+            n_studies = n_distinct(unique_study_id)) |> 
+  kable(format = "latex", booktabs = T)
+```
+
+
+# Overview of the Studies in the Meta-Analytic Database
+
+The database
+spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500
+distinct point estimates.
+
 ```{r years_and_countries}
 dat |> 
   summarise(year_min = min(year),
             year_max = max(year),
-            year_diff = year_max - year_min,
-            n_countries = n_distinct(country))
+            n_manuscripts = n_distinct(unique_paper_id),
+            n_studies = n_distinct(unique_study_id),
+            n_point_estimates = n())
+```
 
 
+Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
+
+```{r}
+dat |> 
+  group_by(unique_study_id) |> 
+  summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
+  ungroup() |> 
+  summarise(mean_n = mean(mean_n_per_study), # then collapse studies in estimate
+            median_n = median(mean_n_per_study))
+```
+
+
+
+In addition, 30% percent of these studies test primary prevention efforts that span more than one day.
+
+```{r}
 dat |>
   distinct(unique_study_id, intervention_length) |> 
   mutate(intervention_length = ifelse(intervention_length > 1, 1, 0)) |> 
-  summarise(perc_greater_1 = mean(intervention_length, na.rm = T))
-
-
-## outcomes
-dat |>
-  select(unique_study_id, delay) |> 
-  group_by(unique_study_id) |> 
-  filter(delay == max(delay)) |> 
-  ungroup() |> 
-  mutate(delay = ifelse(delay > 0, 1, 0)) |> 
-  summarise(perc_greatereql_1 = mean(delay))
+  summarise(perc_greater_1_day = mean(intervention_length, na.rm = T))
 ```
+
+
+```{r}
+tt_overall = dat |> # overall line
+      group_by(year) |>
+      summarise(n = n_distinct(unique_study_id)) |>
+      add_row(year = 1985, n = 0)
+
+zeitgeist = tibble(year = c(1998, 2000, 2007), 
+                   n = pull(filter(tt_overall, year %in% c(1998, 2000, 2007)), n),
+                   event = c("Safe dates", "Men's Program", "Bringing in\nthe Bystander"))
+
+tt_overall     |>
+  ggplot(aes(year, n)) +
+  geom_line(size = 2) +
+  # geom_segment(aes(x = year, ## add "flag poles"
+  #                  xend = year,
+  #                  y = 0,
+  #                  yend = n,
+  #                  label = NULL),
+  #              inherit.aes = F, 
+  #              linewidth = 1.5,
+  #              data = zeitgeist) +
+    geom_label_repel(mapping = aes(x = year, ## labels
+                                   y = n,
+                                   label = event),
+                     size = 6,
+                     segment.size	= 1.5,
+                     inherit.aes = F,
+                     data =  zeitgeist,
+                     nudge_x = c(2, 2.5, -1.9),
+                     nudge_y = c(6, 5.5, 5),
+                     min.segment.length = 0, 
+                     force = 0.3) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12), 
+    legend.text = element_text(size = 12),
+    legend.position = "bottom"
+  ) +
+  labs(
+    x = NULL,
+    y = "# of studies",
+    col = NULL
+  )
+
+ggsave("results/tt_studies.pdf", height = 5)
+```
+
+We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
+come from various places around the world, including Canada, Europe, and Africa.
+
+
+```{r}
+dat |> 
+  distinct(unique_study_id, country) |> 
+  count(country, sort = T) |> 
+  mutate(perc = n / sum(n))
+```
+
+
+Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent
+focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted
+in the workplace, and 2% in community settings. 
+
+```{r}
+dat |> 
+  distinct(unique_study_id, setting) |> 
+  count(setting, sort = T) |> 
+  mutate(perc = n / sum(n))
+```
+
+
+In fact, 61% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
+```{r}
+dat |> # 
+      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                                             "male and female with group composition not specified", 
+                                                             "male and female in separate groups"), 
+                                      "mixed gender groups", 
+                                      participant_sex)) |>
+      distinct(unique_study_id, participant_sex) |>
+  count(participant_sex, sort = T) |> 
+  mutate(perc = n / sum(n))
+```
+
+
+```{r descriptive_fig}
+(country_fig = dat |> 
+  distinct(unique_study_id, country) |> 
+  mutate(country = ifelse(country == "USA", "USA", "Rest of the world")) |> 
+  count(country, sort = T) |> 
+  mutate(country = fct_rev(fct_reorder(factor(country), n)),
+         perc = n / sum(n)) |>
+  ggplot(aes(country, n, label = n, fill = country)) +
+  geom_col() +
+  theme_bw() +
+  theme(axis.text = element_markdown(size = 12), 
+        plot.title = element_markdown()) +
+  scale_y_continuous(breaks = seq(0, 300, by = 100), limits = c(0, 300)) +
+   scale_fill_manual(values = ggthemes::solarized_pal()(2)) +
+  guides(fill = "none") +
+  labs(title = "**a)** Number of Studies by Country",
+       x = NULL, 
+       y = "# of studies", 
+       col = NULL))
+  
+(setting_fig = dat |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  drop_na(setting) |> 
+  mutate(perc = n / sum(n)) |>
+  ggplot(aes(setting, n, fill = setting)) +
+  geom_col() +
+  scale_fill_manual(values = ggthemes::tableau_color_pal('Tableau 10')(6)) +
+  labs(title = "**b)** Number of Studies by Setting",
+       x = NULL, 
+       y = "# of studies", 
+       col = NULL) +
+  theme_bw() +
+    guides(fill = "none") +
+  theme(axis.text = element_markdown(size = 12),
+        plot.title = element_markdown()))
+
+
+dat_participant_sex <- dat |> # participant sex lines
+      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                                             "male and female with group composition not specified", 
+                                                             "male and female in separate groups"), 
+                                      "mixed gender groups", 
+                                      participant_sex)) |>
+      distinct(unique_study_id, .keep_all = T) |>
+      filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |>
+      count(year, participant_sex) |>
+      add_row(year = 1985, participant_sex = "mixed gender groups") |>
+      complete(year, participant_sex, fill = list(n = 0)) |>
+      mutate(participant_sex = str_to_title(participant_sex)) |>
+  mutate(participant_sex = factor(participant_sex, levels = c("Mixed Gender Groups", "Only Male", "Only Female")))
+
+
+
+(tt_gender_fig = dat_participant_sex |>
+  ggplot(aes(year, n, col = participant_sex)) +
+  geom_line(size = 2) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  scale_color_manual(values = ggthemes::palette_pander(3)) +
+  theme_bw() +
+  theme(
+    axis.text = element_markdown(size = 12), 
+    legend.text = element_markdown(size = 12),
+    plot.title = element_markdown(),
+    legend.position = "bottom"
+  ) +
+  labs(
+    title = "**c)** Number of Studies Over Time by Group Gender (1985-2018)",
+    x = NULL,
+    y = "# of studies",
+    col = NULL
+  ))
+
+country_fig / setting_fig / tt_gender_fig
+
+ggsave("results/descriptive.pdf", width = 7, height = 7)
+```
+
+
+## Zeitgeist Programs
+
 
 
 Most of the studies we identified in the first 15 years were conducted by students coming from various disciplines including psychology, educational psychology, and counseling psychology. The majority of these studies are laboratory studies (n = 107) as opposed to field studies (n = 78) that encompass the larger programmatic evaluations that dominate the next generation of studies.
@@ -118,47 +329,7 @@ dat |>
 
 
 
-```{r}
-(country_fig = dat |> 
-  distinct(unique_study_id, country) |> 
-  mutate(country = ifelse(country == "USA", "USA", "Rest of the world")) |> 
-  count(country, sort = T) |> 
-  mutate(country = fct_rev(fct_reorder(factor(country), n)),
-         perc = n / sum(n)) |>
-  ggplot(aes(country, n, label = n, fill = country)) +
-  geom_col() +
-  theme_bw() +
-  theme(axis.text = element_markdown(size = 12), 
-        plot.title = element_markdown()) +
-  scale_y_continuous(breaks = seq(0, 300, by = 100), limits = c(0, 300)) +
-   scale_fill_manual(values = ggthemes::solarized_pal()(2)) +
-  guides(fill = "none") +
-  labs(title = "**a)** Number of Studies by Country",
-       x = NULL, 
-       y = "# of studies", 
-       col = NULL))
-  
-(setting_fig = dat |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  drop_na(setting) |> 
-  mutate(perc = n / sum(n)) |>
-  ggplot(aes(setting, n, fill = setting)) +
-  geom_col() +
-  scale_fill_manual(values = ggthemes::tableau_color_pal('Tableau 10')(6)) +
-  labs(title = "**b)** Number of Studies by Setting",
-       x = NULL, 
-       y = "# of studies", 
-       col = NULL) +
-  theme_bw() +
-    guides(fill = "none") +
-  theme(axis.text = element_markdown(size = 12),
-        plot.title = element_markdown()))
 
-country_fig / setting_fig 
-
-ggsave("results/descriptive.pdf", width = 7, height = 7)
-```
 
 ```{r}
 dat |> 
@@ -178,112 +349,21 @@ dat |>
 
 ```{r}
 dat |> 
-    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
+    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                                           "male and female with group composition not specified", 
+                                                           "male and female in separate groups"), 
+                                    "mixed gender groups",
+                                    participant_sex)) |> 
   distinct(unique_paper_id, .keep_all = T) |> 
   count(participant_sex, sort = T) |> 
   mutate(perc = n / sum(n)) |> 
   janitor::adorn_totals()
 ```
 
-```{r}
-dat_participant_sex <-
-  bind_rows(
-    dat |> # overall line
-      group_by(year) |>
-      summarise(n = n_distinct(unique_study_id)) |>
-      add_row(year = 1985, n = 0) |>
-      mutate(participant_sex = "Overall"),
-    
-    dat |> # participant sex lines
-      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |>
-      distinct(unique_study_id, .keep_all = T) |>
-      filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |>
-      count(year, participant_sex) |>
-      add_row(year = 1985, participant_sex = "mixed gender groups") |>
-      complete(year, participant_sex, fill = list(n = 0)) |>
-      mutate(participant_sex = str_to_title(participant_sex))
-  ) |>
-  mutate(participant_sex = factor(participant_sex, levels = c("Overall", "Mixed Gender Groups", "Only Male", "Only Female")))
-
-zeitgeist = 
-dat_participant_sex |> 
-  filter(participant_sex == "Overall", year %in% c(1998, 2000, 2007)) |> 
-  mutate(event = c("Safe dates", "Men's Program", "Bringing in\nthe Bystander"))
-
-dat_participant_sex |>
-  ggplot(aes(year, n, col = participant_sex)) +
-  geom_line(size = 2) +
-  geom_segment(aes(x = year, ## add "flag poles"
-                   xend = year,
-                   y = 0,
-                   yend = n,
-                   label = NULL),
-               inherit.aes = F, 
-               linewidth = 1.5,
-               data = zeitgeist) +
-    geom_label_repel(mapping = aes(x = year, ## labels
-                                   y = n,
-                                   label = event),
-                     size = 6,
-                     segment.size	= 1.5,
-                     inherit.aes = F,
-                     data =  zeitgeist,
-                     nudge_x = c(1.5, 2.5, -2),
-                     nudge_y = c(6, 5, 5),
-                     min.segment.length = 0, 
-                     force = 0.3,
-                     size = 2) +
-  scale_x_continuous(
-    limits = c(1985, 2018),
-    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
-  ) +
-  scale_color_manual(values = ggthemes::palette_pander(4)) +
-  #scale_color_manual(values = ggthemes::tableau_color_pal("Color Blind")(4)) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12), 
-    legend.text = element_text(size = 12),
-    legend.position = "bottom"
-  ) +
-  labs(
-    x = NULL,
-    y = "# of studies",
-    col = NULL
-  )
-
-ggsave("results/tt_overall.pdf", height = 5)
 
 
 
-# dat |> 
-#   mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", "male and female with group composition not specified", "male and female in separate groups"), "mixed gender groups", participant_sex)) |> 
-#   distinct(unique_study_id, .keep_all = T) |> 
-#   filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |> 
-#   count(year, participant_sex) |> 
-#   add_row(year = 1985, participant_sex = "mixed gender groups") |> 
-#   complete(year, participant_sex, fill = list(n = 0)) |> 
-#   ggplot(aes(year, n, col = participant_sex)) +
-#   geom_line(size = 2) +
-#   scale_x_continuous(limits = c(1985, 2018), 
-#                      breaks = c(1985, seq(1985, 2020, by = 5), 2018)) +
-#   theme_bw() +
-#   theme(legend.position="bottom") +
-#   labs(x = NULL, y = "# of studies", col = NULL)
-  
-ggsave("results/tt_participant_sex.pdf")
-  
-```
 
-
-Table XX details the number of papers for each study design.
-```{r}
-dat |> 
-  distinct(unique_paper_id, unique_study_id, study_design) |> 
-  group_by(study_design) |> 
-  summarise(n_papers = n_distinct(unique_paper_id),
-            n_studies = n_distinct(unique_study_id)) |> 
-  kable(format = "latex", booktabs = T)
-```
 
 
 
@@ -316,7 +396,7 @@ dat %>%
     legend.box = "vertical"
   )
 
-ggsave("results/d_se.pdf", height = 5)
+ggsave("../results/d_se.pdf", height = 5)
 
 ```
 
@@ -359,8 +439,7 @@ dat %>%
     legend.box = "vertical"
   )
 
-
-ggsave("results/att_beh_corr.pdf", width = 7, height = 7)
+ggsave("../results/att_beh_corr.pdf", width = 7, height = 7)
 ```
 
 

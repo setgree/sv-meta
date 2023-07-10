@@ -1,0 +1,35 @@
+---
+title: "6-supplemental-appendices"
+author: "Seth Green"
+date: "2023-07-10"
+output: html_document
+---
+
+```{r setup, include=F, echo=F}
+rm(list = ls())
+library(dplyr, warn.conflicts = F)
+library(knitr)
+library(metafor, quietly = T)
+library(ggplot2, warn.conflicts = F)
+library(ggrepel, warn.conflicts = F)
+library(lubridate)
+library(purrr)
+library(stringr)
+library(tidyr, warn.conflicts = F)
+library(tibble)
+
+source('./functions/sum_lm.R')
+source('./functions/map_robust.R')
+source('./functions/study_count.R')
+# NOTE ON SUM_LM: 
+# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
+#                                          data = dat))$coefficients`
+
+options(scipen = 99)
+```
+
+### load data
+```{r load_data, include=F, echo=F}
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
+  select(unique_study_id, scale_type, everything())
+```
