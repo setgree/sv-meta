@@ -14,7 +14,7 @@ source('./functions/d_calc.R')
 source('./functions/var_d_calc.R')
 
 # Add Glass's Delta, Var_d, and Se_D
-dat_clean <- dat %>%
+dat_clean <- dat |>
   mutate(d = case_when( # calculate d
     !is.na(n_t_group) & study_design %in% c('rct') ~ 
       mapply(
@@ -30,8 +30,8 @@ dat_clean <- dat %>%
       stat =  u_s_d,
       sample_sd = ctrl_sd,
       n_t = n_t_post,
-      n_c = n_c_post))) %>%
-  mutate(d = abs(d) * anticipated_direction) %>%
+      n_c = n_c_post))) |>
+  mutate(d = abs(d) * anticipated_direction) |>
   mutate(var_d = case_when( # calculate variance
     !is.na(n_t_group) & study_design %in% c('rct') ~
       mapply(
@@ -46,12 +46,12 @@ dat_clean <- dat %>%
         n_t = n_t_post,
         n_c = n_c_post)
     )
-    ) %>%
+    ) |>
   mutate(se_d = sqrt(var_d))
 
 
 # add in other useful variables
-dat_to_save <- dat_clean %>%
+dat_to_save <- dat_clean |>
   mutate(decade = as.factor(case_when(
     year <= 1989 ~ "1980s",
     year >= 1990 & year <= 1999 ~ "1990s",
@@ -71,12 +71,12 @@ dat_to_save <- dat_clean %>%
     published_unpublished = 
       case_when(publication_type == 'published' ~ 'published',
                 NA ~ 'unpublished', 
-                TRUE ~ 'unpublished')) %>% 
-  group_by(unique_study_id) %>% 
+                TRUE ~ 'unpublished')) |> 
+  group_by(unique_study_id) |> 
   mutate(has_both = case_when(all(c('attitudes', 'behavior') %in% scale_type) ~ 'both',
                               scale_type == 'attitudes' ~ 'attitudes',
-                              scale_type == 'behavior' ~ 'behavior')) %>%
-  ungroup() %>%
+                              scale_type == 'behavior' ~ 'behavior')) |>
+  ungroup() |>
   mutate(study_design = case_when(study_design == "observational" ~ "Observational",
                                   study_design == "rct" ~ "Randomized Control Trial",
                                   study_design == "quasi-experimental" ~ "Quasi-Experimental"),

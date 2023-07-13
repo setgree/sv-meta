@@ -9,20 +9,14 @@ Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd',
 # step 2: Cohens D and add necessary variables
 Rscript ./2-prep-data-for-analysis.R
 
-# step 3: paper stats
-Rscript -e "rmarkdown::render('./3-sa-meta.Rmd',
+# step 3: descriptive stats
+Rscript -e "rmarkdown::render('./3-paper-descriptives.Rmd',
   output_dir = '../results', clean = T)"
 
-# step 4: annotated pre-analysis plan
-Rscript -e "rmarkdown::render('./4-annotated-pre-analysis-plan.Rmd',
+# step 4: meta analysis
+Rscript -e "rmarkdown::render('./4-sa-meta.Rmd',
   output_dir = '../results', clean = T)"
 
-# step 5: descriptives
-
-Rscript -e "rmarkdown::render('./5-paper-descriptives.Rmd',
+# step 5: appendixes
+Rscript -e "rmarkdown::render('./5-appendixes.Rmd',
   output_dir = '../results', clean = T)"
-  
-# step 6: appendixes
-Rscript -e "rmarkdown::render('./6-supplemental-appendices.Rmd',
-  output_dir = '../results', clean = T)"
-

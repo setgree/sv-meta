@@ -42,7 +42,7 @@ options(scipen = 99)
 
 ### load data
 ```{r load_data, include=F, echo=F}
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
 
@@ -52,7 +52,7 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
 
 *paper*: "Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001."
 ```{r overall_meta}
-dat %>% map_robust()
+dat |> map_robust()
 
 # more verbose version of
 robust(x = rma(yi = d, vi = var_d, data = dat),
@@ -63,7 +63,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 # Figure 1
 ```{r figure_1}
 
-dat %>% ggplot(mapping = aes(y = d, 
+dat |> ggplot(mapping = aes(y = d, 
                              x = se_d)) + 
   geom_point(aes(color = behavior_type,
              shape = study_design),
@@ -89,12 +89,12 @@ sum_lm(dat, d, se_d, coefs_only = T)
 
 ```{r publication_bias_by_study_design}
 # Ns
-dat %>%
-  group_by(study_design) %>%
+dat |>
+  group_by(study_design) |>
   study_count()
 # effect sizes
-dat %>% 
-  split(.$study_design) %>% 
+dat |> 
+  split(~study_design) |> 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .)) # can just do `map(.f = ~sum_lm())
 ```
 
@@ -102,8 +102,8 @@ dat %>%
 
 ```{r published_vs_unpubished}
 
-dat %>% 
-  group_by(published_unpublished) %>% 
+dat |> 
+  group_by(published_unpublished) |> 
     study_count()
 
 # sanity check
@@ -113,56 +113,27 @@ length(unique(dat$unique_study_id)) == 186 + 118
  In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0467), but not at a statistically significant level (p = 0.28).
  
 ```{r publish_relationship_or_not}
-dat %>% sum_lm(d, published_unpublished)
+dat |> sum_lm(d, published_unpublished)
 
 # Difference in relationship by published and unpublished
-dat %>% split(.$published_unpublished) %>% map(sum_lm)
+dat |> split(~published_unpublished) |> map(sum_lm)
 
-dat %>% split(.$published_unpublished) %>% map(map_robust)
+dat |> split(~published_unpublished) |> map(map_robust)
 ```
 
-"Our results are also robust to variation in methodological rigor. The pooled effect size in the largest quintile of studies,  with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
-
-```{r quintile_check}
-# what are the quantiles
-dat %>% group_by(quantile_var) %>%
-  summarise(min_n = min(n_t_post + n_c_post),
-            max_n = max(n_t_post + n_c_post))
-
-dat %>% 
-  split(.$quantile_var) %>% map(.f = map_robust)
-  
-## well it's not *nothing*...but it's pretty small
-dat %>% sum_lm(y = d, x = quantile_var) # it's basically nothing
-```
 
 Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).
-
-```{r d_and_delays}
-
-dat %>% sum_lm(y = d, x = delay)
-
-# TODO: remove or move to appendix
-# how many delayed outcomes
-table(dat$yes_delay)
-
-dat %>% sum_lm(d, yes_delay)
-## What's the longest attitude/behavior delay measurement?
-dat %>%
-  group_by(scale_type) %>%
-  summarize(max_delay = max(delay))
-```
 
 However,  when pooling all effects, we observe that results vary both significantly and substantively by study design. 
 
 ```{r differences_by_study_design}
 # count Ns (again, just for convenience of writing)
-dat %>% group_by(study_design) %>% 
+dat |> group_by(study_design) |> 
   study_count()
 
 # check overall effect sizes
-dat %>%
-  split(.$study_design) %>%
+dat |>
+  split(~study_design) |>
   map(.f = map_robust)
 
 #TODO: can we reshape these two objects to be one table and then make them a latex table? 
@@ -176,8 +147,8 @@ In our sample, attitudinal outcomes outnumber behavioral outcomes by 355 to 145.
 ```{r att_beh_breakdown}
 table(dat$scale_type)
 
-dat %>% 
-  group_by(has_both) %>%
+dat |> 
+  group_by(has_both) |>
   study_count()
 
 # sanity check
@@ -190,39 +161,28 @@ Behavioral measurement has become more common over time, particularly from 2010 
 range(dat$year)
 
 # how many studies in each decade
-dat %>% group_by(decade) %>% study_count()
+dat |> group_by(decade) |> study_count()
 
-tab <- merge(x = dat %>% group_by(decade) %>% study_count(),
-             y = dat %>% group_by(decade, scale_type) %>% summarise(n = n())) 
+tab <- merge(x = dat |> group_by(decade) |> study_count(),
+             y = dat |> group_by(decade, scale_type) |> summarise(n = n())) 
 # print tab
 tab
 
 #reshape and make latex table
-tab %>%
-  pivot_wider(names_from = scale_type, values_from = n) %>%
-  mutate(ratio = attitudes/behavior) %>%
+tab |>
+  pivot_wider(names_from = scale_type, values_from = n) |>
+  mutate(ratio = attitudes/behavior) |>
   knitr::kable(format = 'latex')
 
 # what was the earliest study to measure behavior as we conceive it?
-dat %>% filter(scale_type == 'behavior') %>% 
-  arrange(year) %>% 
-  select(author, year, paper_title) %>% head()
+dat |> filter(scale_type == 'behavior') |> 
+  arrange(year) |> 
+  select(author, year, paper_title) |> head()
 
-# optional histogram
-dat %>% ggplot(aes(x = year, color = scale_type)) +
-  geom_line(stat = 'count') + 
-  labs(x = "Year", 
-       y = "Count", 
-       color = "Scale type",
-       title = "Attitudinal and behavioral outcomes over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 10) +
-  scale_y_continuous(n.breaks = 10) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+
 
 ## what if we just do this for behaviors?
-dat %>%
+dat |>
   ggplot(aes(x = year, color = behavior_type)) +
   geom_line(stat = 'count') + 
   labs(x = "Year", 
@@ -242,8 +202,8 @@ dat %>%
 Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
 
 ```{r behaviors_attitudes_overall}
-dat %>% 
-  split(.$scale_type) %>%
+dat |> 
+  split(~scale_type) |>
   map(.f = map_robust)
 ```
 
@@ -252,14 +212,14 @@ This discrepancy is particularly pronounced in observational research, where att
 ```{r behavior_attitudes_discrepancy_within_study_designs}
 
 # first, Ns
-dat %>% 
-  group_by(scale_type, study_design) %>% 
-  study_count() %>%
+dat |> 
+  group_by(scale_type, study_design) |> 
+  study_count() |>
   kable('latex')
 
 # then effect sizes
-dat %>% 
-  split(list(.$scale_type, .$study_design)) %>% 
+dat |>
+  split(~interaction(scale_type, study_design)) |> 
   map(.f = map_robust)
 
 ```
@@ -270,13 +230,13 @@ Table XXX shows the number of studies which measure each behavioral category and
 
 ```{r categories_of_behavior_and_attitudes}
 #Ns
-dat %>% 
-  group_by(behavior_type) %>% 
-  summarize('N (studies)' = n_distinct(unique_study_id)) %>%
+dat |> 
+  group_by(behavior_type) |> 
+  summarize('N (studies)' = n_distinct(unique_study_id)) |>
   kable('latex')
 
-dat %>% 
-  split(.$behavior_type) %>% 
+dat |> 
+  split(~behavior_type) |> 
   map(.f = map_robust)
 ```
 
@@ -285,8 +245,8 @@ Here we see that primary prevention interventions do not, on average, meaningful
 ### RCT perpetration 
 
 ```{r rct_perpetration}
-dat %>% 
-  filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') %>% 
+dat |> 
+  filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') |> 
   map_robust()
 ```
 # correlation between attitudes and behavior
@@ -294,14 +254,14 @@ dat %>%
 Another way to assess the discrepancy between attitudes and behaviors is to focus on the 61 studies that measure both and look at the association between the two categories.
 
 ```{r dat_has_both_count}
-dat_has_both <- dat %>% filter(has_both == 'both')
-dat_has_both %>% study_count()
+dat_has_both <- dat |> filter(has_both == 'both')
+dat_has_both |> study_count()
 ```
 
 In this subset of studies, the pooled attitudinal effect is $\Delta$ = 0.278 (se = .036), p < .0001, while the pooled behavioral outcome is $\Delta$ = 0.081 (se = .03), p = .009. In other words, the attitudinal effects are slightly lower than the overall attitude effect of 0.367, while the behavioral effects are slightly larger than the overall behavioral effect of 0.072.
 ```{r has_both_behav_att_meta_results}
-dat_has_both %>% split(.$scale_type) %>% 
-  map( map_robust)
+dat_has_both |> split(~scale_type) |> 
+  map(map_robust)
 ```
 
 A key question for this literature is: when attitudes change, do behaviors change with them? Unfortunately, in the studies that measure change across both categories, we find a small, statistically insignificant correlation of $\rho$ (59) = 0.141, p = 0.279.
@@ -313,17 +273,17 @@ A key question for this literature is: when attitudes change, do behaviors chang
 # A) subsequently filter it down just to look at each kind behavior
 # B) color code the scatterplot 
 
-has_both_means <- dat_has_both %>% 
-  group_by(unique_study_id, scale_type) %>%
+has_both_means <- dat_has_both |> 
+  group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>%
+         mean_se_d = mean(se_d)) |>
   select(author, year, paper_title, unique_study_id, intervention_name,
          study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type, decade, behavior_type) %>%  
+         ra, labels, scale_type, decade, behavior_type) |>  
   slice(1) 
 
-has_both_reshaped <- has_both_means %>% 
+has_both_reshaped <- has_both_means |> 
   pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -338,14 +298,14 @@ cor.test(x = has_both_reshaped$mean_d_attitudes,
 We find broadly similar results when looking at just at RCTs; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both attitudes and either victimization or perpetration outcomes ($\rho$ (42) = 0.153, p = 0.322); and, finally, within RCTs that measure attitudes as well as either victimization or perpetration outcomes ($\rho$ (59) = 0.141, p = 0.279).
 ```{r attitude_behavior_correlation_subsets}
 # RCTs only?
-rcts_both <- has_both_reshaped %>% filter(study_design == 'Randomized Control Trial')
+rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
 cor.test(x = rcts_both$mean_d_attitudes, 
          y = rcts_both$mean_d_behavior)
 ## TODO: Not enough 
 #perp and vict only?
-perp_and_vict_both <- has_both_means %>%
-  group_by(unique_study_id) %>%
-  filter(if_else(any(behavior_type %in% c('involvement', 'bystander')), F, T)) %>%
+perp_and_vict_both <- has_both_means |>
+  group_by(unique_study_id) |>
+  filter(if_else(any(behavior_type %in% c('involvement', 'bystander')), F, T)) |>
    pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -359,10 +319,10 @@ cor.test(perp_and_vict_both$mean_d_attitudes,
 
 # finally, perp and vict only in RCTs only
 
-perp_and_vict_rcts <- has_both_means %>%
-  group_by(unique_study_id) %>%
-  filter(if_else(any(behavior_type %in% c('Involvement', 'Bystander')), F, T)) %>%
-  filter(study_design == 'Randomized Control Trial') %>%
+perp_and_vict_rcts <- has_both_means |>
+  group_by(unique_study_id) |>
+  filter(if_else(any(behavior_type %in% c('Involvement', 'Bystander')), F, T)) |>
+  filter(study_design == 'Randomized Control Trial') |>
    pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -377,18 +337,18 @@ cor.test(perp_and_vict_rcts$mean_d_attitudes,
 Figure XXX highlights this lack of correlation. Each point in the scatterplot is a study that measures both attitudes and behaviors, with the attitudinal effect size on the X axis and the behavioral effect size on the Y axis. The dotted black line shows what a perfect correlation would look like, and the dotted gray line shows the correlation that we actually find. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
-dat_has_both <- dat %>% filter(has_both == 'both')
+dat_has_both <- dat |> filter(has_both == 'both')
 
-dat %>%
-  filter(has_both == 'both') %>%
-  group_by(author, year, study_design, unique_study_id, scale_type) %>%
+dat |>
+  filter(has_both == 'both') |>
+  group_by(author, year, study_design, unique_study_id, scale_type) |>
   filter(delay == min(delay)) |>
   summarise(mean_d = mean(d),
          mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
+         mean_se_d = mean(se_d)) |>
   pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
     names_from = c(scale_type),
-    values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
+    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
   ggplot(aes(x = mean_d_attitudes,
              y = mean_d_behavior)) +
   geom_point(aes(color = study_design),

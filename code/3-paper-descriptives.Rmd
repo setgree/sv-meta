@@ -37,12 +37,12 @@ library(metafor)
 source('./functions/study_count.R')
 source('./functions/map_robust.R')
 
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   mutate(
     attitudes_behaviors = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
       scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) %>%
+      scale_type == 'behavior' ~ 2)) |>
   ungroup()
 ```
 
@@ -72,8 +72,7 @@ dat |>
 # Overview of the Studies in the Meta-Analytic Database
 
 The database
-spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500
-distinct point estimates.
+spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
 
 ```{r years_and_countries}
 dat |> 
@@ -146,8 +145,9 @@ tt_overall     |>
   ) +
   theme_bw() +
   theme(
-    axis.text = element_text(size = 12), 
-    legend.text = element_text(size = 12),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
     legend.position = "bottom"
   ) +
   labs(
@@ -208,9 +208,11 @@ dat |> #
   geom_col() +
   theme_bw() +
   theme(axis.text = element_markdown(size = 12), 
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 14),
         plot.title = element_markdown()) +
   scale_y_continuous(breaks = seq(0, 300, by = 100), limits = c(0, 300)) +
-   scale_fill_manual(values = ggthemes::solarized_pal()(2)) +
+  scale_fill_manual(values = ggthemes::solarized_pal()(2)) +
   guides(fill = "none") +
   labs(title = "**a)** Number of Studies by Country",
        x = NULL, 
@@ -232,6 +234,8 @@ dat |> #
   theme_bw() +
     guides(fill = "none") +
   theme(axis.text = element_markdown(size = 12),
+        axis.title = element_text(size = 14),
+        legend.text = element_text(size = 14),
         plot.title = element_markdown()))
 
 
@@ -262,7 +266,8 @@ dat_participant_sex <- dat |> # participant sex lines
   theme_bw() +
   theme(
     axis.text = element_markdown(size = 12), 
-    legend.text = element_markdown(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
     plot.title = element_markdown(),
     legend.position = "bottom"
   ) +
@@ -347,31 +352,82 @@ dat |>
 
 ## Trends in Measurement in the Database
 
-Overall, mentalizing outcomes outnumber behavioral outcomes in our sample by 355 to 145. 207 studies
-measure mentalizing outcomes only; 36 measure only behaviors; and 61 measure both
+Overall, mentalizing outcomes outnumber behavioral outcomes in our sample by 355 to 145. 
 ```{r}
+dat |> 
+  select(scale_type) |> 
+  group_by(scale_type) |> 
+  summarise(n = n())
+```
 
+
+207 studies measure mentalizing outcomes only; 
+```{r}
+dat |> 
+  select(unique_study_id, scale_type) |> 
+  group_by(unique_study_id) |> 
+  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
+  filter(perc_attitudes == 1) |> 
+  ungroup() |> 
+  nrow()
+```
+
+
+36 measure only behaviors; 
+```{r}
+dat |> 
+  select(unique_study_id, scale_type) |> 
+  group_by(unique_study_id) |> 
+  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
+  filter(perc_attitudes == 0) |> 
+  ungroup() |> 
+  nrow()
+```
+
+
+61 measure both
+```{r}
+dat |> 
+  select(unique_study_id, scale_type) |> 
+  group_by(unique_study_id) |> 
+  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
+  filter(!perc_attitudes %in% c(0,1)) |> 
+  ungroup() |> 
+  nrow()
 ```
 
 
 While in the first 15 years, the ratio between mentalizing outcomes and behavior outcomes was
 roughly 1 to 4, after 2010 this ratio drops to 1 to 1.5.
 ```{r}
+dat |> 
+  filter(between(year, 1985, 2000)) |>
+  count(scale_type) |> 
+  pivot_wider(names_from = scale_type, values_from = n) |> 
+  mutate(ratio = attitudes/behavior)
+```
 
+after 2010 [the ratio between mentalizing outcomes and behavior outcomes] drops to 1 to 1.4.
+```{r}
+dat |> 
+  filter(year > 2010) |>
+  count(scale_type) |> 
+  pivot_wider(names_from = scale_type, values_from = n) |> 
+  mutate(ratio = attitudes/behavior)
 ```
 
 
-Fig XXX displays the relationship between these outcomes over time.
+Fig 3 displays the relationship between these outcomes over time.
 
-```{r fig_att_beh_corr}
-dat %>% 
+```{r fig_tt_att_beh}
+dat |> 
   mutate(scale_type = str_to_title(ifelse(scale_type == "attitudes", "mentalizing", "behavior"))) |> 
   distinct(year, unique_study_id, scale_type) |> 
   count(year, scale_type) |> 
   add_row(year = 1985, scale_type = "Behavior") |> 
   complete(year, scale_type, fill = list(n = 0)) |> 
   ggplot(aes(x = year, y = n, color = scale_type)) +
-  geom_line() + 
+  geom_line(size = 3) + 
   labs(
     x = NULL,
     y = "# of studies",
@@ -381,115 +437,77 @@ dat %>%
     limits = c(1985, 2018),
     breaks = c(1985, seq(1985, 2020, by = 5), 2018)
   ) +
+  scale_color_manual(values = ggthemes::tableau_color_pal('Color Blind')(2)) +
   theme_bw() +
   theme(
     axis.text = element_text(size = 12), 
-    legend.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
     legend.position = "bottom"
   )
 
-ggsave("output/fig_att_beh_corr.pdf")
+ggsave("results/tt_att_beh.pdf", height = 5)
 ```
 
 
+## Measuring Sexually Violent Behavior
+
+behavioral outcomes that fall into four categories: perpetration, victimization, bystander, and involvement. Figure XX demonstrates the trends over time in these measurements.
+
+```{r}
+dat |>
+  filter(behavior_type != "Attitude") |> 
+  distinct(unique_study_id, year, behavior_type) |> 
+  count(year, behavior_type) |> 
+  add_row(year = 1985:1990, behavior_type = "Involvement") |> # start at 0 for all behaviors. here i use arbitrary behavior 
+  complete(year, behavior_type, fill = list(n = 0)) |> 
+  ggplot(aes(x = year, y = n, color = behavior_type)) +
+  geom_line(size = 3) + 
+  labs(x = NULL, 
+       y = "# of studies", 
+       col = NULL) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  scale_color_manual(values = ggthemes::stata_pal("s1color")(4)) +
+  theme_bw() +
+    theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),    
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+ggsave("results/tt_beh_type.pdf", height = 5)
+```
 
 
+## Measuring Mentalizing
 
+Overall these and other myth measures constitute 56% of the mentalizing measures we coded
 ```{r}
 dat |> 
   select(scale_name, behavior_type) |> 
   filter(behavior_type == "Attitude") |> 
   mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth")) |> 
   group_by(myth_scale) |> 
-  summarise(n = n())
-
-```
-
-
-
-
-```{r}
-dat |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
+  summarise(n = n()) |> 
+  mutate(perc = n / sum(n))
 ```
 
 ```{r}
 dat |> 
-  distinct(unique_paper_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
-```
-
-```{r}
-dat |> 
-    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                                           "male and female with group composition not specified", 
-                                                           "male and female in separate groups"), 
-                                    "mixed gender groups",
-                                    participant_sex)) |> 
-  distinct(unique_paper_id, .keep_all = T) |> 
-  count(participant_sex, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
-```
-
-
-
-
-
-
-
-
-```{r}
-dat %>%
+  filter(has_both == 'both') |> 
   drop_na(study_design) |> 
-  ggplot(aes(x = se_d, y = d)) +
-  geom_point(aes(
-      color = behavior_type,
-      shape = study_design),
-    size = 3
-  ) +
-  geom_smooth(
-    method = "lm",
-    se = F,
-    size = 2
-  ) +
-  #ggtitle("Relationship between effect sizes and standard errors") +
-  labs(
-    x = "Standard errors",
-    y = "Effect size",
-    color = "Outcome type",
-    shape = "Study Design"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-
-ggsave("../results/d_se.pdf", height = 5)
-
-```
-
-
-```{r}
-dat %>% 
-  filter(has_both == 'both') %>% 
-  drop_na(study_design) |> 
-  group_by(author, year, study_design, unique_study_id, scale_type) %>%
-  #filter(delay == min(delay)) |> 
+  group_by(author, year, study_design, unique_study_id, scale_type) |>
   summarise(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>% 
+         mean_se_d = mean(se_d)) |> 
   pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
     names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) %>%
+    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
   ggplot(aes(x = mean_d_attitudes,
              y = mean_d_behavior)) + 
   geom_point(aes(color = study_design),
@@ -504,239 +522,18 @@ dat %>%
               size = 2) +  
   scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
   scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  labs(x = "Effect size (attitudes)",
-       y = "Effect size (behaviors)",
-       color = "Study Design") +
-  guides(color = guide_legend(title = "Study Design")) + 
+  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
+  labs(x = "Effect size (Mentalizing)",
+       y = "Effect size (Behaviors)",
+       color = NULL) +
   theme_bw() +
-    theme(
+  theme(
     axis.text = element_text(size = 12),
-    legend.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
     legend.position = "bottom",
     legend.box = "vertical"
   )
 
-ggsave("../results/att_beh_corr.pdf", width = 7, height = 7)
-```
-
-
-```{r}
-dat %>%
-  filter(behavior_type != "Attitude") |> 
-  distinct(unique_study_id, year, behavior_type) |> 
-  count(year, behavior_type) |> 
-  add_row(year = 1985:1990, behavior_type = "Involvement") |> # start at 0 for all behaviors. here i use arbitrary behavior 
-  complete(year, behavior_type, fill = list(n = 0)) |> 
-  ggplot(aes(x = year, y = n, color = behavior_type)) +
-  geom_line(size = 3) + 
-  labs(title = "**a)** Number of Studies by Country",
-       x = NULL, 
-       y = "# of studies", 
-       col = NULL) +
-  scale_x_continuous(
-    limits = c(1985, 2018),
-    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
-  ) +
-  theme_bw() +
-    theme(
-    axis.text = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-
-```
-
-
-Table XX details the distribution of behavioral outcomes within studies that employ observational designs (i.e., quasi-experimental and observational studies) and randomized designs (i.e., experiments and horse-race experiments). 
-```{r}
-
-dat |> 
-  filter(scale_type == "behavior") |> 
-  distinct(unique_study_id, study_design, behavior_type) |> 
-  count(study_design, behavior_type) |> 
-  pivot_wider(values_from = n, id_cols = behavior_type, names_from = study_design, values_fill = 0) |> 
-  janitor::adorn_totals() |> 
-  kable(format = "latex", booktabs = T)
-```
-
-
-We recovered XXX manuscripts and XXX studies from our search that qualified methodologically and theoretically.
-
-```{r}
-dat %>% 
-  select(unique_study_id, unique_paper_id) %>% 
-  summarise(n_papers = n_distinct(unique_paper_id),
-            n_studies = n_distinct(unique_study_id))
-```
-
-
-
-### Overview of Studies in the Meta-Analytic Database
-
-```{r }
-dat |> 
-  select(contains("n_")) |> 
-  View()
-
-# average N?
-mean(dat$n_t_post) + mean(dat$n_c_post)
-mean(dat$n_t_pre, na.rm = T) + mean(dat$n_c_pre, na.rm = T)
-
-# participant sex
-table(dat$condition_gender)
-
-## intervention length
-mean(dat$intervention_length, na.rm = T)
-quantile(dat$intervention_length, probs = seq(0, 1, by = 0.2), na.rm = TRUE)
-```
-
-### Meta-Analytic Results
-
-(see 3-sa-meta.Rmd)
-
-
-We found XX studies that measured self-reported behavior.
-```{r}
-dat %>% 
-  select(unique_study_id, scale_type) %>% 
-  group_by(scale_type) %>% 
-  summarise(n_unique_studies = n_distinct(unique_study_id)) 
-```
-
-XX of these studies measured behavior only in the immediate aftermath of the intervention, while xx included long-term measures.  
-```{r}
-dat %>% 
-  filter(scale_type == "behavior") %>% 
-  select(unique_study_id, delay) %>% 
-  drop_na(delay) %>% 
-  group_by(unique_study_id) %>% 
-  mutate(max_delay = max(delay),
-         only_short_term = max_delay == 0) %>% 
-  count(only_short_term) %>% 
-  ungroup() %>% 
-  count(only_short_term)
-```
-
-To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
-```{r}
-dat %>% 
-  select(unique_study_id, scale_type, study_design, d) %>% 
-  filter(scale_type == "behavior") %>% 
-  group_by(unique_study_id, study_design) %>% 
-  summarise(mean_d_by_study_x_design = mean(d)) %>% 
-  group_by(study_design) %>% 
-  summarise(n = n(),
-            mean_d_by_design = mean(mean_d_by_study_x_design)) %>% 
-  kable(digits = 2, format = "latex", booktabs = T) %>%
-  kableExtra::kable_styling() 
-```
-
-```{r}
-dat |> 
-  filter(scale_type == "attitudes") |> 
-  distinct(unique_study_id, scale_name) |> 
-  count(scale_name, sort = T) |> 
-  View()
-```
-
-how many studies evaluate rape myths?
-```{r rape_myth_outcome_prevalence}
-dat %>%
-  group_by(unique_study_id) %>%
-  summarise(
-    myth_var = any(str_detect(scale_name, "myth|IRMA|illinois"))
-  ) %>%
-  summarise(
-    myth_count = sum(myth_var),
-    no_myth_count = sum(!myth_var)
-  )
-
-```
-
-what's the distribution of outcome types for bystander interventions
-
-```{r bystander_dv_count}
-
-# filter based on mentioning bystander in either title, description, 
-# intervention name, or program name, or have a stated purpose of "4" (bystander)
-bystander_dat <- dat %>%
-  filter(
-    str_detect(paper_title, "bystander") |
-      str_detect(brief_description_of_the_intervention, "bystander") |
-      str_detect(intervention_name, "bystander") |
-      str_detect(program_name, "bystander") |
-      str_detect(stated_purpose, "4")) %>%
-    select(author, year, paper_title, unique_study_id, study_design,
-           d, var_d, se_d, 
-           behavior_type, has_both) %>%
-  mutate(perp_vict_grouped = case_when(
-    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
-    behavior_type == 'Involvement' ~ 'involvement',
-    behavior_type == 'Attitude' ~ 'Attitude',
-    behavior_type == 'Bystander' ~ 'Bystander'))
-
-bystander_dat %>%  study_count()
-
-bystander_dat %>% group_by(behavior_type) %>% study_count()
-
-bystander_dat %>% group_by(has_both) %>% study_count()
-
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% 
-  split(.$perp_vict_grouped) %>% 
-  map(.f = map_robust)
-
-table(bystander_dat$behavior_type)    
-
-# count studies that measure #just bystander behaviors
-bystander_dat %>%
-  filter(has_both != 'attitudes') %>% group_by(perp_vict_grouped) %>% study_count()
-
-# double-check
-bystander_dat_not_just_atts %>% 
-  group_by(unique_study_id) %>%
-  filter('Bystander' %in% behavior_type & !'perp_vict' %in% perp_vict_grouped) %>% ungroup() %>% study_count()
-
-
-# what kind of effect sizes are we talking about? 
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$behavior_type) %>% map(map_robust)
-
-# group perp and vict outcomes together
-
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$perp_vict_grouped) %>% map(map_robust)
-
-
-# bystander interventions are a product of their time and place
-bystander_dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>%
-  ggplot(aes(x = year)) +
-  geom_line(stat = 'count', color = 'light blue') + 
-  labs(x = "Year", 
-       y = "Count", 
-       title = "Bystander interventions over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 20) +
-  scale_y_continuous(n.breaks = 15) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
-## BTW an alternate way to do this
-dat %>%
-  group_by(unique_study_id) %>%
-  summarise(
-    bystander_count = ifelse(
-      any(
-        str_detect(c(
-          brief_description_of_the_intervention, 
-          intervention_name, program_name, paper_title), "bystander")) |
-        any(str_detect(stated_purpose, "4")),
-      TRUE, FALSE)
-  ) %>% 
-  summarise(
-    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
-    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
-  )
-
-
-
-
+ggsave("results/att_beh_corr.pdf", width = 7.2, height = 7.2)
 ```

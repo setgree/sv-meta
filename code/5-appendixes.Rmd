@@ -1,5 +1,5 @@
 ---
-title: "4-annotated-pre-analysis-plan"
+title: "4-appendixes"
 author: "Seth Green"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output: html_document
@@ -46,18 +46,18 @@ source('./functions/study_count.R')
 
 # read in data
 
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') %>%
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 
 # data for 'has both' analyses
 
-has_both <- dat %>% 
-filter(all(c('attitudes', 'behavior') %in% scale_type)) %>% 
-  group_by(unique_study_id, scale_type) %>%
+has_both <- dat |> 
+filter(all(c('attitudes', 'behavior') %in% scale_type)) |> 
+  group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>%
-  slice(1) %>% 
+         mean_se_d = mean(se_d)) |>
+  slice(1) |> 
   pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -67,53 +67,129 @@ filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
 
 ```
 
-## Pre-registered analyses (from Prospero Doc)
+## Robustness checks
 
-"Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement)."
+Our main meta-analytic result comes from a random effects meta-analysis clustering at the level of individual studies.
 
-"Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term."
+```{r main_result_for_comparison}
+
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_study_id)
+
+```
+
+Clustering at the level of paper rather than study raises the standard error to 0.0280, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+```{r cluster_paper_level}
+# cluster at paper
+robust(x = rma(yi = d, vi = var_d, data = dat),
+       cluster = dat$unique_paper_id)
+
+#no cluster
+rma(yi = d, vi = var_d, data = dat)
+
+```
+
+ Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.331 (se = 0.028), p < .0001,
+```{r collapse_individual_ds}
+
+dat %>% group_by(unique_study_id) %>%
+  mutate(d = mean(d),
+         var_d = mean(var_d)) %>%
+  slice(1) %>%
+  map_robust()
+```
+
+while averaging $\Delta$ within each study's behavioral and mentalizing outcomes separately leads to $\Delta$ = 0.307
+```{r collapse_ds_within_study_and_scale_type}
+dat %>% group_by(unique_study_id, scale_type) %>%
+  mutate(d = mean(d),
+         var_d = mean(var_d)) %>%
+  slice(1) %>%
+  map_robust()
+```
+
+## Additional checks for publication bias
+ In our sample, the pooled effect size in the largest quintile of studies, with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
+
+```{r quintile_check}
+# what are the quantiles
+dat %>% group_by(quantile_var) %>% 
+  summarise(min_n = min(n_t_post + n_c_post),
+            max_n = max(n_t_post + n_c_post))
+
+dat %>% 
+  split(.$quantile_var) %>% map(.f = map_robust)
+  
+## well it's not *nothing*...but it's pretty small
+dat %>% sum_lm(y = d, x = quantile_var) # it's basically nothing
+```
+
+Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121.
+
+```{r d_and_delays}
+
+dat %>% sum_lm(y = d, x = delay)
+
+table(dat$yes_delay)
+
+dat %>% sum_lm(d, yes_delay)
+## What's the longest attitude/behavior delay measurement?
+dat %>%
+  group_by(scale_type) %>%
+  summarize(max_delay = max(delay))
+```
+
+This suggests that results are not being driven by short-term outcome measurement. However, we caution to note that our perpetration and victimization behavioral outcomes are \textit{counts of incidents}, which means they can only either flatline or increase in magnitude over time. Comparing the relationship between behavioral effect  and elapsed time to the relationship betewen  mentalizing effects and the passage of time is not comparing like to like. We also note that our measure of `delay' captures the number of days between a treatment's \textit{conclusion} and outcome measurement. If a treatment had multiple `doses' \tetxemdash for example, multiple classroom sessions over the course of a semester \textemdash then a behavioral survey administered on the last session would be recording incidents of sexual violence over a whole semester, but be marked in our study as having a delay of zero. Thus we caution readers to not read too much into the relationship between effect sizes and time elapsed. 
+
+# Pre-registered analyses (from Prospero Doc)
+
+> Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement). 
+
+This we did in the main text.
+
+> Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
+
 ```{r}
 # number of studies that measure behavior
-dat %>% 
-  filter(scale_type == 'behavior') %>%
+dat |> 
+  filter(scale_type == 'behavior') |>
   study_count()
 
 # study count with and without a delay?
-dat %>% 
-  filter(scale_type == 'behavior') %>%
-  group_by(yes_delay) %>% 
+dat |> 
+  filter(scale_type == 'behavior') |>
+  group_by(yes_delay) |> 
   study_count()
-# note that this is larger than the number of studies
+# note that this is larger than the number of studies that measure behavior
 # because some studies have outcome measurements at 
 # multiple points
 
 # now effect sizes
-dat %>% filter(scale_type == 'behavior') %>%
-  split(.$yes_delay) %>%
+dat |> filter(scale_type == 'behavior') |>
+  split(~yes_delay) |>
   map(.f = map_robust)
 # big diff, but is that just capturing 
 # difference between bystander/involvement
 # and victimization/perpetration?
 
-dat %>% 
-  filter(behavior_type %in% c('Victimization', 'Perpetration')) %>%
-  split(.$yes_delay) %>%
+dat |> 
+  filter(behavior_type %in% c('Victimization', 'Perpetration')) |>
+  split(~yes_delay) |>
   map(.f = map_robust)
 # now the relationship is in the opposite direction
 # how many studies measure vict/perp with no delay?
 
-dat %>% 
-  filter(behavior_type %in% c('Victimization', 'Perpetration')) %>% 
-  group_by(yes_delay) %>%
+dat |> 
+  filter(behavior_type %in% c('Victimization', 'Perpetration')) |> 
+  group_by(yes_delay) |>
   study_count()
 # very few
 
 ```
 
 
-* Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
+> Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 
-## NOTE: EXPLAIN WHY THIS IS NONSENSICAL
 ```{r behavioral_attenuation_by_study_design}
 # N of studies
 dat %>% 
@@ -123,44 +199,78 @@ dat %>%
 
 dat %>%
   filter(scale_type == 'behavior') %>%
-  split(list(.$study_design, .$yes_delay)) %>% 
+  split(~interaction(study_design, yes_delay)) %>%
   map(map_robust)
-# These results aren't going to be very informative 
-# because A) what do vict/perp outcomes *mean* when
-# there is no delay? b/c no delay = no time to accumulate relatively rare events
-# & B) there are so few studies that *dont* have delays when measuring behavior
 
 ```
+
+> Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term.
+
+See above table.
+
+
+> Evaluate at the effect size of perpetration behavioral outcomes for only studies with random assignment, both in the short- and in the long-term. 
+
+```{r perp_rcts_short_long_term}
+
+dat %>% filter(behavior_type == 'Perpetration',
+               study_design == 'Randomized Control Trial') %>%
+  group_by(yes_delay) %>% study_count()
+
+# what is the one RCt with short-term perpetration measurement
+short_term_rct_perp <- dat %>% filter(behavior_type == 'Perpetration',
+               study_design == 'Randomized Control Trial', 
+               yes_delay == F) %>% 
+  select(author, year, intervention_name, scale_name, delay, d, se_d)
+
+# average effect size for the remaining studies
+dat %>% filter(behavior_type == 'Perpetration',
+               study_design == 'Randomized Control Trial',
+               yes_delay == T) %>%
+  map_robust()
+```
+> Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
+
+
+
+
+
+
+
+
+
+
+
 
 * Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
 
 ```{r experimental_stricti_vs_non_experimental_delay_and_not}
-dat %>% 
+dat |> 
   filter(scale_type == 'behavior', 
                study_design == 'rct',
-               yes_delay == F) %>% 
+               yes_delay == F) |> 
   select(author, year, behavior_type, delay)
 
 # N studies
-dat %>% 
-  filter(scale_type == 'behavior', study_design != 'pre-post') %>%
-  group_by(study_design, yes_delay) %>% 
+dat |> 
+  filter(scale_type == 'behavior', study_design != 'pre-post') |>
+  group_by(study_design, yes_delay) |> 
   study_count()
 
-dat %>% 
-  filter(scale_type == 'behavior', study_design != 'pre-post') %>%
-  split(list(.$study_design, .$yes_delay)) %>%
+dat |> 
+  filter(scale_type == 'behavior', study_design != 'pre-post') |>
+  split(~interaction(study_design, yes_delay)) |>
   map(map_robust)
 
 # so instead...
-dat %>% filter(study_design == 'quasi-experimental',
-               scale_type == 'behavior') %>%
-  split(.$yes_delay) %>%
+dat |> filter(study_design == 'quasi-experimental',
+               scale_type == 'behavior') |>
+  split(~yes_delay) |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
                    cluster = .x$unique_study_id))
 
-dat %>% filter(study_design == 'rct', scale_type == 'behavior') %>%
-  split(.$yes_delay) %>%
+dat |> filter(study_design == 'rct', scale_type == 'behavior') |>
+  split(~yes_delay) |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
                    cluster = .x$unique_study_id))
 
@@ -172,15 +282,15 @@ dat %>% filter(study_design == 'rct', scale_type == 'behavior') %>%
 
 ```{r perpetration outcomes}
 
-rct_perp <- dat %>%
+rct_perp <- dat |>
   filter(scale_type == 'behavior',
                    behavior_type == 'perpetration')
 
 # behavioral data need time to accumulate 
 # so instead of delay, yes/no, how about delay > 1 month (30 days)
 
-rct_perp %>%
-  split(.$delay > 30) %>%
+rct_perp |>
+  split(~delay > 30) |>
   map(.f = ~robust(rma(yi = .x$d, vi = .x$var_d), 
                    cluster = .x$unique_study_id))
 
@@ -188,49 +298,60 @@ rct_perp %>%
 
 * Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies.
 
+We have already reported on behavioral outcomes in the short- and long-term within quasi-experimental and randomized designs. 
+
+Within randomized and quasi-experimental designs,  103 studies measure attitudinal outcomes immediately after treatment, with a pooled effect size of $\Delta$ = 0.313 (se = 0.043), p< 0.0001. By contrast,  114 randomized and quasi-experimental evaluations measure attitudes with a delay, and find a pooled effect size of  $\Delta$ = 0.286 (se = 0.032), p< 0.0001.
+
 ```{r attitudes_behaviors_quasi_random_delay_yes_no}
 
  dat %>% 
-  filter(study_design %in% c('rct', 'quasi-experimental')) %>%
-  split(list(.$scale_type, .$yes_delay)) %>% 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
+  filter(study_design == 'Quasi-Experimental' | 
+           study_design == 'Randomized Control Trial',
+         scale_type == 'attitudes') %>%
+  group_by(yes_delay) %>% study_count()
+  
+dat %>% 
+  filter(study_design == 'Quasi-Experimental' | 
+           study_design == 'Randomized Control Trial',
+         scale_type == 'attitudes') %>%
+  split(.$yes_delay) %>% map(map_robust)
+
+``` 
+
+This difference is not statistically significant.
+```{r atts_behaviors_quasi_rct_diff_in_es}
+dat %>% 
+  filter(study_design == 'Quasi-Experimental' | 
+           study_design == 'Randomized Control Trial',
+         scale_type == 'attitudes') %>%
+  sum_lm(d, yes_delay)
 
 ```
+# A note on clustered study designs
 
-
-### A note on clustered study designs
-
-*paper*: We did not anticipate, however, the quantity of cluster-assigned studies in our sample..
+> In this study's pre-analysis plan, we detailed a search for studies that were either ``purely observational,\ldots quasi-experimental,\ldots or experimental,''defined as featuring random assignment. We did not anticipate, however, the quantity of cluster-assigned studies in our sample (173 of 304 studies, and 54 of 100 featuring random assignment.) 
 
 ```{r cluster_study_redo}
 
-dat %>% group_by(unique_study_id) %>% slice(1) %>% ungroup() %>%
-  count(is.na(.$cluster_type))
-
- dat %>% 
-   filter(ra) %>% 
-   group_by(unique_study_id) %>% 
-   slice(1) %>% ungroup() %>% 
-   count(is.na(.$cluster_type))
-
+dat %>% group_by(cluster_type) %>% study_count()
+dat %>% group_by(cluster_type) %>% study_count()
+  
 ```
 
-*paper*: In practice, there were 10 studies with fewer than 10 clusters, drawn from 8 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from
-```{r reclassify_low_cluster_rcts}
-dat %>%
-  mutate(study_design = if_else(robust_quasi_check == 1,
-                                'rct', 
-                                as.character(study_design))) %>%
-  split(.$study_design) %>%
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
+> In practice, there were 10 studies with fewer than 10 clusters, drawn from 8 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from $\Delta$ = 0.2364 to $\Delta$ = 0.2312, and for quasi-experimental studies, from $\Delta$ = 0.2157 to $\Delta$ = 0.2173.
 
+```{r reclassify_low_cluster_rcts}
+dat |>
+  mutate(study_design = if_else(robust_quasi_check == 1,
+                                'Randomized Control Trial', 
+                                as.character(study_design))) |>
+  split(~study_design) |>
+  map(map_robust)
 ```
 
 ### Synthesizing dichotomous and continuous dependent variables
 
-*paper*: Using the conventional conversion formula from odds ratio to Cohen's d, ATEs that correspond in reductions of incidence from...
+> Using the conventional conversion formula from odds ratio to Cohen's d, ATEs that correspond in reductions of incidence from...
 
 ```{r dip_vs_odds_ratio}
 odds_ratio_to_d(.6, .3)
@@ -257,13 +378,13 @@ Everything that follows is exploratory and not included in the paper or appendix
 ### Plotting
 
 ```{r viz_attempts}
-dat %>% 
-  split(.$study_design) %>% 
+dat |> 
+  split(~study_design) |> 
   map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
                           dot_informative = T))
  
 # overall linear plot
-dat %>% 
+dat |> 
 ggplot(aes(x = se_d, y = d)) +
   geom_point() +
   geom_smooth(method = 'lm') + 
@@ -272,7 +393,7 @@ ggplot(aes(x = se_d, y = d)) +
 dplot(condense = F)
 ## Relationship between attitudes and behaviors 
 
-has_both %>%
+has_both |>
   ggplot(aes(x = mean_d_attitudes, 
              y = mean_d_behavior,
              color = study_design)) +
@@ -281,8 +402,8 @@ has_both %>%
   theme_minimal()
 
 # now same with RCTs, and with study labels
-has_both %>% 
-  filter(study_design == 'rct') %>% 
+has_both |> 
+  filter(study_design == 'rct') |> 
   ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
   geom_point(size = 3, color = 'blue') + 
   geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
@@ -302,11 +423,11 @@ Group results within study
 
 ```{r grouping rbustness checks}
 # robustness check: group by study AND scale_type and average the results
-dat_grouped <- dat %>%
-  group_by(unique_study_id, scale_type) %>%
+dat_grouped <- dat |>
+  group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d),
          mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
+         mean_se_d = mean(se_d)) |>
   slice(1)
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
@@ -318,11 +439,11 @@ rma(yi = d, vi = var_d, data = dat_grouped)
 # once we've grouped by study_id, clustering changes the SE by just 0.0001
 
 # How about not grouping by scale_type/
-dat_grouped_two <- dat %>%
-  group_by(unique_study_id) %>%
+dat_grouped_two <- dat |>
+  group_by(unique_study_id) |>
   mutate(mean_d = mean(d),
          mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) %>%
+         mean_se_d = mean(se_d)) |>
   slice(1)
 
 robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
@@ -346,16 +467,16 @@ robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
 different ways to break down main results:
 ```{r alternate_breakdowns}
 # ra vs not (in paper we break down by study)
-dat %>% 
-  split(list(.$scale_type, .$ra)) %>%   
+dat |> 
+  split(~interaction(scale_type, ra)) |>   
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # We *would* include this next outcome if our behavioral category table 
 # included an 'overall' row
 
-dat %>% 
-  split(.$behavior_type) %>% 
+dat |> 
+  split(~behavior_type) |> 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id)) 
 # this suggests that moving the needle on perpetration is effectively unsolved problem
@@ -367,7 +488,8 @@ table(dat$behavior_type)
 # TODO: triple-check that thesse are right.
 
 # scale type and delay
-dat %>% split(list(.$scale_type,.$yes_delay)) %>% 
+dat |> 
+  split(~interaction(scale_type,yes_delay)) |> 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 ```
@@ -375,8 +497,8 @@ dat %>% split(list(.$scale_type,.$yes_delay)) %>%
 sum_lm() checks that don't make it into the final paper
 
 ```{r sum_lm checks}
-dat %>% 
-  split(.$ra) %>% 
+dat |> 
+  split(~ra) |> 
   map(.f = ~sum_lm(y = d, x = se_d, dat = .))
 
 
@@ -394,9 +516,9 @@ sum_lm(dat, d, scale_type)
 # publication status?
 sum_lm(dat, d, publication_type)
 
-dat %>%
+dat |>
   filter(behavior_type == 'perpetration', 
-         study_design == 'rct') %>% 
+         study_design == 'rct') |> 
   sum_lm(d, se_d)
 ```
 
@@ -418,14 +540,14 @@ cor.test.plus(
 Different ways of assessing effect size change over time
 
 ```{r effect_size_over_time}
-dat %>% ggplot((aes(x = year, y = d))) + 
+dat |> ggplot((aes(x = year, y = d))) + 
   geom_point() +   
   geom_smooth(method = 'lm') + 
   theme_minimal()
 # basically no slope
 
-dat %>% sum_lm(d, year)
-dat %>% split(list(.$ra, .$scale_type)) %>%
+dat |> sum_lm(d, year)
+dat |> split(~interaction(ra, scale_type)) |>
   map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
         geom_point() + 
         geom_smooth(method = 'lm') +
@@ -434,10 +556,10 @@ dat %>% split(list(.$ra, .$scale_type)) %>%
 # these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
 
 # visualizing how little attitudes and behavioral outcomes have changed over time 
-dat %>% 
-  group_by(year, scale_type) %>% 
+dat |> 
+  group_by(year, scale_type) |> 
   summarise(mean_d = mean(d), 
-            mean_se_d = mean(se_d)) %>%
+            mean_se_d = mean(se_d)) |>
   ggplot(aes(x = year, y = mean_d, 
              group = scale_type)) +
   geom_point(aes(color = scale_type)) +
@@ -454,12 +576,12 @@ additional ways to look at rct perp outcomes
 ```{r rct_perp}
 # not a big difference
 
-rct_perp %>% ggplot(mapping = aes(x = delay, y = d)) + 
+rct_perp |> ggplot(mapping = aes(x = delay, y = d)) + 
   geom_point() +
   geom_smooth(method = 'lm') + 
   theme_minimal()
 
-rct_perp %>% filter(delay > 30) %>%
+rct_perp |> filter(delay > 30) |>
 ggplot(mapping = aes(x = se_d, y = d)) + 
   geom_point() +
   geom_smooth(method = 'lm') + 
@@ -469,10 +591,10 @@ ggplot(mapping = aes(x = se_d, y = d)) +
 
 ### Quintile check
 ```{r quintile}
-dat %>% ungroup %>% arrange(n_t_post) %>%
-  mutate(quintile = ntile(n_t_post, 5)) %>% 
-  group_by(unique_paper_id, intervention_name) %>% 
-  split(.$quintile) %>%
+dat |> arrange(n_t_post) |>
+  mutate(quintile = ntile(n_t_post, 5)) |> 
+  group_by(unique_paper_id, intervention_name) |> 
+  split(~quintile) |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
                    cluster = .x$unique_study_id))
 
@@ -483,11 +605,11 @@ what about things that get tested more than once?
 
 ```{r repeat_tests}
 
-dat %>% 
-  filter(intervention_name == "bringing in the bystander") %>% 
-  split(.$scale_type) %>% 
-  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
-              cluster = .$unique_paper_id))
+dat |> 
+  filter(intervention_name == "bringing in the bystander") |> 
+  split(~scale_type) |> 
+  map(~robust(x = rma(yi = ~d,  sei = ~se_d), 
+              cluster = ~unique_paper_id))
 
 ```
 
@@ -511,20 +633,20 @@ dat %>%
 ```{r study_type}
 
 # main body of table
-dat %>%   
-  split(list(.$scale_type, .$study_design)) %>%
+dat |>   
+  split(~interaction(scale_type, study_design)) |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # behavior vs attitudes for the 'overall' row
-dat %>% 
-  split(.$scale_type) %>% 
+dat |> 
+  split(~scale_type) |> 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # study designs for the "overall" column
-dat %>% 
-      split(.$study_design) %>% 
+dat |> 
+      split(~study_design) |> 
       map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 # overall/overall text comes from overall_meta chunk
@@ -535,16 +657,16 @@ dat %>%
 # is on the backburner
 
 # double-check Ns;
-dat %>% group_by(scale_type, study_design) %>% tally()
+dat |> group_by(scale_type, study_design) |> tally()
 ```
 
 *paper* (footnote): "...In keeping with the consistency between available meta-analyses' estimates, we also observe a small, statistically insignificant relationship between effect size and year of publication"
 
 ```{r effect_size_and_pub_year}
-dat %>% sum_lm(y = d, x = year)
+dat |> sum_lm(y = d, x = year)
 
 # this graph isn't in the paper but making sure there's no obvious relationship:
-dat %>%
+dat |>
   ggplot(aes(x = year, y = d, color = study_design)) +
   geom_point(aes(shape = scale_type), size = 3) +
   geom_smooth(aes(group = study_design), method = "lm", se = FALSE) +
@@ -564,16 +686,16 @@ dat %>%
 
 *paper*: Overall, the relationship between days of delay and effect size is diminutive and insignificant ($\beta$ = -0.00023). 
 ```{r d_and_delays}
-dat %>% sum_lm(d,delay)
+dat |> sum_lm(d,delay)
 
 ### by scale_type?
-dat %>%
-  split(.$scale_type) %>% 
+dat |>
+  split(~scale_type) |> 
   map(.f = ~sum_lm(y = d, x = delay, dat = .))
 
 ## What's the longest attitude/behavior delay measurement?
-dat %>%
-  group_by(scale_type) %>%
+dat |>
+  group_by(scale_type) |>
   summarize(max_delay = max(delay))
 ```
 
@@ -582,30 +704,30 @@ dat %>%
 ```{r do_effect_sizes_decay}
 
 # split for delay and behaviors/attitudes 
-dat %>% split(list(.$scale_type, as.factor(.$delay > 0))) %>%
+dat |> split(~interaction(scale_type, as.factor(delay > 0))) |>
                 map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # note: 'overall' behavioral/attitude measurements taken from `overall_results`
 
 # split meta-analysis by delay/not for 'overall' estimates:
-dat %>% split(.$yes_delay) %>% 
+dat |> split(~yes_delay) |> 
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # split for delay and behavioral categories
-dat %>% 
-  split(list(.$behavior_type, .$yes_delay)) %>%
+dat |> 
+  split(~interaction(behavior_type, yes_delay)) |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 ## TODO: revisit these
-dat %>% filter(behavior_type == 'victimization') %>% filter(yes_delay == 'FALSE') %>% select(author, year, paper_title, d, se_d) # really two negative #s? 
+dat |> filter(behavior_type == 'victimization') |> filter(yes_delay == 'FALSE') |> select(author, year, paper_title, d, se_d) # really two negative #s? 
 ## TODO: Maybe work into paper breakdown of behavioral types? 
 table(dat$behavior_type)
 
 # just within RCTs
-dat %>% filter(scale_type == 'behavior') %>% group_by(behavior_type) %>% tally()
+dat |> filter(scale_type == 'behavior') |> group_by(behavior_type) |> tally()
 ```
 
 ## A closer look at behavioral outcomes
@@ -618,17 +740,17 @@ dat %>% filter(scale_type == 'behavior') %>% group_by(behavior_type) %>% tally()
 table(dat$scale_type)
 
 # by study design?
-dat %>% group_by(scale_type, study_design) %>% tally()
+dat |> group_by(scale_type, study_design) |> tally()
 
 # by categories of behavior/attitudes?
-dat %>% group_by(study_design, behavior_type) %>% tally()
+dat |> group_by(study_design, behavior_type) |> tally()
 ```
 
 ### Do behavior outcomes become more likely over time?
 
 ```{r behavioral_outcomes_by_decade}
 range(dat$year)
-dat <- dat %>%
+dat <- dat |>
   mutate(decade = case_when(
     year <= 1989 ~ "1980s",
     year >= 1990 & year <= 1999 ~ "1990s",
@@ -637,18 +759,18 @@ dat <- dat %>%
     TRUE ~ "Other"
   ))
 
-dat %>%  group_by(decade, scale_type) %>%
-  summarize(count = n()) %>% 
+dat |>  group_by(decade, scale_type) |>
+  summarize(count = n()) |> 
     pivot_wider(names_from = scale_type, values_from = count)
 
 # just for curiousity how many *studiess* are in each decade
-dat %>% group_by(unique_paper_id) %>% slice(1) %>% group_by(decade) %>% tally()
+dat |> group_by(unique_paper_id) |> slice(1) |> group_by(decade) |> tally()
 # sanity check
 6 + 63 + 48 + 109 == length(unique(dat$unique_paper_id)) # passed
 # what was the earliest study to measure behavior as we conceive it?
-dat %>% filter(scale_type == 'behavior') %>% 
-  arrange(year) %>% 
-  select(author, year, paper_title) %>% head()
+dat |> filter(scale_type == 'behavior') |> 
+  arrange(year) |> 
+  select(author, year, paper_title) |> head()
 
 
 year_plot <- ggplot(dat, aes(x = year, fill = scale_type)) +
@@ -670,16 +792,16 @@ dev.off()
 *paper*: To assess this, we look at studies that measure both behavioral and attitudinal changes and estimate the average correlation. In the entire universe of studies reporting both types of outcomes, we see an average Pearson's product-moment correlation of 0.14; this is a modest, positive relationship, but with a p-value of  0.278, it is not statistically distinguishable from zero. 
 
 ```{r}
-has_both <- dat %>% 
-  filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
-  group_by(unique_study_id, scale_type) %>%
+has_both <- dat |> 
+  filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
+  group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) %>%
+         mean_se_d = mean(se_d)) |>
   select(author, year, paper_title, unique_study_id, intervention_name,
          study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type) %>%  
-  slice(1) %>% 
+         ra, labels, scale_type) |>  
+  slice(1) |> 
   pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -697,13 +819,13 @@ cor.test(x = has_both$mean_d_attitudes,
 ```{r attitude_behavior_correlation_for_rcts_vs_observational}
 
 # by study type?
-has_both %>% 
-  split(.$study_design) %>%
-  map(~cor.test(.$mean_d_attitudes, .$mean_d_behavior))
+has_both |> 
+  split(~study_design) |>
+  map(~cor.test(~mean_d_attitudes, ~mean_d_behavior))
 
 # not in paper but what's the slope of these lines
-has_both %>%
-  split(.$study_design) %>%
+has_both |>
+  split(~study_design) |>
   map(~sum_lm(y = mean_d_behavior,
               x = mean_d_attitudes, 
               dat = .))
@@ -712,59 +834,59 @@ has_both %>%
 ### Dat for forest plot and sign tests
 
 ```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_final.rds') %>% 
-  select(unique_study_id, scale_type, everything()) %>%
-  filter(study_design == 'rct') %>%
-  group_by(unique_study_id) %>%
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
+dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_final.rds') |> 
+  select(unique_study_id, scale_type, everything()) |>
+  filter(study_design == 'rct') |>
+  group_by(unique_study_id) |>
+         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) %>%
-  group_by(unique_paper_id, scale_type) %>%
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) %>%
-  slice(1) %>%
-  ungroup(scale_type) %>% 
-  mutate(mean_se = mean(se_d)) %>%
-  arrange(mean_se) %>%
-  ungroup() %>%
+                              year, " ", "(", scale_type, ")")) |>
+  group_by(unique_paper_id, scale_type) |>
+  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
+  slice(1) |>
+  ungroup(scale_type) |> 
+  mutate(mean_se = mean(se_d)) |>
+  arrange(mean_se) |>
+  ungroup() |>
   select(study_names, d, se_d, 
          scale_type, unique_paper_id)
 
 # sign test: how many studies have an attitude d that's > behavior d
-dat_for_forest_plot %>%
-  group_by(unique_paper_id) %>%
+dat_for_forest_plot |>
+  group_by(unique_paper_id) |>
   summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) %>%
+            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
     mean_d_attitude > mean_d_behavior ~ "Higher",
     mean_d_attitude == mean_d_behavior ~ "Same",
     mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) %>%
-  count(comparison) %>%
+  )) |>
+  count(comparison) |>
   rename(Comparison = comparison, Count = n)
 binom.test(15, 21, 0.5)
 # now the whole thing but not filtering on RCTs
-readRDS(file = '../data/sa_meta_data_final.rds') %>% 
-  select(unique_study_id, scale_type, everything()) %>%
-  group_by(unique_study_id) %>%
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) %>%
+readRDS(file = '../data/sa_meta_data_final.rds') |> 
+  select(unique_study_id, scale_type, everything()) |>
+  group_by(unique_study_id) |>
+         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) %>%
-  group_by(unique_paper_id, scale_type) %>%
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) %>%
-  slice(1) %>%
-  ungroup(scale_type) %>% 
-  mutate(mean_se = mean(se_d)) %>%
-  arrange(mean_se) %>%
-  ungroup() %>%
-    group_by(unique_paper_id) %>%
+                              year, " ", "(", scale_type, ")")) |>
+  group_by(unique_paper_id, scale_type) |>
+  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
+  slice(1) |>
+  ungroup(scale_type) |> 
+  mutate(mean_se = mean(se_d)) |>
+  arrange(mean_se) |>
+  ungroup() |>
+    group_by(unique_paper_id) |>
   summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) %>%
+            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
     mean_d_attitude > mean_d_behavior ~ "Higher",
     mean_d_attitude == mean_d_behavior ~ "Same",
     mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) %>%
-  count(comparison) %>%
+  )) |>
+  count(comparison) |>
   rename(Comparison = comparison, Count = n)
 binom.test(36, (36 + 12 + 1), 0.5)
 ```
@@ -777,29 +899,29 @@ binom.test(36, (36 + 12 + 1), 0.5)
 
 head(dat_for_forest_plot) # checking we've already created subset (chunk above)
 # overall effect size
-overall_forest <- dat_for_forest_plot %>%
-  split(.$scale_type) %>%
-  map(~robust(x = rma(yi = .$d,  sei = .$se_d), 
-              cluster = .$unique_paper_id))
+overall_forest <- dat_for_forest_plot |>
+  split(~scale_type) |>
+  map(~robust(x = rma(yi = ~d,  sei = ~se_d), 
+              cluster = ~unique_paper_id))
 
 
-dat_for_forest_plot <- dat_for_forest_plot %>% 
+dat_for_forest_plot <- dat_for_forest_plot |> 
   add_row(study_names = "Overall (Attitudes)",
           d = overall_forest[[1]]$beta,
           se_d = overall_forest[[1]]$se,
           scale_type = "attitudes",
-          unique_paper_id = NA) %>%
+          unique_paper_id = NA) |>
   add_row(study_names = "Overall (Behavior)",
           d = overall_forest[[2]]$beta,
           se_d = overall_forest[[2]]$se,
           scale_type = "behavior",
-          unique_paper_id = NA) %>%
-  mutate(index = row_number()) %>%
+          unique_paper_id = NA) |>
+  mutate(index = row_number()) |>
   relocate(index, .before = 1)
   
 # plot 
 
-p <- dat_for_forest_plot %>%
+p <- dat_for_forest_plot |>
   ggplot(aes(y = index, x = d, xmin = d - (1.96 * se_d),
              xmax = d + (1.96 * se_d))) +  
   geom_point(size = 1) +
@@ -844,9 +966,9 @@ dev.off()
 ```{r heterogeneity_study_design_behavior_type}
 # overall estimates
 # first, how many are in each category?
-dat %>% group_by(study_design, behavior_type) %>% tally()
+dat |> group_by(study_design, behavior_type) |> tally()
 # so there are zero pre-post designs that ask about involvement
-dat %>% filter(study_design == 'pre-post', behavior_type == 'involvement') %>% count()
+dat |> filter(study_design == 'pre-post', behavior_type == 'involvement') |> count()
 
 # Two possible solutions to this. 1) group studies into RCT vs non-randomized,
 # and because we specify this in the pre-analysis plan 
@@ -857,26 +979,26 @@ dat %>% filter(study_design == 'pre-post', behavior_type == 'involvement') %>% c
 
 ## I (Seth) am totally forgetting what I was talking about in the 
 ## above comment as of May 31 2023
-dat %>% 
-  split(list(.$ra, .$behavior_type)) %>% 
+dat |> 
+  split(~interaction(ra, behavior_type)) |> 
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 # for 'behavior overall' category (to keep consistent with other tables)
-dat %>% split(list(.$ra, .$scale_type)) %>% 
+dat |> split(~interaction(ra, scale_type)) |> 
    map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
 # Alternative grouping:
 
-dat %>% 
-  mutate(behavior_type = as.character(behavior_type)) %>%
+dat |> 
+  mutate(behavior_type = as.character(behavior_type)) |>
   mutate(behavior_type = if_else(
-  behavior_type == 'bystander', 'involvement', behavior_type)) %>% 
-  split(list(.$study_design, .$behavior_type)) %>%
+  behavior_type == 'bystander', 'involvement', behavior_type)) |> 
+  split(~interaction(study_design, behavior_type)) |>
      map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 # This was trickier than it should have been 
 # https://github.com/ReeceGoding/Frustration-One-Year-With-R#410-factor-variables
 ```
 
-Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat %>% group_by(study_design, behavior_type) %>% summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
+Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat |> group_by(study_design, behavior_type) |> summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
