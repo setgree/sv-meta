@@ -1,0 +1,331 @@
+---
+title: "cutouts"
+output: html_document
+date: "2023-07-11"
+---
+
+## Overall results and (lack of) publication bias
+
+Our random effects meta-analysis of all primary prevention strategies from 1986 to 2018 reveals an overall
+effect size, across all interventions and outcomes, of ∆ = 0.281 (se = 0.024).
+
+
+In our database we find this relationship between effect sizes and standard errors to be weak
+and insignificant: β = 0.145 (se = 0.176), p = .412.
+
+
+econd, the relationship between SE and ∆ remains insignificant within randomized (N = 99, β = 0.208,
+se = 0.256, p = .373) and quasi-experimental (N = 104, β = -0.201, se = 0.393, p = .597) designs, providing
+further evidence to the lack of publication bias within the literature.
+
+
+Our third check for publication bias is to separate the literature into studies published in peer-reviewed
+journals (N = 186) and those that were not (N = 118). O
+
+
+In our sample,
+being unpublished is associated with a small reduction in effect size (β = -0.0467), but not at a statistically
+significant level (p = 0.28). 
+
+
+Within published studies, the relationship between standard errors and ∆ is
+tiny and insignificant (N = 186, β = 0.00302 (se = 0.256), p = .373); 
+
+
+hile the association between the
+two variables is larger in unpublished studies(N = 118, β = 0.5842 (se = 0.360)), the relationship is still
+statistically insignificant (p = 0.106) 
+
+
+## The Meta-Analytic Effect on Behavior and on Attitudes, Beliefs, and Ideas about Sexual Violence
+
+
+The overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022), p = .0013; whereas the overall effect size for mental outcomes is $\Delta$ =  0.367 (se = .03), p $<$ 0.0001. 
+
+We also observe a negligible, statistically insignificant relationship between effect size and year of publication ($\beta$ = 0.004, se = 0.002)
+
+However, while the meta-analytic effect for behavioral outcomes is statistically significant at p $<$ .05 in both randomized and quasi-experimental designs, both don't meet the conventional standard for a `small' effect size ($\Delta$ = 0.2).
+
+
+## Do bystander interventions change behavior?
+
+We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure mental states like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (se = .069), p $<$ .001.  43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest amount $\Delta$ = .15 (se = .056), p = .01.  In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (se = 0.019), p = 0.329or victimization ($\Delta$ =-0.009 (se = .041),  p = .835.
+
+
+
+
+
+### A Closer Look at Behavioral Outcomes
+
+
+## Do changes in Mentalizing Outcomes Predict Behavioral Changes?
+
+## Discussion of quantitative results
+
+```{r}
+dat |> 
+  distinct(unique_study_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+```
+
+```{r}
+dat |> 
+  distinct(unique_paper_id, .keep_all = T) |> 
+  count(setting, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+```
+
+```{r}
+dat |> 
+    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                                           "male and female with group composition not specified", 
+                                                           "male and female in separate groups"), 
+                                    "mixed gender groups",
+                                    participant_sex)) |> 
+  distinct(unique_paper_id, .keep_all = T) |> 
+  count(participant_sex, sort = T) |> 
+  mutate(perc = n / sum(n)) |> 
+  janitor::adorn_totals()
+```
+
+
+
+
+
+
+
+
+```{r}
+dat |>
+  drop_na(study_design) |> 
+  ggplot(aes(x = se_d, y = d)) +
+  geom_point(aes(
+      color = behavior_type,
+      shape = study_design),
+    size = 3
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = F,
+    size = 2
+  ) +
+  #ggtitle("Relationship between effect sizes and standard errors") +
+  labs(
+    x = "Standard errors",
+    y = "Effect size",
+    color = "Outcome type",
+    shape = "Study Design"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+ggsave("../results/d_se.pdf", height = 5)
+
+```
+
+
+
+
+
+
+
+
+Table XX details the distribution of behavioral outcomes within studies that employ observational designs (i.e., quasi-experimental and observational studies) and randomized designs (i.e., experiments and horse-race experiments). 
+```{r}
+dat |> 
+  filter(scale_type == "behavior") |> 
+  distinct(unique_study_id, study_design, behavior_type) |> 
+  count(study_design, behavior_type) |> 
+  pivot_wider(values_from = n, id_cols = behavior_type, names_from = study_design, values_fill = 0) |> 
+  janitor::adorn_totals() |> 
+  kable(format = "latex", booktabs = T)
+```
+
+
+We recovered XXX manuscripts and XXX studies from our search that qualified methodologically and theoretically.
+
+```{r}
+dat |> 
+  select(unique_study_id, unique_paper_id) |> 
+  summarise(n_papers = n_distinct(unique_paper_id),
+            n_studies = n_distinct(unique_study_id))
+```
+
+
+
+### Overview of Studies in the Meta-Analytic Database
+
+```{r }
+dat |> 
+  select(contains("n_")) |> 
+  View()
+
+# average N?
+mean(dat$n_t_post) + mean(dat$n_c_post)
+mean(dat$n_t_pre, na.rm = T) + mean(dat$n_c_pre, na.rm = T)
+
+# participant sex
+table(dat$condition_gender)
+
+## intervention length
+mean(dat$intervention_length, na.rm = T)
+quantile(dat$intervention_length, probs = seq(0, 1, by = 0.2), na.rm = TRUE)
+```
+
+### Meta-Analytic Results
+
+(see 3-sa-meta.Rmd)
+
+
+We found XX studies that measured self-reported behavior.
+```{r}
+dat |> 
+  select(unique_study_id, scale_type) |> 
+  group_by(scale_type) |> 
+  summarise(n_unique_studies = n_distinct(unique_study_id)) 
+```
+
+XX of these studies measured behavior only in the immediate aftermath of the intervention, while xx included long-term measures.  
+```{r}
+dat |> 
+  filter(scale_type == "behavior") |> 
+  select(unique_study_id, delay) |> 
+  drop_na(delay) |> 
+  group_by(unique_study_id) |> 
+  mutate(max_delay = max(delay),
+         only_short_term = max_delay == 0) |> 
+  count(only_short_term) |> 
+  ungroup() |> 
+  count(only_short_term)
+```
+
+To do so, we break down our dataset according to four types of study designs: experimental studies, quasi experimental studies, and observational studies. as presented in Table X, 
+```{r}
+dat |> 
+  select(unique_study_id, scale_type, study_design, d) |> 
+  filter(scale_type == "behavior") |> 
+  group_by(unique_study_id, study_design) |> 
+  summarise(mean_d_by_study_x_design = mean(d)) |> 
+  group_by(study_design) |> 
+  summarise(n = n(),
+            mean_d_by_design = mean(mean_d_by_study_x_design)) |> 
+  kable(digits = 2, format = "latex", booktabs = T) |>
+  kableExtra::kable_styling() 
+```
+
+```{r}
+dat |> 
+  filter(scale_type == "attitudes") |> 
+  distinct(unique_study_id, scale_name) |> 
+  count(scale_name, sort = T) |> 
+  View()
+```
+
+how many studies evaluate rape myths?
+```{r rape_myth_outcome_prevalence}
+dat |>
+  group_by(unique_study_id) |>
+  summarise(
+    myth_var = any(str_detect(scale_name, "myth|IRMA|illinois"))
+  ) |>
+  summarise(
+    myth_count = sum(myth_var),
+    no_myth_count = sum(!myth_var)
+  )
+
+```
+
+what's the distribution of outcome types for bystander interventions
+
+```{r bystander_dv_count}
+
+# filter based on mentioning bystander in either title, description, 
+# intervention name, or program name, or have a stated purpose of "4" (bystander)
+bystander_dat <- dat |>
+  filter(
+    str_detect(paper_title, "bystander") |
+      str_detect(brief_description_of_the_intervention, "bystander") |
+      str_detect(intervention_name, "bystander") |
+      str_detect(program_name, "bystander") |
+      str_detect(stated_purpose, "4")) |>
+    select(author, year, paper_title, unique_study_id, study_design,
+           d, var_d, se_d, 
+           behavior_type, has_both) |>
+  mutate(perp_vict_grouped = case_when(
+    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
+    behavior_type == 'Involvement' ~ 'involvement',
+    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'Bystander' ~ 'Bystander'))
+
+bystander_dat |>  study_count()
+
+bystander_dat |> group_by(behavior_type) |> study_count()
+
+bystander_dat |> group_by(has_both) |> study_count()
+
+bystander_dat |> filter(behavior_type != 'Involvement') |> 
+  split(.$perp_vict_grouped) |> 
+  map(.f = map_robust)
+
+table(bystander_dat$behavior_type)    
+
+# count studies that measure #just bystander behaviors
+bystander_dat |>
+  filter(has_both != 'attitudes') |> group_by(perp_vict_grouped) |> study_count()
+
+# double-check
+bystander_dat_not_just_atts |> 
+  group_by(unique_study_id) |>
+  filter('Bystander' %in% behavior_type & !'perp_vict' %in% perp_vict_grouped) |> ungroup() |> study_count()
+
+
+# what kind of effect sizes are we talking about? 
+bystander_dat |> filter(behavior_type != 'Involvement') |> split(.$behavior_type) |> map(map_robust)
+
+# group perp and vict outcomes together
+
+bystander_dat |> filter(behavior_type != 'Involvement') |> split(.$perp_vict_grouped) |> map(map_robust)
+
+
+# bystander interventions are a product of their time and place
+bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
+  ggplot(aes(x = year)) +
+  geom_line(stat = 'count', color = 'light blue') + 
+  labs(x = "Year", 
+       y = "Count", 
+       title = "Bystander interventions over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 20) +
+  scale_y_continuous(n.breaks = 15) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## BTW an alternate way to do this
+dat |>
+  group_by(unique_study_id) |>
+  summarise(
+    bystander_count = ifelse(
+      any(
+        str_detect(c(
+          brief_description_of_the_intervention, 
+          intervention_name, program_name, paper_title), "bystander")) |
+        any(str_detect(stated_purpose, "4")),
+      TRUE, FALSE)
+  ) |> 
+  summarise(
+    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
+    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
+  )
+
+
+
+
+```
