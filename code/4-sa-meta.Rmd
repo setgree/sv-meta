@@ -140,6 +140,95 @@ dat |>
 # and then eventually a function which just takes dat as its input?
 ```
 
+\subsection{Do bystander interventions Change Behavior?}
+
+We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure ideas about sexual violence like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.001.  43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01.  In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329 or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835. This suggests, unfortunately, that nearly 1 in 3 studies in our database is pursuing a theory of behavioral change that is not grounded in reality.
+
+```{r bystander_dv_count}
+
+# filter based on mentioning bystander in either title, description, 
+# intervention name, or program name, or have a stated purpose of "4" (bystander)
+bystander_dat <- dat |>
+  filter(
+    str_detect(paper_title, "bystander") |
+      str_detect(brief_description_of_the_intervention, "bystander") |
+      str_detect(intervention_name, "bystander") |
+      str_detect(program_name, "bystander") |
+      str_detect(stated_purpose, "4")) |>
+    select(author, year, paper_title, unique_study_id, study_design,
+           d, var_d, se_d, 
+           behavior_type, has_both, country) |>
+  mutate(perp_vict_grouped = case_when(
+    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
+    behavior_type == 'Involvement' ~ 'involvement',
+    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'Bystander' ~ 'Bystander'))
+
+bystander_dat |>  study_count()
+
+bystander_dat |> group_by(behavior_type) |> study_count()
+
+bystander_dat |> group_by(has_both) |> study_count()
+
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% 
+  split(.$perp_vict_grouped) %>% 
+  map(.f = map_robust)
+
+table(bystander_dat$behavior_type)    
+
+# count studies that measure #just bystander behaviors
+bystander_dat |>
+  filter(has_both != 'attitudes') |> group_by(perp_vict_grouped) |> study_count()
+
+# double-check -- define this object (it got lost)
+# bystander_dat_not_just_atts |> 
+#   group_by(unique_study_id) |>
+#   filter('Bystander' %in% behavior_type & !'perp_vict' %in% perp_vict_grouped) |> ungroup() |> study_count()
+
+
+# what kind of effect sizes are we talking about? 
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$behavior_type) %>% map(map_robust)
+
+# group perp and vict outcomes together
+
+bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$perp_vict_grouped) %>% map(map_robust)
+
+# bystander interventions are a product of their time and place
+bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
+  ggplot(aes(x = year)) +
+  geom_line(stat = 'count', color = 'light blue') + 
+  labs(x = "Year", 
+       y = "Count", 
+       title = "Bystander interventions over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 20) +
+  scale_y_continuous(n.breaks = 15) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## BTW an alternate way to do this
+dat |>
+  group_by(unique_study_id) |>
+  summarise(
+    bystander_count = ifelse(
+      any(
+        str_detect(c(
+          brief_description_of_the_intervention, 
+          intervention_name, program_name, paper_title), "bystander")) |
+        any(str_detect(stated_purpose, "4")),
+      TRUE, FALSE)
+  ) |> 
+  summarise(
+    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
+    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
+  )
+
+# where do bystander interventions occur
+bystander_dat %>% group_by(country) %>% study_count()
+```
+
+
+
 # Attitudinal Change exceeds behavioral change in every category of study
 
 In our sample, attitudinal outcomes outnumber behavioral outcomes by 355 to 145. 207 studies measure attitudes only, 36 measure only behaviors, while 61 measure both. 
@@ -296,6 +385,7 @@ cor.test(x = has_both_reshaped$mean_d_attitudes,
 ```
 
 We find broadly similar results when looking at just at RCTs; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both attitudes and either victimization or perpetration outcomes ($\rho$ (42) = 0.153, p = 0.322); and, finally, within RCTs that measure attitudes as well as either victimization or perpetration outcomes ($\rho$ (59) = 0.141, p = 0.279).
+
 ```{r attitude_behavior_correlation_subsets}
 # RCTs only?
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
@@ -360,7 +450,7 @@ dat |>
               se = FALSE,
               color = 'grey') +
   labs(#title = "Correlation between attitudinal and behavioral change",
-       x = "Effect size (attitudes)",
+       x = "Effect size (ideas)",
        y = "Effect size (behaviors)",
        color = "Study Design") +
   guides(color = guide_legend(title = "Study Design")) +
