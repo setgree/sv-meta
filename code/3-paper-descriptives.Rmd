@@ -14,7 +14,8 @@ editor_options:
   chunk_output_type: console
 ---
 
-
+### set up
+knitr options, libraries, and load data
 ```{r echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       cache = FALSE,
@@ -22,28 +23,21 @@ knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE, 
                       results = 'markup')
 
-
-library(tidyverse)
-library(ggtext)
-library(patchwork)
-library(ggthemes)
+library(dplyr)
+library(forcats)
 library(ggrepel)
-library(knitr) 
-library(kableExtra)
+library(ggtext)
+library(ggthemes)
 library(janitor)
-library(scales)
+library(kableExtra)
+library(knitr) 
 library(metafor)
+library(patchwork)
+library(scales)
+library(stringr)
+library(tidyr)
 
-source('./functions/study_count.R')
-source('./functions/map_robust.R')
-
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
-  mutate(
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) |>
-  ungroup()
+dat <- readRDS(file = '../data/sa_meta_data_final.rds')
 ```
 
 # The Problem of Sexual Violence
@@ -156,7 +150,7 @@ tt_overall     |>
     col = NULL
   )
 
-ggsave("results/tt_studies.pdf", height = 5)
+ggsave("../results/in-paper-figures/tt_studies.pdf", height = 5)
 ```
 
 We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
@@ -281,7 +275,7 @@ dat_participant_sex <- dat |> # participant sex lines
 
 country_fig / setting_fig / tt_gender_fig
 
-ggsave("results/descriptive.pdf", width = 7, height = 7)
+ggsave("../results/in-paper-figures/descriptive.pdf", width = 7, height = 7)
 ```
 
 
@@ -447,7 +441,7 @@ dat |>
     legend.position = "bottom"
   )
 
-ggsave("results/tt_att_beh.pdf", height = 5)
+ggsave("../results/in-paper-figures/tt_att_beh.pdf", height = 5)
 ```
 
 
@@ -480,7 +474,7 @@ dat |>
     legend.box = "vertical"
   )
 
-ggsave("results/tt_beh_type.pdf", height = 5)
+ggsave("../results/in-paper-figures/tt_beh_type.pdf", height = 5)
 ```
 
 
@@ -535,5 +529,5 @@ dat |>
     legend.box = "vertical"
   )
 
-ggsave("results/att_beh_corr.pdf", width = 7.2, height = 7.2)
+ggsave("../results/in-paper-figures/att_beh_corr.pdf", width = 7.2, height = 7.2)
 ```
