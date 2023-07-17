@@ -223,7 +223,8 @@ dat |> #
   distinct(unique_study_id, .keep_all = T) |> 
   count(setting, sort = T) |> 
   drop_na(setting) |> 
-  mutate(perc = n / sum(n)) |>
+  mutate(setting = fct_rev(fct_reorder(setting, n)), 
+         perc = n / sum(n)) |>
   ggplot(aes(setting, n, fill = setting)) +
   geom_col() +
   scale_fill_manual(values = ggthemes::tableau_color_pal('Tableau 10')(6)) +
@@ -421,7 +422,7 @@ Fig 3 displays the relationship between these outcomes over time.
 
 ```{r fig_tt_att_beh}
 dat |> 
-  mutate(scale_type = str_to_title(ifelse(scale_type == "attitudes", "mentalizing", "behavior"))) |> 
+  mutate(scale_type = str_to_title(ifelse(scale_type == "attitudes", "ideas", "behavior"))) |> 
   distinct(year, unique_study_id, scale_type) |> 
   count(year, scale_type) |> 
   add_row(year = 1985, scale_type = "Behavior") |> 
@@ -457,19 +458,18 @@ behavioral outcomes that fall into four categories: perpetration, victimization,
 ```{r}
 dat |>
   filter(behavior_type != "Attitude") |> 
-  distinct(unique_study_id, year, behavior_type) |> 
-  count(year, behavior_type) |> 
-  add_row(year = 1985:1990, behavior_type = "Involvement") |> # start at 0 for all behaviors. here i use arbitrary behavior 
-  complete(year, behavior_type, fill = list(n = 0)) |> 
-  ggplot(aes(x = year, y = n, color = behavior_type)) +
+  distinct(unique_study_id, decade, behavior_type) |> 
+  count(decade, behavior_type) |> 
+  complete(decade, behavior_type, fill = list(n = 0)) |> 
+  ggplot(aes(x = decade, y = n, color = behavior_type, group = behavior_type)) +
   geom_line(size = 3) + 
   labs(x = NULL, 
        y = "# of studies", 
        col = NULL) +
-  scale_x_continuous(
-    limits = c(1985, 2018),
-    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
-  ) +
+  # scale_x_continuous(
+  #   limits = c(1985, 2018),
+  #   breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  # ) +
   scale_color_manual(values = ggthemes::stata_pal("s1color")(4)) +
   theme_bw() +
     theme(
