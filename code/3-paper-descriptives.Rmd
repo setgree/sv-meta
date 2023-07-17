@@ -150,7 +150,7 @@ tt_overall     |>
     col = NULL
   )
 
-ggsave("../results/in-paper-figures/tt_studies.pdf", height = 5)
+ggsave("../results/figures/tt_studies.pdf", height = 5)
 ```
 
 We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
@@ -275,7 +275,7 @@ dat_participant_sex <- dat |> # participant sex lines
 
 country_fig / setting_fig / tt_gender_fig
 
-ggsave("../results/in-paper-figures/descriptive.pdf", width = 7, height = 7)
+ggsave("../results/figures/descriptive.pdf", width = 7, height = 7)
 ```
 
 
@@ -441,7 +441,7 @@ dat |>
     legend.position = "bottom"
   )
 
-ggsave("../results/in-paper-figures/tt_att_beh.pdf", height = 5)
+ggsave("../results/figures/tt_att_beh.pdf", height = 5)
 ```
 
 
@@ -474,7 +474,7 @@ dat |>
     legend.box = "vertical"
   )
 
-ggsave("../results/in-paper-figures/tt_beh_type.pdf", height = 5)
+ggsave("../results/figures/tt_beh_type.pdf", height = 5)
 ```
 
 
@@ -529,5 +529,5 @@ dat |>
     legend.box = "vertical"
   )
 
-ggsave("../results/in-paper-figures/att_beh_corr.pdf", width = 7.2, height = 7.2)
+ggsave("../results/figures/att_beh_corr.pdf", width = 7.2, height = 7.2)
 ```
