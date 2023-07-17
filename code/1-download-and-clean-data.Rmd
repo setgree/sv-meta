@@ -314,9 +314,10 @@ table(raw_dat$condition_gender)
 # participant sex
 raw_dat$participant_sex <- factor(raw_dat$participant_sex,
                                   levels = 1:7,
-                                  labels = c("only male", "only female", 
-                                             "male and female in mixed groups", "
-                                             male and female in separate groups",
+                                  labels = c("only male", 
+                                             "only female", 
+                                             "male and female in mixed groups", 
+                                             "male and female in separate groups",
                                              "male and female with group composition not specified",
                                              "not specified", "general population"))
 

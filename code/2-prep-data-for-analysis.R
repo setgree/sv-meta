@@ -52,7 +52,6 @@ dat_clean <- dat |>
   )) |>
   mutate(se_d = sqrt(var_d))
 
-
 # add in other useful variables
 dat_to_save <- dat_clean |>
   mutate(
@@ -85,17 +84,17 @@ dat_to_save <- dat_clean |>
       "Randomized Control Trial",
       "Quasi-Experimental",
       "Observational")),
-    behavior_type = str_to_title(behavior_type),
-    attitudes_behaviors = case_when(
-      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
-      scale_type == 'attitudes' ~ 1,
-      scale_type == 'behavior' ~ 2)) |>
+    behavior_type = str_to_title(behavior_type)) %>%
   group_by(unique_study_id) |>
   mutate(
     has_both = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 'both',
       scale_type == 'attitudes' ~ 'attitudes',
-      scale_type == 'behavior' ~ 'behavior')) |>
+      scale_type == 'behavior' ~ 'behavior'),
+    attitudes_behaviors = case_when(
+      all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
+      scale_type == 'attitudes' ~ 1,
+      scale_type == 'behavior' ~ 2)) |>
   ungroup()
 
 saveRDS(object = dat_to_save, file = '../data/sa_meta_data_final.rds')

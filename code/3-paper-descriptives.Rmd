@@ -16,14 +16,14 @@ editor_options:
 
 ### set up
 knitr options, libraries, and load data
-```{r echo=FALSE}
+```{r setup, echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       cache = FALSE,
                       message = FALSE,
                       warning = FALSE, 
                       results = 'markup')
 
-library(dplyr)
+library(dplyr, warn.conflicts = F)
 library(forcats)
 library(ggrepel)
 library(ggtext)
@@ -31,11 +31,10 @@ library(ggthemes)
 library(janitor)
 library(kableExtra)
 library(knitr) 
-library(metafor)
 library(patchwork)
 library(scales)
 library(stringr)
-library(tidyr)
+library(tidyr, quietly = T)
 
 dat <- readRDS(file = '../data/sa_meta_data_final.rds')
 ```
@@ -44,7 +43,7 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds')
 
 Our present review provides empirical results from 13 countries
 
-```{r}
+```{r unique_countries}
 length(unique(dat$country))
 ```
 
@@ -53,7 +52,7 @@ length(unique(dat$country))
 
 Table 1 details the number of papers for each study design.
 
-```{r}
+```{r table_one}
 dat |> 
   distinct(unique_paper_id, unique_study_id, study_design) |> 
   group_by(study_design) |> 
@@ -65,8 +64,7 @@ dat |>
 
 # Overview of the Studies in the Meta-Analytic Database
 
-The database
-spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
+The database spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
 
 ```{r years_and_countries}
 dat |> 
@@ -80,7 +78,7 @@ dat |>
 
 Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
 
-```{r}
+```{r avg_study_size}
 dat |> 
   group_by(unique_study_id) |> 
   summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
@@ -90,10 +88,9 @@ dat |>
 ```
 
 
-
 In addition, 30% percent of these studies test primary prevention efforts that span more than one day.
 
-```{r}
+```{r perc_greater_1_day}
 dat |>
   distinct(unique_study_id, intervention_length) |> 
   mutate(intervention_length = ifelse(intervention_length > 1, 1, 0)) |> 
@@ -101,7 +98,8 @@ dat |>
 ```
 
 
-```{r}
+### number of studies over time
+```{r studies_over_time}
 tt_overall = dat |> # overall line
       group_by(year) |>
       summarise(n = n_distinct(unique_study_id)) |>
@@ -156,38 +154,35 @@ ggsave("../results/figures/tt_studies.pdf", height = 5)
 We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
 come from various places around the world, including Canada, Europe, and Africa.
 
-
-```{r}
+```{r country_distribution}
 dat |> 
   distinct(unique_study_id, country) |> 
   count(country, sort = T) |> 
-  mutate(perc = n / sum(n))
+  mutate(perc = round(n / sum(n), 3))
 ```
 
+Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted in the workplace, and 2% in community settings. 
 
-Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent
-focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted
-in the workplace, and 2% in community settings. 
-
-```{r}
+```{r study_settings}
 dat |> 
   distinct(unique_study_id, setting) |> 
   count(setting, sort = T) |> 
-  mutate(perc = n / sum(n))
+  mutate(perc = round(n / sum(n), 3))
 ```
 
 
 In fact, 61% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
-```{r}
+```{r gender_breakdown}
 dat |> # 
-      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                                             "male and female with group composition not specified", 
-                                                             "male and female in separate groups"), 
-                                      "mixed gender groups", 
-                                      participant_sex)) |>
-      distinct(unique_study_id, participant_sex) |>
+  mutate(participant_sex = 
+           ifelse(participant_sex %in% c("male and female in mixed groups", 
+                                         "male and female with group composition not specified", 
+                                         "male and female in separate groups"),
+                  "mixed gender groups", 
+                  participant_sex)) |>
+  distinct(unique_study_id, participant_sex) |>
   count(participant_sex, sort = T) |> 
-  mutate(perc = n / sum(n))
+  mutate(perc = round(n / sum(n), 3))
 ```
 
 
@@ -279,12 +274,12 @@ ggsave("../results/figures/descriptive.pdf", width = 7, height = 7)
 ```
 
 
-## Zeitgeist Programs
+# Zeitgeist Programs
 
 ### The first 15 Years
 
 In the first 15 years, we find 110 studies reported in 77 manuscripts (constituting 36% of our database). 
-```{r}
+```{r early_years_study_count}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
   summarise(n_manuscript = n_distinct(unique_paper_id),
@@ -299,9 +294,8 @@ dat |>
 ```
 
 
-
 This is also apparent when looking at the type of publication; while 56 of these studies are journal articles, 54 are dissertations
-```{r}
+```{r early_years_published_dissertation_breakdown}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
   distinct(unique_study_id, publication_type) |> 
@@ -309,19 +303,17 @@ dat |>
 ```
 
 
-
 The majority of these studies are laboratory studies (n = 61) as opposed to field studies (n = 49) that encompass the larger programmatic evaluations that dominate the next generation of studies.
-```{r}
+```{r early_years_lab_field} 
 dat |> 
   filter(between(year, 1985, 2000)) |> 
   distinct(unique_study_id, lab_field, publication_type) |> 
   count(lab_field)
 ```
 
-
 These studies tend to be smaller than the next generation of studies (with an average of 188 participants)
 
-```{r}
+```{r early_years_study_size}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
   group_by(unique_study_id) |> 
@@ -332,7 +324,7 @@ dat |>
 
 
 which constitute 56\% of all studies in this time frame), but a relatively high number of studies that target only men (32 studies, which constitute 29\% of all studies in this time frame).
-```{r}
+```{r early_years_gender_breakdown}
 dat |> 
   filter(between(year, 1985, 2000)) |> 
       mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
@@ -347,8 +339,9 @@ dat |>
 
 ## Trends in Measurement in the Database
 
-Overall, mentalizing outcomes outnumber behavioral outcomes in our sample by 355 to 145. 
-```{r}
+outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 355 to 145. 
+
+```{r ideas_vs_behavior_outcome_count}
 dat |> 
   select(scale_type) |> 
   group_by(scale_type) |> 
@@ -356,7 +349,7 @@ dat |>
 ```
 
 
-207 studies measure mentalizing outcomes only; 
+207 measure outcomes about ideas only
 ```{r}
 dat |> 
   select(unique_study_id, scale_type) |> 
@@ -392,9 +385,8 @@ dat |>
 ```
 
 
-While in the first 15 years, the ratio between mentalizing outcomes and behavior outcomes was
-roughly 1 to 4, after 2010 this ratio drops to 1 to 1.5.
-```{r}
+While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was roughly 1:5, 
+```{r early_years_ratio_between_ideas_and_beahvior_outcomes}
 dat |> 
   filter(between(year, 1985, 2000)) |>
   count(scale_type) |> 
@@ -402,8 +394,8 @@ dat |>
   mutate(ratio = attitudes/behavior)
 ```
 
-after 2010 [the ratio between mentalizing outcomes and behavior outcomes] drops to 1 to 1.4.
-```{r}
+after 2010 this ratio drops to 1:1.4. 
+```{r post_2010_ratio_ideas_behavvior}
 dat |> 
   filter(year > 2010) |>
   count(scale_type) |> 
@@ -449,7 +441,7 @@ ggsave("../results/figures/tt_att_beh.pdf", height = 5)
 
 behavioral outcomes that fall into four categories: perpetration, victimization, bystander, and involvement. Figure XX demonstrates the trends over time in these measurements.
 
-```{r}
+```{r behavioral_outcomes_by_decade}
 dat |>
   filter(behavior_type != "Attitude") |> 
   distinct(unique_study_id, decade, behavior_type) |> 
@@ -474,14 +466,14 @@ dat |>
     legend.box = "vertical"
   )
 
-ggsave("../results/figures/tt_beh_type.pdf", height = 5)
+ggsave("../results/figures/tt_beh_type.pdf")
 ```
 
 
 ## Measuring Mentalizing
 
-Overall these and other myth measures constitute 56% of the mentalizing measures we coded
-```{r}
+Overall these and other myth measures constitute 56% of the measures we coded that assessed ideas about sexual violence
+```{r myth_percentage}
 dat |> 
   select(scale_name, behavior_type) |> 
   filter(behavior_type == "Attitude") |> 
@@ -491,43 +483,3 @@ dat |>
   mutate(perc = n / sum(n))
 ```
 
-```{r}
-dat |> 
-  filter(has_both == 'both') |> 
-  drop_na(study_design) |> 
-  group_by(author, year, study_design, unique_study_id, scale_type) |>
-  summarise(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) |> 
-  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
-  ggplot(aes(x = mean_d_attitudes,
-             y = mean_d_behavior)) + 
-  geom_point(aes(color = study_design),
-             size = 3) + 
-  geom_abline(slope = 1, 
-              lty = 'dashed',
-              size = 2) +
-  geom_smooth(lty = "dashed", 
-              method = "lm", 
-              se = FALSE,
-              color = 'grey',
-              size = 2) +  
-  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
-  labs(x = "Effect size (Mentalizing)",
-       y = "Effect size (Behaviors)",
-       color = NULL) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 14),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-
-ggsave("../results/figures/att_beh_corr.pdf", width = 7.2, height = 7.2)
-```
