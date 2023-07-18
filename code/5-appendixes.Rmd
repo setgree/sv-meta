@@ -17,24 +17,15 @@ library(lubridate)
 library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
-library(purrr)
+library(purrr, warn.conflicts = F)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 
-source('./functions/dplot.R')
 source('./functions/sum_lm.R')
 source('./functions/dip_calc.R')
 source('./functions/odds_ratio_to_d.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
-# NOTE ON SUM_LM: 
-# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d))
-
-
-# NOTE ON map_robust:
-# consolidates metafor::robust() into just
-# the key things we report in the paper
-#                                          data = dat))$coefficients`
 ```
 
 ```{r load_data, include=F, echo=F}
@@ -92,19 +83,19 @@ rma(yi = d, vi = var_d, data = dat)
  Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.331 (se = 0.028), p < .0001,
 ```{r collapse_individual_ds}
 
-dat %>% group_by(unique_study_id) %>%
+dat |> group_by(unique_study_id) |>
   mutate(d = mean(d),
-         var_d = mean(var_d)) %>%
-  slice(1) %>%
+         var_d = mean(var_d)) |>
+  slice(1) |>
   map_robust()
 ```
 
-while averaging $\Delta$ within each study's behavioral and mentalizing outcomes separately leads to $\Delta$ = 0.307
+while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.307
 ```{r collapse_ds_within_study_and_scale_type}
-dat %>% group_by(unique_study_id, scale_type) %>%
+dat |> group_by(unique_study_id, scale_type) |>
   mutate(d = mean(d),
-         var_d = mean(var_d)) %>%
-  slice(1) %>%
+         var_d = mean(var_d)) |>
+  slice(1) |>
   map_robust()
 ```
 
@@ -113,29 +104,29 @@ dat %>% group_by(unique_study_id, scale_type) %>%
 
 ```{r quintile_check}
 # what are the quantiles
-dat %>% group_by(quantile_var) %>% 
+dat |> group_by(quantile_var) |> 
   summarise(min_n = min(n_t_post + n_c_post),
             max_n = max(n_t_post + n_c_post))
 
-dat %>% 
-  split(.$quantile_var) %>% map(.f = map_robust)
+dat |> 
+  split(~quantile_var) |> map(.f = map_robust)
   
 ## well it's not *nothing*...but it's pretty small
-dat %>% sum_lm(y = d, x = quantile_var) # it's basically nothing
+dat |> sum_lm(y = d, x = quantile_var) # it's basically nothing
 ```
 
 Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121.
 
 ```{r d_and_delays}
 
-dat %>% sum_lm(y = d, x = delay)
+dat |> sum_lm(y = d, x = delay)
 
 table(dat$yes_delay)
 
-dat %>% sum_lm(d, yes_delay)
+dat |> sum_lm(d, yes_delay)
 ## What's the longest attitude/behavior delay measurement?
-dat %>%
-  group_by(scale_type) %>%
+dat |>
+  group_by(scale_type) |>
   summarize(max_delay = max(delay))
 ```
 
@@ -192,14 +183,14 @@ dat |>
 
 ```{r behavioral_attenuation_by_study_design}
 # N of studies
-dat %>% 
-  filter(scale_type == 'behavior') %>%
-  group_by(study_design, yes_delay) %>% 
+dat |> 
+  filter(scale_type == 'behavior') |>
+  group_by(study_design, yes_delay) |> 
   study_count()
 
-dat %>%
-  filter(scale_type == 'behavior') %>%
-  split(~interaction(study_design, yes_delay)) %>%
+dat |>
+  filter(scale_type == 'behavior') |>
+  split(~interaction(study_design, yes_delay)) |>
   map(map_robust)
 
 ```
@@ -213,20 +204,20 @@ See above table.
 
 ```{r perp_rcts_short_long_term}
 
-dat %>% filter(behavior_type == 'Perpetration',
-               study_design == 'Randomized Control Trial') %>%
-  group_by(yes_delay) %>% study_count()
+dat |> filter(behavior_type == 'Perpetration',
+               study_design == 'Randomized Control Trial') |>
+  group_by(yes_delay) |> study_count()
 
 # what is the one RCt with short-term perpetration measurement
-short_term_rct_perp <- dat %>% filter(behavior_type == 'Perpetration',
+short_term_rct_perp <- dat |> filter(behavior_type == 'Perpetration',
                study_design == 'Randomized Control Trial', 
-               yes_delay == F) %>% 
+               yes_delay == F) |> 
   select(author, year, intervention_name, scale_name, delay, d, se_d)
 
 # average effect size for the remaining studies
-dat %>% filter(behavior_type == 'Perpetration',
+dat |> filter(behavior_type == 'Perpetration',
                study_design == 'Randomized Control Trial',
-               yes_delay == T) %>%
+               yes_delay == T) |>
   map_robust()
 ```
 > Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
@@ -237,17 +228,17 @@ Within randomized and quasi-experimental designs,  103 studies measure attitudin
 
 ```{r attitudes_behaviors_quasi_random_delay_yes_no}
 
- dat %>% 
+ dat |> 
   filter(study_design == 'Quasi-Experimental' | 
            study_design == 'Randomized Control Trial',
-         scale_type == 'attitudes') %>%
-  group_by(yes_delay) %>% study_count()
+         scale_type == 'attitudes') |>
+  group_by(yes_delay) |> study_count()
   
-dat %>% 
+dat |> 
   filter(study_design == 'Quasi-Experimental' | 
            study_design == 'Randomized Control Trial',
-         scale_type == 'attitudes') %>%
-  split(.$yes_delay) %>% map(map_robust)
+         scale_type == 'attitudes') |>
+  split(~yes_delay) |> map(map_robust)
 
 ``` 
 
@@ -258,8 +249,8 @@ dat %>%
 
 ```{r cluster_study_redo}
 
-dat %>% group_by(cluster_type) %>% study_count()
-dat %>% group_by(cluster_type) %>% study_count()
+dat |> group_by(cluster_type) |> study_count()
+dat |> group_by(cluster_type) |> study_count()
 ```
 
 > In practice, there were 10 studies with fewer than 10 clusters, drawn from 8 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from $\Delta$ = 0.2364 to $\Delta$ = 0.2312, and for quasi-experimental studies, from $\Delta$ = 0.2157 to $\Delta$ = 0.2173.

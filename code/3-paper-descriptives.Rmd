@@ -470,7 +470,7 @@ ggsave("../results/figures/tt_beh_type.pdf")
 ```
 
 
-## Measuring Mentalizing
+## Measuring ideas
 
 Overall these and other myth measures constitute 56% of the measures we coded that assessed ideas about sexual violence
 ```{r myth_percentage}
@@ -482,4 +482,3 @@ dat |>
   summarise(n = n()) |> 
   mutate(perc = n / sum(n))
 ```
-

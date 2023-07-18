@@ -170,8 +170,8 @@ bystander_dat |> group_by(behavior_type) |> study_count()
 
 bystander_dat |> group_by(has_both) |> study_count()
 
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% 
-  split(.$perp_vict_grouped) %>% 
+bystander_dat |> filter(behavior_type != 'Involvement') |> 
+  split(~perp_vict_grouped) |> 
   map(.f = map_robust)
 
 table(bystander_dat$behavior_type)    
@@ -187,11 +187,11 @@ bystander_dat |>
 
 
 # what kind of effect sizes are we talking about? 
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$behavior_type) %>% map(map_robust)
+bystander_dat |> filter(behavior_type != 'Involvement') |> split(~behavior_type) |> map(map_robust)
 
 # group perp and vict outcomes together
 
-bystander_dat %>% filter(behavior_type != 'Involvement') %>% split(.$perp_vict_grouped) %>% map(map_robust)
+bystander_dat |> filter(behavior_type != 'Involvement') |> split(~perp_vict_grouped) |> map(map_robust)
 
 # bystander interventions are a product of their time and place
 bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
@@ -224,7 +224,7 @@ dat |>
   )
 
 # where do bystander interventions occur
-bystander_dat %>% group_by(country) %>% study_count()
+bystander_dat |> group_by(country) |> study_count()
 ```
 
 
