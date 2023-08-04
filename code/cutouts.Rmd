@@ -1623,3 +1623,23 @@ dat |>
 
 ggsave("../results/supplementary-figures//att_beh_corr.pdf", width = 7.2, height = 7.2)
 ```
+
+
+# Figure 1
+```{r figure_1}
+
+dat |> ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```

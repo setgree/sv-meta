@@ -286,3 +286,6 @@ ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 # our overall average
 dip_calc(0.05, 0.015)
 ```
+
+
+Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).

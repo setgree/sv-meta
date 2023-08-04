@@ -48,7 +48,8 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
 
 ### Overall results and publication bias 
 
-*paper*: "Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001."
+> Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
+
 ```{r overall_meta}
 dat |> map_robust()
 
@@ -58,32 +59,13 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 ```
 
 
-# Figure 1
-```{r figure_1}
-
-dat |> ggplot(mapping = aes(y = d, 
-                             x = se_d)) + 
-  geom_point(aes(color = behavior_type,
-             shape = study_design),
-             size = 3) + 
-  stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relationship between effect sizes and standard errors") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5))
-
-```
-
-"First, we do not observe a significant relationship between effect sizes and standard errors: $\beta$ = 0.145 (se = 0.176),  p = 0.411"
+> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.145 (SE = 0.176), p = 0.412.
 
 ```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
 
-"Second, the relationship between SE and $\Delta$ remains insignificant within randomized (N = XXX) and quasi-experimental (N = XXX) designs, but highly significant within observational designs (N = XXX)"
+> Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 99, $\beta$ = 0.208, SE = 0.256, p = .373) and quasi-experimental (N = 104, $\beta$ = -0.201, SE = 0.393, p = .597) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 102, $\beta$ = 2.228, SE = 0.64, p $<$ .001), suggesting some publication bias within these studies. 
 
 ```{r publication_bias_by_study_design}
 # Ns
@@ -96,10 +78,9 @@ dat |>
   map(.f = ~sum_lm(y = d, x = se_d, dat = .)) # can just do `map(.f = ~sum_lm())
 ```
 
-"Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 186) and those not (N = 118)."
+> Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 186) and those that were not (N = 118). 
 
 ```{r published_vs_unpubished}
-
 dat |> 
   group_by(published_unpublished) |> 
     study_count()
@@ -108,19 +89,21 @@ dat |>
 length(unique(dat$unique_study_id)) == 186 + 118
 ```
 
- In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0467), but not at a statistically significant level (p = 0.28).
- 
+> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0467), but not at a statistically significant level (p = 0.28) 
+
 ```{r publish_relationship_or_not}
 dat |> sum_lm(d, published_unpublished)
+```
 
-# Difference in relationship by published and unpublished
+> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant  (N = 186, $\beta$ = 0.00302  (SE = 0.256), p = .373); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.5842 (SE = 0.360)), the relationship is still statistically non-significant (p = 0.106).
+
+```{r publish_unpublish_split_effect_size_standard_error}
+
 dat |> split(~published_unpublished) |> map(sum_lm)
 
 dat |> split(~published_unpublished) |> map(map_robust)
 ```
 
-
-Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).
 
 However,  when pooling all effects, we observe that results vary both significantly and substantively by study design. 
 
