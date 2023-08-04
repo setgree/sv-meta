@@ -9,13 +9,11 @@ editor_options:
 
 ### Overview
 
-This document will work through our results, and its aim is to both reflect the pre-analyis plan as it was written in 2018 and the most up-to-date version of the text. Everything in our pre-analysis plan will be included in either the main results section or an appendix, but not necessarily in the order it was drafted up.
-
-This document will precede chunks with quotes prepended either a "*paper*" or a "*pap*" to denote whether the text is from the paper or the pre-analysis plan.
+This document works through our results section. Each chunk corresponds to, and is preceded by, a quantitative claim in the results section. 
 
 ## Setup
 
-### load libraries
+### libraries and functions
 
 ```{r setup, include=F, echo=F}
 rm(list = ls())
