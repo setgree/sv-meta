@@ -20,3 +20,7 @@ Rscript -e "rmarkdown::render('./4-sa-meta.Rmd',
 # step 5: appendixes
 Rscript -e "rmarkdown::render('./5-appendixes.Rmd',
   output_dir = '../results', clean = T)"
+  
+  # step 6: exploratory analyses
+Rscript -e "rmarkdown::render('./6-exploratory-analyses.Rmd',
+  output_dir = '../results', clean = T)"

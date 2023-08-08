@@ -165,7 +165,7 @@ bystander_dat |> filter(behavior_type == 'Attitude') |> map_robust()
 
 ```
 
-> 43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01. In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329 or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835. This suggests, unfortunately, that nearly 1 in 3 studies in our database is pursuing a theory of behavioral change that is not grounded in reality.
+> 43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01. In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329) or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835).
 
 ```{r bystander_dv_count}
 bystander_dat |> group_by(scale_type) |> study_count()
@@ -181,117 +181,50 @@ bystander_dat |>
 ```
 
 
-# Attitudinal Change exceeds behavioral change in every category of study
+# {A Closer Look at Behavioral Outcomes}
 
-In our sample, attitudinal outcomes outnumber behavioral outcomes by 355 to 145. 207 studies measure attitudes only, 36 measure only behaviors, while 61 measure both. 
+> Table \ref{tab:meta_beh} shows the number of studies which measure each behavioral category and their pooled effect sizes. We also provide the overall effect size for idea-based outcomes for reference. We find that on an aggregate level, primary prevention programs haven't been effective in reducing perpetration and victimization behaviors at all. The corresponding effect sizes for these two critical outcomes are neither meaningful in magnitude nor statistically significant. It appears that primary prevention programming is currently effective in increasing only bystander or involvement behavior \textemdash and changing ideas about sexual violence. 
 
-```{r att_beh_breakdown}
-table(dat$scale_type)
+```{r Effect Size by Outcome Type}
+# Ns
+dat |> group_by(behavior_type) |> study_count()
 
+# effect sizes
 dat |> 
-  group_by(has_both) |>
-  study_count()
-
-# sanity check
-length(unique(dat$unique_study_id)) == 207 + 36 + 61 # true
-```
-
-Behavioral measurement has become more common over time, particularly from 2010 onward. 
-
-```{r behavioral_outcomes_by_decade}
-range(dat$year)
-
-# how many studies in each decade
-dat |> group_by(decade) |> study_count()
-
-tab <- merge(x = dat |> group_by(decade) |> study_count(),
-             y = dat |> group_by(decade, scale_type) |> summarise(n = n())) 
-# print tab
-tab
-
-#reshape and make latex table
-tab |>
-  pivot_wider(names_from = scale_type, values_from = n) |>
-  mutate(ratio = attitudes/behavior) |>
-  knitr::kable(format = 'latex')
-
-# what was the earliest study to measure behavior as we conceive it?
-dat |> filter(scale_type == 'behavior') |> 
-  arrange(year) |> 
-  select(author, year, paper_title) |> head()
-
-
-
-## what if we just do this for behaviors?
-dat |>
-  ggplot(aes(x = year, color = behavior_type)) +
-  geom_line(stat = 'count') + 
-  labs(x = "Year", 
-       y = "Count", 
-       color = "Behavior type",
-       title = "Categories of behavioral outcomes over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 10) +
-  scale_y_continuous(n.breaks = 10) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
-# can also filter out attitudes if we want (filter(scale_type == 'attitudes'))
-
-```
-
-Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
-
-```{r behaviors_attitudes_overall}
-dat |> 
-  split(~scale_type) |>
+  split(~behavior_type) |>
   map(.f = map_robust)
 ```
 
-This discrepancy is particularly pronounced in observational research, where attitudinal outcomes are about 18 times larger than behavioral responses; but the discrepancy is substantial across every category of study design. However, it is notable that the largest behavioral effects are found within randomized studies, i.e. the most rigorous designs.
+> Our sample features 28 randomized designs that measure perpetration, which collectively produce a meta-analytic effect of 0.081 (SE = 0.062), with a p-value of 0.198.
 
+```{r rct_perp}
 
-In our dataset, behavioral outcomes can be classified as victimization, perpetration, bystander (intervening in a situation where perpetration is perceived to be a risk), and involvement (for example, signing up to be part of a rape awareness group on campus).
+rct_perp <- dat %>% filter(behavior_type == 'Perpetration',
+                           study_design == 'Randomized Control Trial')
 
-Table XXX shows the number of studies which measure each behavioral category and their pooled effect sizes, as well as attitudes for reference.
+rct_perp %>% study_count()
 
-```{r categories_of_behavior_and_attitudes}
-#Ns
-dat |> 
-  group_by(behavior_type) |> 
-  summarize('N (studies)' = n_distinct(unique_study_id)) |>
-  kable('latex')
-
-dat |> 
-  split(~behavior_type) |> 
-  map(.f = map_robust)
+rct_perp %>% map_robust()
 ```
+## Do Changes in Ideas Predict Changes in Behaviors?
 
-Here we see that primary prevention interventions do not, on average, meaningfully reduce victimization or perpetration. This, we think, is the key finding of this meta-analysis. % if I were reading this right now I'd want more zoom in on how different _categories_ of intervention reduce victimization & perpetration. 
 
-### RCT perpetration 
-
-```{r rct_perpetration}
-dat |> 
-  filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') |> 
-  map_robust()
-```
-# correlation between attitudes and behavior
-
-Another way to assess the discrepancy between attitudes and behaviors is to focus on the 61 studies that measure both and look at the association between the two categories.
+> A key question for the primary prevention literature concerns the association between ideas about sexual violence and sexual violence itself. Specifically, a primary goal of this review is to examine whether the predicted association between changing ideas and changing behavior actually prevails in the database. To do so, we focus on the 61 studies that measure both type of outcomes.
 
 ```{r dat_has_both_count}
 dat_has_both <- dat |> filter(has_both == 'both')
 dat_has_both |> study_count()
 ```
 
-In this subset of studies, the pooled attitudinal effect is $\Delta$ = 0.278 (se = .036), p < .0001, while the pooled behavioral outcome is $\Delta$ = 0.081 (se = .03), p = .009. In other words, the attitudinal effects are slightly lower than the overall attitude effect of 0.367, while the behavioral effects are slightly larger than the overall behavioral effect of 0.072.
+> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.081 (SE = 0.03), p = 0.009, while the pooled idea change effect is $\Delta$ = 0.278 (SE = 0.036), p $<$0.0001.
+
 ```{r has_both_behav_att_meta_results}
+dat_has_both |> map_robust()
 dat_has_both |> split(~scale_type) |> 
   map(map_robust)
 ```
 
-A key question for this literature is: when attitudes change, do behaviors change with them? Unfortunately, in the studies that measure change across both categories, we find a small, statistically insignificant correlation of $\rho$ (59) = 0.141, p = 0.279.
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (59) = 0.141, p = 0.279 between changes in ideas and changes in behaviors.
 
 ```{r attitude_behavior_correlation_overall}
 ## TODO John-Henry: is there a way to get the behavior_type that corresponds 
@@ -322,15 +255,15 @@ cor.test(x = has_both_reshaped$mean_d_attitudes,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-We find broadly similar results when looking at just at RCTs; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both attitudes and either victimization or perpetration outcomes ($\rho$ (42) = 0.153, p = 0.322); and, finally, within RCTs that measure attitudes as well as either victimization or perpetration outcomes ($\rho$ (59) = 0.141, p = 0.279).
+> We find similar results when looking at the subset of randomized studies; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both ideas about sexual violence and either victimization or perpetration  ($\rho$ (42) = 0.153, p = 0.322); and, finally, within randomized studies that measure ideas about sexual violence as well as either victimization or perpetration  ($\rho$ (59) = 0.141, p = 0.279).
 
 ```{r attitude_behavior_correlation_subsets}
 # RCTs only?
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
 cor.test(x = rcts_both$mean_d_attitudes, 
          y = rcts_both$mean_d_behavior)
-## TODO: Not enough 
-#perp and vict only?
+
+#perp and vict(and ideas) only?
 perp_and_vict_both <- has_both_means |>
   group_by(unique_study_id) |>
   filter(if_else(any(behavior_type %in% c('involvement', 'bystander')), F, T)) |>
@@ -345,7 +278,7 @@ cor.test(perp_and_vict_both$mean_d_attitudes,
          perp_and_vict_both$mean_d_behavior)
 
 
-# finally, perp and vict only in RCTs only
+# finally, perp and vict (and ideas) only in RCTs only
 
 perp_and_vict_rcts <- has_both_means |>
   group_by(unique_study_id) |>
@@ -362,7 +295,7 @@ cor.test(perp_and_vict_rcts$mean_d_attitudes,
          perp_and_vict_rcts$mean_d_behavior)
 ```
 
-Figure XXX highlights this lack of correlation. Each point in the scatterplot is a study that measures both attitudes and behaviors, with the attitudinal effect size on the X axis and the behavioral effect size on the Y axis. The dotted black line shows what a perfect correlation would look like, and the dotted gray line shows the correlation that we actually find. Studies are color-coded by design.
+> Figure \ref{fig:corr} highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
 dat_has_both <- dat |> filter(has_both == 'both')
@@ -394,6 +327,8 @@ dat |>
   guides(color = guide_legend(title = "Study Design")) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
+## TODO: compare line by line with JH's figure in 6-exploratory-analyses (
+## (alternative correlation scatterplot)
 ```
 
 In sum, while attitudes towards rape myths appear to malleable, the problem of rape itself is much more resistant to change. 

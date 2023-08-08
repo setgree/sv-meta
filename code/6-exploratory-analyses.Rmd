@@ -41,6 +41,23 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
 
 ### bystander interventions are a product of their time and place
 ```{r bystander_interventions_over_time}
+
+bystander_dat <- dat |>
+  filter(
+    str_detect(paper_title, "bystander") |
+      str_detect(brief_description_of_the_intervention, "bystander") |
+      str_detect(intervention_name, "bystander") |
+      str_detect(program_name, "bystander") |
+      str_detect(stated_purpose, "4")) |>
+    select(author, year, paper_title, unique_study_id, study_design,
+           d, var_d, se_d, scale_type,
+           behavior_type, has_both, country) |>
+  mutate(perp_vict_grouped = case_when(
+    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
+    behavior_type == 'Involvement' ~ 'involvement',
+    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'Bystander' ~ 'Bystander'))
+
 bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
   ggplot(aes(x = year)) +
   geom_line(stat = 'count', color = 'light blue') + 
@@ -72,4 +89,46 @@ dat |>
 
 # where do bystander interventions occur
 bystander_dat |> group_by(country) |> study_count()
+```
+
+## alternative correlation scatterplot
+```{r alt_corr_scatterp}
+dat |> 
+  filter(has_both == 'both') |> 
+  drop_na(study_design) |> 
+  group_by(author, year, study_design, unique_study_id, scale_type) |>
+  summarise(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) |> 
+  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
+  ggplot(aes(x = mean_d_attitudes,
+             y = mean_d_behavior)) + 
+  geom_point(aes(color = study_design),
+             size = 3) + 
+  geom_abline(slope = 1, 
+              lty = 'dashed',
+              size = 2) +
+  geom_smooth(lty = "dashed", 
+              method = "lm", 
+              se = FALSE,
+              color = 'grey',
+              size = 2) +  
+  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
+  labs(x = "Effect size (Ideas)",
+       y = "Effect size (Behaviors)",
+       color = NULL) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+
+ggsave("../results/supplementary-figures//att_beh_corr.pdf", width = 7.2, height = 7.2)
 ```

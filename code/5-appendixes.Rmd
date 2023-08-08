@@ -1,5 +1,5 @@
 ---
-title: "4-appendixes"
+title: "5-appendixes"
 author: "Seth Green"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output: html_document
@@ -287,5 +287,3 @@ ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 dip_calc(0.05, 0.015)
 ```
 
-
-Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121. (We discuss this relationship, and the difficulties of interpreting it, in an appendix).

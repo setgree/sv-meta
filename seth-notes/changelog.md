@@ -1,3 +1,14 @@
+### 2023-08-07 
+wow long time! paper really came together. 
+
+Added exploratory script and added it to run script; got script 4 to reproduce every quantitative claim in the results section; small fixes in appendixes script
+
+The next TODOs are
+* figure out what you want in the exploratory section (raid the cutouts script)
+* figure out the differences between your script and JHs'
+* double-check some things
+* upload to Code Ocean as V1
+
 ### 2022-03-28
 Stopped at line 155 of the appendix; as far as I know, the main results section and the Rmd are aligned
 

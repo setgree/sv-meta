@@ -1583,48 +1583,6 @@ dat |>
 Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat |> group_by(study_design, behavior_type) |> summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
 
 
-```{r}
-dat |> 
-  filter(has_both == 'both') |> 
-  drop_na(study_design) |> 
-  group_by(author, year, study_design, unique_study_id, scale_type) |>
-  summarise(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) |> 
-  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
-  ggplot(aes(x = mean_d_attitudes,
-             y = mean_d_behavior)) + 
-  geom_point(aes(color = study_design),
-             size = 3) + 
-  geom_abline(slope = 1, 
-              lty = 'dashed',
-              size = 2) +
-  geom_smooth(lty = "dashed", 
-              method = "lm", 
-              se = FALSE,
-              color = 'grey',
-              size = 2) +  
-  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
-  labs(x = "Effect size (Ideas)",
-       y = "Effect size (Behaviors)",
-       color = NULL) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 14),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-
-ggsave("../results/supplementary-figures//att_beh_corr.pdf", width = 7.2, height = 7.2)
-```
-
-
 # Figure 1
 ```{r figure_1}
 
@@ -1642,4 +1600,91 @@ dat |> ggplot(mapping = aes(y = d,
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5))
 
+```
+
+
+
+```{r att_beh_breakdown}
+
+
+dat |> 
+  group_by(has_both) |>
+  study_count()
+
+# sanity check
+length(unique(dat$unique_study_id)) == 207 + 36 + 61 # true
+```
+
+Behavioral measurement has become more common over time, particularly from 2010 onward. 
+```{r behavioral_outcomes_by_decade}
+range(dat$year)
+
+# how many studies in each decade
+dat |> group_by(decade) |> study_count()
+
+tab <- merge(x = dat |> group_by(decade) |> study_count(),
+             y = dat |> group_by(decade, scale_type) |> summarise(n = n())) 
+# print tab
+tab
+
+#reshape and make latex table
+tab |>
+  pivot_wider(names_from = scale_type, values_from = n) |>
+  mutate(ratio = attitudes/behavior) |>
+  knitr::kable(format = 'latex')
+
+# what was the earliest study to measure behavior as we conceive it?
+dat |> filter(scale_type == 'behavior') |> 
+  arrange(year) |> 
+  select(author, year, paper_title) |> head()
+
+
+
+## what if we just do this for behaviors?
+dat |>
+
+  
+    ggplot(aes(x = year, color = behavior_type)) +
+   geom_line(stat = 'count') + 
+  labs(x = "Year", 
+       y = "Count", 
+       color = "Behavior type",
+       title = "Categories of behavioral outcomes over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 10) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# can also filter out attitudes if we want (filter(scale_type == 'attitudes'))
+
+```
+
+Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
+
+
+In our dataset, behavioral outcomes can be classified as victimization, perpetration, bystander (intervening in a situation where perpetration is perceived to be a risk), and involvement (for example, signing up to be part of a rape awareness group on campus).
+
+Table XXX shows the number of studies which measure each behavioral category and their pooled effect sizes, as well as attitudes for reference.
+
+```{r categories_of_behavior_and_attitudes}
+#Ns
+dat |> 
+  group_by(behavior_type) |> 
+  summarize('N (studies)' = n_distinct(unique_study_id)) |>
+  kable('latex')
+
+dat |> 
+  split(~behavior_type) |> 
+  map(.f = map_robust)
+```
+
+Here we see that primary prevention interventions do not, on average, meaningfully reduce victimization or perpetration. This, we think, is the key finding of this meta-analysis. % if I were reading this right now I'd want more zoom in on how different _categories_ of intervention reduce victimization & perpetration. 
+
+### RCT perpetration 
+
+```{r rct_perpetration}
+dat |> 
+  filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') |> 
+  map_robust()
 ```
