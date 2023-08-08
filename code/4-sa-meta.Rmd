@@ -11,9 +11,9 @@ editor_options:
 
 This document works through our results section. Each chunk corresponds to, and is preceded by, a quantitative claim in the results section. 
 
-## Setup
+### Setup
 
-### libraries and functions
+**libraries and functions**
 
 ```{r setup, include=F, echo=F}
 rm(list = ls())
@@ -38,15 +38,16 @@ source('./functions/study_count.R')
 options(scipen = 99)
 ```
 
-### load data
+**load data**
+
 ```{r load_data, include=F, echo=F}
 dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
 
-## Results 
+# Results 
 
-### Overall results and publication bias 
+## Overall results and (lack of) publication bias
 
 > Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
 
@@ -57,7 +58,6 @@ dat |> map_robust()
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
-
 
 > In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.145 (SE = 0.176), p = 0.412.
 
@@ -95,7 +95,7 @@ length(unique(dat$unique_study_id)) == 186 + 118
 dat |> sum_lm(d, published_unpublished)
 ```
 
-> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant  (N = 186, $\beta$ = 0.00302  (SE = 0.256), p = .373); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.5842 (SE = 0.360)), the relationship is still statistically non-significant (p = 0.106).
+> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant (N = 186, $\beta$ = 0.00302  (SE = 0.256), p = .373); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.5842 (SE = 0.360)), the relationship is still statistically non-significant (p = 0.106).
 
 ```{r publish_unpublish_split_effect_size_standard_error}
 
@@ -104,31 +104,41 @@ dat |> split(~published_unpublished) |> map(sum_lm)
 dat |> split(~published_unpublished) |> map(map_robust)
 ```
 
+## The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
 
-However,  when pooling all effects, we observe that results vary both significantly and substantively by study design. 
+> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.072 (SE = 0.022), p = .0013; whereas the overall effect size for idea-based outcomes is ∆ = 0.367 (SE = .03), p < 0.0001.
 
-```{r differences_by_study_design}
-# count Ns (again, just for convenience of writing)
-dat |> group_by(study_design) |> 
-  study_count()
+```{r differences_by_attitude_behavior}
 
-# check overall effect sizes
+dat |> split(~scale_type) |> map(.f = map_robust)
+```
+
+> We further report on the meta-analytic effect of primary prevention interventions on behavior, and on ideas about sexual violence by study design (see Table 2). This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are about 18 times larger than behavioral responses. Turning specifically to primary prevention programs’ effect on behavioral outcomes, we observe that the largest behavioral effects are found within randomized studies, which are the most rigorous designs, while the smallest are found within observational designs. However, while the meta-analytic effect for behavioral outcomes is statistically significant at p < .05 in both randomized and quasi-experimental designs, neither meet the conventional standard for a “small” effect size (∆ = 0.2).
+
+```{r behavior_attitudes_discrepancy_within_study_designs}
+
+# first, Ns
+dat |> 
+  group_by(scale_type, study_design) |> 
+  study_count() |>
+  kable('latex')
+
+# then effect sizes
 dat |>
-  split(~study_design) |>
+  split(~interaction(scale_type, study_design)) |> 
   map(.f = map_robust)
 
-#TODO: can we reshape these two objects to be one table and then make them a latex table? 
-# and then eventually a function which just takes dat as its input?
 ```
 
 \subsection{Do bystander interventions Change Behavior?}
 
-We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure ideas about sexual violence like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.001.  43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01.  In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329 or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835. This suggests, unfortunately, that nearly 1 in 3 studies in our database is pursuing a theory of behavioral change that is not grounded in reality.
+> We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure ideas about sexual violence like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
 
-```{r bystander_dv_count}
-
+```{r bystander_interventions_overall}
+# create bystander dataset
 # filter based on mentioning bystander in either title, description, 
 # intervention name, or program name, or have a stated purpose of "4" (bystander)
+## TODO: do a random audit of this
 bystander_dat <- dat |>
   filter(
     str_detect(paper_title, "bystander") |
@@ -137,7 +147,7 @@ bystander_dat <- dat |>
       str_detect(program_name, "bystander") |
       str_detect(stated_purpose, "4")) |>
     select(author, year, paper_title, unique_study_id, study_design,
-           d, var_d, se_d, 
+           d, var_d, se_d, scale_type,
            behavior_type, has_both, country) |>
   mutate(perp_vict_grouped = case_when(
     behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
@@ -145,11 +155,21 @@ bystander_dat <- dat |>
     behavior_type == 'Attitude' ~ 'Attitude',
     behavior_type == 'Bystander' ~ 'Bystander'))
 
+# how many studies overall?
 bystander_dat |>  study_count()
 
+# how many studies look at ideas?
 bystander_dat |> group_by(behavior_type) |> study_count()
 
-bystander_dat |> group_by(has_both) |> study_count()
+bystander_dat |> filter(behavior_type == 'Attitude') |> map_robust()
+
+```
+
+> 43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01. In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329 or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835. This suggests, unfortunately, that nearly 1 in 3 studies in our database is pursuing a theory of behavioral change that is not grounded in reality.
+
+```{r bystander_dv_count}
+
+bystander_dat |> group_by(scale_type) |> study_count()
 
 bystander_dat |> filter(behavior_type != 'Involvement') |> 
   split(~perp_vict_grouped) |> 
@@ -279,20 +299,6 @@ dat |>
 
 This discrepancy is particularly pronounced in observational research, where attitudinal outcomes are about 18 times larger than behavioral responses; but the discrepancy is substantial across every category of study design. However, it is notable that the largest behavioral effects are found within randomized studies, i.e. the most rigorous designs.
 
-```{r behavior_attitudes_discrepancy_within_study_designs}
-
-# first, Ns
-dat |> 
-  group_by(scale_type, study_design) |> 
-  study_count() |>
-  kable('latex')
-
-# then effect sizes
-dat |>
-  split(~interaction(scale_type, study_design)) |> 
-  map(.f = map_robust)
-
-```
 
 In our dataset, behavioral outcomes can be classified as victimization, perpetration, bystander (intervening in a situation where perpetration is perceived to be a risk), and involvement (for example, signing up to be part of a rape awareness group on campus).
 
