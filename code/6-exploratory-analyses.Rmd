@@ -1,0 +1,75 @@
+---
+title: "6-exploratory-analyses"
+author: "Seth Green"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## Setup 
+
+```{r setup, include=F, echo=F}
+rm(list = ls())
+library(dplyr, warn.conflicts = F)
+library(knitr)
+library(metafor, quietly = T)
+library(ggplot2, warn.conflicts = F)
+library(ggrepel, warn.conflicts = F)
+library(lubridate)
+library(purrr)
+library(stringr)
+library(tidyr, warn.conflicts = F)
+library(tibble)
+
+source('./functions/sum_lm.R')
+source('./functions/map_robust.R')
+source('./functions/study_count.R')
+# NOTE ON SUM_LM: 
+# `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
+#                                          data = dat))$coefficients`
+
+options(scipen = 99)
+```
+
+**load data**
+
+```{r load_data, include=F, echo=F}
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
+  select(unique_study_id, scale_type, everything())
+```
+
+
+### bystander interventions are a product of their time and place
+```{r bystander_interventions_over_time}
+bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
+  ggplot(aes(x = year)) +
+  geom_line(stat = 'count', color = 'light blue') + 
+  labs(x = "Year", 
+       y = "Count", 
+       title = "Bystander interventions over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 20) +
+  scale_y_continuous(n.breaks = 15) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## BTW an alternate way to do this
+dat |>
+  group_by(unique_study_id) |>
+  summarise(
+    bystander_count = ifelse(
+      any(
+        str_detect(c(
+          brief_description_of_the_intervention, 
+          intervention_name, program_name, paper_title), "bystander")) |
+        any(str_detect(stated_purpose, "4")),
+      TRUE, FALSE)
+  ) |> 
+  summarise(
+    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
+    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
+  )
+
+# where do bystander interventions occur
+bystander_dat |> group_by(country) |> study_count()
+```

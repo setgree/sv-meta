@@ -168,66 +168,17 @@ bystander_dat |> filter(behavior_type == 'Attitude') |> map_robust()
 > 43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.15 (SE = 0.056), p = 0.01. In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (SE = 0.019), p = 0.329 or victimization ($\Delta$ =-0.009 (SE = 0.041),  p = 0.835. This suggests, unfortunately, that nearly 1 in 3 studies in our database is pursuing a theory of behavioral change that is not grounded in reality.
 
 ```{r bystander_dv_count}
-
 bystander_dat |> group_by(scale_type) |> study_count()
 
-bystander_dat |> filter(behavior_type != 'Involvement') |> 
-  split(~perp_vict_grouped) |> 
-  map(.f = map_robust)
+# filter out the one involvement outcome because 
+# having just one cluster breaks the meta-analysis function
+# the effect size of the one involvement outcome is d = 0.52 (se = 0.126)
 
-table(bystander_dat$behavior_type)    
-
-# count studies that measure #just bystander behaviors
-bystander_dat |>
-  filter(has_both != 'attitudes') |> group_by(perp_vict_grouped) |> study_count()
-
-# double-check -- define this object (it got lost)
-# bystander_dat_not_just_atts |> 
-#   group_by(unique_study_id) |>
-#   filter('Bystander' %in% behavior_type & !'perp_vict' %in% perp_vict_grouped) |> ungroup() |> study_count()
-
-
-# what kind of effect sizes are we talking about? 
-bystander_dat |> filter(behavior_type != 'Involvement') |> split(~behavior_type) |> map(map_robust)
-
-# group perp and vict outcomes together
-
-bystander_dat |> filter(behavior_type != 'Involvement') |> split(~perp_vict_grouped) |> map(map_robust)
-
-# bystander interventions are a product of their time and place
-bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
-  ggplot(aes(x = year)) +
-  geom_line(stat = 'count', color = 'light blue') + 
-  labs(x = "Year", 
-       y = "Count", 
-       title = "Bystander interventions over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 20) +
-  scale_y_continuous(n.breaks = 15) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
-## BTW an alternate way to do this
-dat |>
-  group_by(unique_study_id) |>
-  summarise(
-    bystander_count = ifelse(
-      any(
-        str_detect(c(
-          brief_description_of_the_intervention, 
-          intervention_name, program_name, paper_title), "bystander")) |
-        any(str_detect(stated_purpose, "4")),
-      TRUE, FALSE)
-  ) |> 
-  summarise(
-    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
-    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
-  )
-
-# where do bystander interventions occur
-bystander_dat |> group_by(country) |> study_count()
+bystander_dat |> 
+  filter(behavior_type != 'Involvement') |> 
+  split(~behavior_type) |> 
+  map(map_robust)
 ```
-
 
 
 # Attitudinal Change exceeds behavioral change in every category of study
