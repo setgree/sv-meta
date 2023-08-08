@@ -1582,7 +1582,6 @@ dat |>
 
 Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat |> group_by(study_design, behavior_type) |> summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
 
-
 # Figure 1
 ```{r figure_1}
 

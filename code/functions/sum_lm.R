@@ -9,5 +9,5 @@ sum_lm <- function(dataset = dat, y = d, x = se_d, coefs_only = T, dgts = 5) {
                           data = dataset))
   if (coefs_only) round(print_obj$coefficients, digits = dgts)
   
-  else round(print_obj, digits = dgts)
+  else print_obj
 }
