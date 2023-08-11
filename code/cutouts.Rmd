@@ -2,162 +2,9 @@
 title: "cutouts"
 output: html_document
 date: "2023-07-11"
+editor_options: 
+  chunk_output_type: console
 ---
-
-## Overall results and (lack of) publication bias
-
-Our random effects meta-analysis of all primary prevention strategies from 1986 to 2018 reveals an overall
-effect size, across all interventions and outcomes, of ∆ = 0.281 (se = 0.024).
-
-
-In our database we find this relationship between effect sizes and standard errors to be weak
-and insignificant: β = 0.145 (se = 0.176), p = .412.
-
-
-econd, the relationship between SE and ∆ remains insignificant within randomized (N = 99, β = 0.208,
-se = 0.256, p = .373) and quasi-experimental (N = 104, β = -0.201, se = 0.393, p = .597) designs, providing
-further evidence to the lack of publication bias within the literature.
-
-
-Our third check for publication bias is to separate the literature into studies published in peer-reviewed
-journals (N = 186) and those that were not (N = 118). O
-
-
-In our sample,
-being unpublished is associated with a small reduction in effect size (β = -0.0467), but not at a statistically
-significant level (p = 0.28). 
-
-
-Within published studies, the relationship between standard errors and ∆ is
-tiny and insignificant (N = 186, β = 0.00302 (se = 0.256), p = .373); 
-
-
-hile the association between the
-two variables is larger in unpublished studies(N = 118, β = 0.5842 (se = 0.360)), the relationship is still
-statistically insignificant (p = 0.106) 
-
-
-## The Meta-Analytic Effect on Behavior and on Attitudes, Beliefs, and Ideas about Sexual Violence
-
-
-The overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022), p = .0013; whereas the overall effect size for mental outcomes is $\Delta$ =  0.367 (se = .03), p $<$ 0.0001. 
-
-We also observe a negligible, statistically insignificant relationship between effect size and year of publication ($\beta$ = 0.004, se = 0.002)
-
-However, while the meta-analytic effect for behavioral outcomes is statistically significant at p $<$ .05 in both randomized and quasi-experimental designs, both don't meet the conventional standard for a `small' effect size ($\Delta$ = 0.2).
-
-
-## Do bystander interventions change behavior?
-
-We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure mental states like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (se = .069), p $<$ .001.  43 of the 96 bystander studies measure behaviors. Overall, 23 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest amount $\Delta$ = .15 (se = .056), p = .01.  In our database, 20 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019 (se = 0.019), p = 0.329or victimization ($\Delta$ =-0.009 (se = .041),  p = .835.
-
-
-
-
-
-### A Closer Look at Behavioral Outcomes
-
-
-## Do changes in Mentalizing Outcomes Predict Behavioral Changes?
-
-## Discussion of quantitative results
-
-```{r}
-dat |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
-```
-
-```{r}
-dat |> 
-  distinct(unique_paper_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
-```
-
-```{r}
-dat |> 
-    mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                                           "male and female with group composition not specified", 
-                                                           "male and female in separate groups"), 
-                                    "mixed gender groups",
-                                    participant_sex)) |> 
-  distinct(unique_paper_id, .keep_all = T) |> 
-  count(participant_sex, sort = T) |> 
-  mutate(perc = n / sum(n)) |> 
-  janitor::adorn_totals()
-```
-
-
-
-
-
-
-
-
-```{r}
-dat |>
-  drop_na(study_design) |> 
-  ggplot(aes(x = se_d, y = d)) +
-  geom_point(aes(
-      color = behavior_type,
-      shape = study_design),
-    size = 3
-  ) +
-  geom_smooth(
-    method = "lm",
-    se = F,
-    size = 2
-  ) +
-  #ggtitle("Relationship between effect sizes and standard errors") +
-  labs(
-    x = "Standard errors",
-    y = "Effect size",
-    color = "Outcome type",
-    shape = "Study Design"
-  ) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-
-ggsave("../results/d_se.pdf", height = 5)
-
-```
-
-
-
-
-
-
-
-
-Table XX details the distribution of behavioral outcomes within studies that employ observational designs (i.e., quasi-experimental and observational studies) and randomized designs (i.e., experiments and horse-race experiments). 
-```{r}
-dat |> 
-  filter(scale_type == "behavior") |> 
-  distinct(unique_study_id, study_design, behavior_type) |> 
-  count(study_design, behavior_type) |> 
-  pivot_wider(values_from = n, id_cols = behavior_type, names_from = study_design, values_fill = 0) |> 
-  janitor::adorn_totals() |> 
-  kable(format = "latex", booktabs = T)
-```
-
-
-We recovered XXX manuscripts and XXX studies from our search that qualified methodologically and theoretically.
-
-```{r}
-dat |> 
-  select(unique_study_id, unique_paper_id) |> 
-  summarise(n_papers = n_distinct(unique_paper_id),
-            n_studies = n_distinct(unique_study_id))
-```
 
 
 
@@ -181,9 +28,6 @@ quantile(dat$intervention_length, probs = seq(0, 1, by = 0.2), na.rm = TRUE)
 ```
 
 ### Meta-Analytic Results
-
-(see 3-sa-meta.Rmd)
-
 
 We found XX studies that measured self-reported behavior.
 ```{r}
@@ -245,205 +89,10 @@ dat |>
 
 what's the distribution of outcome types for bystander interventions
 
-
 ## robustness checks, alternate specifications, and alternate visualizations
 Everything that follows is exploratory and not included in the paper or appendix
 
-### Plotting
 
-```{r viz_attempts}
-dat |> 
-  split(~study_design) |> 
-  map(.x = ., .f = ~dplot(sa_data = ., dot_size = 2, condense = F,
-                          dot_informative = T))
- 
-# overall linear plot
-dat |> 
-ggplot(aes(x = se_d, y = d)) +
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-
-dplot(condense = F)
-## Relationship between attitudes and behaviors 
-
-has_both |>
-  ggplot(aes(x = mean_d_attitudes, 
-             y = mean_d_behavior,
-             color = study_design)) +
-  geom_point(size = 3) + 
-  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
-  theme_minimal()
-
-# now same with RCTs, and with study labels
-has_both |> 
-  filter(study_design == 'rct') |> 
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
-  geom_point(size = 3, color = 'blue') + 
-  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
-              method = "lm",
-              show.legend = FALSE, alpha = .1, se = F) +
-  geom_label_repel(mapping = aes(label = labels)) +
-  theme_minimal() +
-  labs(x = "mean d (attitudes)",
-       y = "mean d (behavior)")
-# actually kind of a cool plot when you zoom in
-
-```
-
-### Robustness checks
-
-Group results within study
-
-```{r grouping rbustness checks}
-# robustness check: group by study AND scale_type and average the results
-dat_grouped <- dat |>
-  group_by(unique_study_id, scale_type) |>
-  mutate(mean_d = mean(d),
-         mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) |>
-  slice(1)
-
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
-       cluster = dat_grouped$unique_study_id)
-
-# alternative specification 
-rma(yi = d, vi = var_d, data = dat_grouped)
-
-# once we've grouped by study_id, clustering changes the SE by just 0.0001
-
-# How about not grouping by scale_type/
-dat_grouped_two <- dat |>
-  group_by(unique_study_id) |>
-  mutate(mean_d = mean(d),
-         mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) |>
-  slice(1)
-
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
-  cluster = dat_grouped_two$unique_study_id)
-
-# again, very similar.
-# NOTE FOR TEAM: should we average within studies?
-# in the prejudice meta, y'all averaged all the Ds and var_ds
-# within each (to create a single point estimate representing each
-# study). But here, we are looking for a lot more within-study variance (e.g. to
-# attitudes predict # behavior? What about perp/victimization? So I personally
-# vote that we not average but take everything. As a robustness check above, I found
-# that averaging doesn't change the overall results (it didn't
-# in the prejudice meta that much either if I recall correctly). Another
-# approach would be, JH, to create a function that has "average within study" as
-# an input each time to replace the functions I am using. My intuition is that
-# we should not average, because it's more trouble than it's worth to then parse
-# out within-study correlations; but I defer to the group.
-```
-
-different ways to break down main results:
-```{r alternate_breakdowns}
-# ra vs not (in paper we break down by study)
-dat |> 
-  split(~interaction(scale_type, ra)) |>   
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-
-# We *would* include this next outcome if our behavioral category table 
-# included an 'overall' row
-
-dat |> 
-  split(~behavior_type) |> 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-# this suggests that moving the needle on perpetration is effectively unsolved problem
-
-# in general, the effects on victimization and  perpetration are larger in the rcts, 
-# which is encouraging (and surprising to me).
-
-table(dat$behavior_type)
-# TODO: triple-check that thesse are right.
-
-# scale type and delay
-dat |> 
-  split(~interaction(scale_type,yes_delay)) |> 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id))
-```
-
-sum_lm() checks that don't make it into the final paper
-
-```{r sum_lm checks}
-dat |> 
-  split(~ra) |> 
-  map(.f = ~sum_lm(y = d, x = se_d, dat = .))
-
-
-# how about the overall relationship between lab/field and d? 
-sum_lm(dat, d, lab_field)
-
-# study type?
-sum_lm(dat, d, study_design)
-# yep, meaningful relationship
-
-# scale type?
-sum_lm(dat, d, scale_type)
-# that is a HUGE difference
-
-# publication status?
-sum_lm(dat, d, publication_type)
-
-dat |>
-  filter(behavior_type == 'perpetration', 
-         study_design == 'rct') |> 
-  sum_lm(d, se_d)
-```
-
-Correlation between attitudes and behaviors -- standard errors of estimates
-
-```{r attitude_behavior_correlation_standard_error}
-# thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
-cor.test.plus <- function(x) {
-  list(x, 
-       Standard.Error = unname(sqrt((1 - x$estimate^2)/x$parameter)))
-}
-cor.test.plus(
-  cor.test(
-    x = has_both$mean_d_attitudes, 
-    y = has_both$mean_d_behavior))
-
-```
-
-Different ways of assessing effect size change over time
-
-```{r effect_size_over_time}
-dat |> ggplot((aes(x = year, y = d))) + 
-  geom_point() +   
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-# basically no slope
-
-dat |> sum_lm(d, year)
-dat |> split(~interaction(ra, scale_type)) |>
-  map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
-        geom_point() + 
-        geom_smooth(method = 'lm') +
-        theme_minimal())
-
-# these are more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
-
-# visualizing how little attitudes and behavioral outcomes have changed over time 
-dat |> 
-  group_by(year, scale_type) |> 
-  summarise(mean_d = mean(d), 
-            mean_se_d = mean(se_d)) |>
-  ggplot(aes(x = year, y = mean_d, 
-             group = scale_type)) +
-  geom_point(aes(color = scale_type)) +
-  geom_smooth(method = 'lm', aes(color = scale_type), se = F) + 
-  theme_minimal() +
-  scale_x_continuous(breaks = seq(1986, 2018, 5)) +
-    labs(x = "year",
-       y = "mean d") +
-  labs(color = "Attitudes or behaviors")
-```
 
 additional ways to look at rct perp outcomes
 
@@ -1150,46 +799,26 @@ dat |>
   labs(color = "Attitudes or behaviors")
 ```
 
-additional ways to look at rct perp outcomes
-
-```{r rct_perp}
-# not a big difference
-
-rct_perp |> ggplot(mapping = aes(x = delay, y = d)) + 
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-
-rct_perp |> filter(delay > 30) |>
-ggplot(mapping = aes(x = se_d, y = d)) + 
-  geom_point() +
-  geom_smooth(method = 'lm') + 
-  theme_minimal()
-# a stronger relationship
-```
-
-### Quintile check
-```{r quintile}
-dat |> arrange(n_t_post) |>
-  mutate(quintile = ntile(n_t_post, 5)) |> 
-  group_by(unique_paper_id, intervention_name) |> 
-  split(~quintile) |>
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-                   cluster = .x$unique_study_id))
-
-# just reinforces that there's no meaningful relationship between d and se; if anything the highestlargest decile seems to have the largest effect sizes
-```
-
-what about things that get tested more than once?
+What is the 'bringing in the bystander' average effect on attitudes/behaviors
 
 ```{r repeat_tests}
 
 dat |> 
-  filter(intervention_name == "bringing in the bystander") |> 
+  filter(intervention_name == "bringing in the bystander")|> 
   split(~scale_type) |> 
-  map(~robust(x = rma(yi = ~d,  sei = ~se_d), 
-              cluster = ~unique_paper_id))
+  map(map_robust)
+# a nice todo would be to modify map_robust so that if there weren't enough 
+# rows in a set it would just tell you that and continue on with the meta-analysis
+# instead of stopping but, for now;
 
+dat |> 
+  filter(intervention_name == "bringing in the bystander") %>% select(behavior_type)
+# so it's pretty much all bystander, with one victmization outcome
+dat |> 
+  filter(intervention_name == "bringing in the bystander",
+         behavior_type == 'Victimization')|> 
+  select(paper_title, year, d, se_d)
+# d = 0,02
 ```
 
 
@@ -1410,132 +1039,6 @@ has_both |>
               dat = .))
 ```
 
-### Dat for forest plot and sign tests
-
-```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- readRDS(file = '../data/sa_meta_data_final.rds') |> 
-  select(unique_study_id, scale_type, everything()) |>
-  filter(study_design == 'rct') |>
-  group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
-  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) |>
-  group_by(unique_paper_id, scale_type) |>
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
-  slice(1) |>
-  ungroup(scale_type) |> 
-  mutate(mean_se = mean(se_d)) |>
-  arrange(mean_se) |>
-  ungroup() |>
-  select(study_names, d, se_d, 
-         scale_type, unique_paper_id)
-
-# sign test: how many studies have an attitude d that's > behavior d
-dat_for_forest_plot |>
-  group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
-  mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) |>
-  count(comparison) |>
-  rename(Comparison = comparison, Count = n)
-binom.test(15, 21, 0.5)
-# now the whole thing but not filtering on RCTs
-readRDS(file = '../data/sa_meta_data_final.rds') |> 
-  select(unique_study_id, scale_type, everything()) |>
-  group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
-  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) |>
-  group_by(unique_paper_id, scale_type) |>
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
-  slice(1) |>
-  ungroup(scale_type) |> 
-  mutate(mean_se = mean(se_d)) |>
-  arrange(mean_se) |>
-  ungroup() |>
-    group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
-  mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) |>
-  count(comparison) |>
-  rename(Comparison = comparison, Count = n)
-binom.test(36, (36 + 12 + 1), 0.5)
-```
-
-### Forest Plot (Figure)
-
-*paper*: Figure XXX highlights the randomized controlled trials that measure both behavioral and attitudinal outcomes, with horizontal lines for the two categories' average meta-analytic effects.
-
-```{r forest_plot}
-
-head(dat_for_forest_plot) # checking we've already created subset (chunk above)
-# overall effect size
-overall_forest <- dat_for_forest_plot |>
-  split(~scale_type) |>
-  map(~robust(x = rma(yi = ~d,  sei = ~se_d), 
-              cluster = ~unique_paper_id))
-
-
-dat_for_forest_plot <- dat_for_forest_plot |> 
-  add_row(study_names = "Overall (Attitudes)",
-          d = overall_forest[[1]]$beta,
-          se_d = overall_forest[[1]]$se,
-          scale_type = "attitudes",
-          unique_paper_id = NA) |>
-  add_row(study_names = "Overall (Behavior)",
-          d = overall_forest[[2]]$beta,
-          se_d = overall_forest[[2]]$se,
-          scale_type = "behavior",
-          unique_paper_id = NA) |>
-  mutate(index = row_number()) |>
-  relocate(index, .before = 1)
-  
-# plot 
-
-p <- dat_for_forest_plot |>
-  ggplot(aes(y = index, x = d, xmin = d - (1.96 * se_d),
-             xmax = d + (1.96 * se_d))) +  
-  geom_point(size = 1) +
-  geom_errorbarh(height = .1, aes(color = scale_type)) +
-  geom_vline(xintercept = 0, color = "black", alpha = .5) +
-  scale_x_continuous(name = expression(paste("Glass's", " ", Delta))) +
-  scale_y_continuous(name = "", breaks = 1:length(dat_for_forest_plot$study_names),
-                     trans = "reverse", labels = dat_for_forest_plot$study_names) + 
-  ylab("Study") +
-  geom_vline(xintercept = overall_forest$attitudes$beta, color = '#F8766D', lty = 'dashed') +
-  geom_vline(xintercept = overall_forest$behavior$beta, color = '#00BFC4', lty = 'dashed') +
-  labs(color = "Attitudes or behaviors") +
-  theme_minimal() + 
-  theme(axis.text.y = element_text(face = ifelse(
-    dat_for_forest_plot$study_names %in% 
-      c("Overall (Attitudes)", "Overall (Behavior)"), 
-    "bold", "plain"), 
-    margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
-  ggtitle("Attitudinal and Behavioral Changes Compared")
-
-p
-
-# getting a warning message about vectorized input is not officially supported
-# and results may change in future versions of ggplot2. 
-# Guess we'll hope they don't? :)
-
-png(filename = '../results/4-ggplot-forest-plot.png', width = 1920/2, height = 1080/2)
-p
-dev.off()
-# figure out how to make this plot legible. Do I need two rows per
-# useful for figuring out colors & such: `ggplot_build(p)$data`
-
-## TODO:  sctterplot: y = d (behavior), x = d (attitudes)
-```
-
 
 ### Assessing differences between categories of behavioral outcomes
 *pap*: Compare the effect size of behavioral outcomes for studies with random assignment vs. quasi-experimental studies, both in the short- and in the long-term. 
@@ -1580,84 +1083,7 @@ dat |>
 # https://github.com/ReeceGoding/Frustration-One-Year-With-R#410-factor-variables
 ```
 
-Making a footnote here that to get the number of unique study IDs in each subset of study design/outcome type, do `dat |> group_by(study_design, behavior_type) |> summarise(count_unique_study_id = n_distinct(unique_study_id))`. You'll get a number that doesn't really make any sense 395 in total -- but that's because there are duplicates
 
-# Figure 1
-```{r figure_1}
-
-dat |> ggplot(mapping = aes(y = d, 
-                             x = se_d)) + 
-  geom_point(aes(color = behavior_type,
-             shape = study_design),
-             size = 3) + 
-  stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relationship between effect sizes and standard errors") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5))
-
-```
-
-
-
-```{r att_beh_breakdown}
-
-
-dat |> 
-  group_by(has_both) |>
-  study_count()
-
-# sanity check
-length(unique(dat$unique_study_id)) == 207 + 36 + 61 # true
-```
-
-Behavioral measurement has become more common over time, particularly from 2010 onward. 
-```{r behavioral_outcomes_by_decade}
-range(dat$year)
-
-# how many studies in each decade
-dat |> group_by(decade) |> study_count()
-
-tab <- merge(x = dat |> group_by(decade) |> study_count(),
-             y = dat |> group_by(decade, scale_type) |> summarise(n = n())) 
-# print tab
-tab
-
-#reshape and make latex table
-tab |>
-  pivot_wider(names_from = scale_type, values_from = n) |>
-  mutate(ratio = attitudes/behavior) |>
-  knitr::kable(format = 'latex')
-
-# what was the earliest study to measure behavior as we conceive it?
-dat |> filter(scale_type == 'behavior') |> 
-  arrange(year) |> 
-  select(author, year, paper_title) |> head()
-
-
-
-## what if we just do this for behaviors?
-dat |>
-
-  
-    ggplot(aes(x = year, color = behavior_type)) +
-   geom_line(stat = 'count') + 
-  labs(x = "Year", 
-       y = "Count", 
-       color = "Behavior type",
-       title = "Categories of behavioral outcomes over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 10) +
-  scale_y_continuous(n.breaks = 10) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
-# can also filter out attitudes if we want (filter(scale_type == 'attitudes'))
-
-```
 
 Overall, behaviors are much more resistant to change than attitudes.  The overall effect size for attitudes is $\Delta$ =  0.367 (se = .03), p < 0.0001; while the overall effect size for behaviors is $\Delta$ = 0.072 (se = 0.022) p = 0.0013. While this is still a statistically significant result, it does not meet the conventional threshold for a 'small' effect size.
 
@@ -1687,3 +1113,17 @@ dat |>
   filter(study_design == 'Randomized Control Trial' & behavior_type == 'Perpetration') |> 
   map_robust()
 ```
+notes
+
+NOTE FOR TEAM: should we average within studies?
+in the prejudice meta, y'all averaged all the Ds and var_ds
+within each (to create a single point estimate representing each
+study). But here, we are looking for a lot more within-study variance (e.g. to
+attitudes predict # behavior? What about perp/victimization? So I personally
+vote that we not average but take everything. As a robustness check above, I found
+that averaging doesn't change the overall results (it didn't
+in the prejudice meta that much either if I recall correctly). Another
+approach would be, JH, to create a function that has "average within study" as
+an input each time to replace the functions I am using. My intuition is that
+we should not average, because it's more trouble than it's worth to then parse
+out within-study correlations; but I defer to the group.
