@@ -11,5 +11,6 @@ bld/
 cutouts/*
 results/*
 data/*
+!data/sa_meta_data_raw.csv
 notes/*
 figures/*

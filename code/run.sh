@@ -1,6 +1,10 @@
 #!/bin/bash
 set -ex
 
+if [ ! -d "../results/figures" ]; then
+    mkdir -p "../results/figures"
+fi
+
 # Step 1: clean
 Rscript -e "rmarkdown::render('./1-download-and-clean-data.Rmd', 
   output_dir = '../results', clean = T)"
