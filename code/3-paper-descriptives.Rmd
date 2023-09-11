@@ -111,7 +111,7 @@ zeitgeist = tibble(year = c(1998, 2000, 2007),
 
 tt_overall     |>
   ggplot(aes(year, n)) +
-  geom_line(size = 2) +
+  geom_line(linewidth = 2) +
   # geom_segment(aes(x = year, ## add "flag poles"
   #                  xend = year,
   #                  y = 0,
@@ -247,7 +247,7 @@ dat_participant_sex <- dat |> # participant sex lines
 
 (tt_gender_fig = dat_participant_sex |>
   ggplot(aes(year, n, col = participant_sex)) +
-  geom_line(size = 2) +
+  geom_line(linewidth = 2) +
   scale_x_continuous(
     limits = c(1985, 2018),
     breaks = c(1985, seq(1985, 2020, by = 5), 2018)
@@ -414,7 +414,7 @@ dat |>
   add_row(year = 1985, scale_type = "Behavior") |> 
   complete(year, scale_type, fill = list(n = 0)) |> 
   ggplot(aes(x = year, y = n, color = scale_type)) +
-  geom_line(size = 3) + 
+  geom_line(linewidth = 3) + 
   labs(
     x = NULL,
     y = "# of studies",
@@ -448,7 +448,7 @@ dat |>
   count(decade, behavior_type) |> 
   complete(decade, behavior_type, fill = list(n = 0)) |> 
   ggplot(aes(x = decade, y = n, color = behavior_type, group = behavior_type)) +
-  geom_line(size = 3) + 
+  geom_line(linewidth = 3) + 
   labs(x = NULL, 
        y = "# of studies", 
        col = NULL) +

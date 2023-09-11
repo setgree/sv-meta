@@ -21,6 +21,8 @@ options(scipen = 99)
 ### Download most up-to-date dataset
 ```{r download_data, eval=F}
 # download sheet from google -----------------------------------
+# You, reader, won't have access to this, so don't run this chunk
+
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020",
                path = "../data/sa_meta_data_raw",
