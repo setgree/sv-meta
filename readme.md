@@ -8,6 +8,8 @@ This repository reproduces every quantitative claim and figure in the accompanyi
 
 ## Scripts
 
+These are the main files in `code/`.
+
 * `run.sh` is a sheby ll script that runs through the data cleaning and analysis scripts, start to finish. (Here is an [introduction to shell scripts](https://swcarpentry.github.io/shell-novice/).)
 
 * `1-download-and-clean-data.Rmd` downloads and cleans the data. You won't have access to our original google sheet dataset, so the `download_data` chunk is set to `F`, but the downloaded dataset is included. This script saves a cleaned dataset for use in script 2. 
@@ -23,6 +25,8 @@ This repository reproduces every quantitative claim and figure in the accompanyi
 * `6-exploratory-analyses.Rmd` produces some additional figures and analyses that we didn't include in the main scripts..
 
 ## Functions
+
+These are the files in `code/functions/`.
 
 * `d_calc.R` calculates Glass's $\Delta$ based on the specified inputs.
 
@@ -46,3 +50,5 @@ This repository reproduces every quantitative claim and figure in the accompanyi
 * `sa_meta_data_raw.csv` is the data you need to start from script 1. 
 
 * `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
+
+## Results
