@@ -8,7 +8,7 @@ editor_options:
 ---
 ## Setup 
 
-```{r setup, include=F, echo=F}
+```{r setup, echo=F}
 rm(list = ls())
 library(dplyr, warn.conflicts = F)
 library(knitr)
@@ -31,7 +31,7 @@ options(scipen = 99)
 
 **load data**
 
-```{r load_data, include=F, echo=F}
+```{r load_data, echo=F}
 dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
