@@ -11,6 +11,7 @@ bld/
 cutouts/*
 results/*
 data/*
+seth-notes/
 !data/sa_meta_data_raw.csv
 !data/codebook.csv
 !codebook.pdf

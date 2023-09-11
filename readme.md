@@ -45,3 +45,4 @@ This repository reproduces every quantitative claim and figure in the accompanyi
 ## Data 
 * `sa_meta_data_raw.csv` is the data you need to start from script 1. 
 
+* `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
