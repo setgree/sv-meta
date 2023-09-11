@@ -61,12 +61,12 @@ write_dockerfileR <- function(write_file = TRUE,
                "  && rm -rf /var/lib/apt/lists/*", "\n", "\n"))
   }
   
-  pkgs <- sort(sessioninfo::package_info((pkgs =.packages()), 
+  pkgs <- sort(sessioninfo::package_info((pkgs = .packages()), 
                             dependencies = F)$package)
-  if(length(pkgs) != 0) {
+  if (length(pkgs) != 0) {
     cat(paste0("RUN Rscript -e 'if(!require(\"remotes\")) install.packages(\"remotes\")'", "\n"))
   }
-  if(any(grep('Bioconductor', sessioninfo::package_info()$source))) {
+  if (any(grep('Bioconductor', sessioninfo::package_info()$source))) {
     cat(paste0("RUN Rscript -e 'options(warn = 2); if(!require(\"BiocManager\")) install.packages(\"BiocManager\")'", "\n"))
   }
   
@@ -75,8 +75,8 @@ write_dockerfileR <- function(write_file = TRUE,
   bioc_packs <- list()
   github_packs <- list()
   
-  for(pkg in pkgs) {
-    if(any(grep("CRAN",
+  for (pkg in pkgs) {
+    if (any(grep("CRAN",
                 sessioninfo::package_info(pkg, dependencies = FALSE)$source))) {
       cran_packs <- c(cran_packs, pkg)}
     else if (any(grep("Bioconductor",
