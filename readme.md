@@ -52,3 +52,4 @@ These are the files in `code/functions/`.
 * `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
 
 ## Results
+Note to self to un-ignore this folder once we're ready to publish
