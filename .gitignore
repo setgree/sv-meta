@@ -12,5 +12,7 @@ cutouts/*
 results/*
 data/*
 !data/sa_meta_data_raw.csv
+!data/codebook.csv
+!codebook.pdf
 notes/*
 figures/*
