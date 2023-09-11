@@ -1,4 +1,4 @@
-# Code and Data for _Preventing Sexual Violence \textemdash A Behavioral Problem Without a Behaviorally-Informed Solution_
+# Code and Data for _Preventing Sexual Violence $\textemdash$ A Behavioral Problem Without a Behaviorally-Informed Solution_
 
 By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy Paluck.
 
