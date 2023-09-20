@@ -36,7 +36,6 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
 
-
 ### bystander interventions are a product of their time and place
 ```{r bystander_interventions_over_time}
 

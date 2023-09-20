@@ -38,17 +38,16 @@ raw_dat <- read.csv('../data/sa_meta_data_raw.csv',
 problems(raw_dat) # none as of March 2022
 
 # drop 'eliminate' studies & create unique paper ID
-raw_dat <- raw_dat |>
+raw_dat <- 
+raw_dat |>
   fill(paper_title) |>
   replace_na(list(eliminiate = 0)) |> 
   filter(eliminiate == 0) |>
   group_by(paper_title) |>
-  mutate(first_line = row_number() == 1) |>
-  ungroup() |>
-  mutate(unique_paper_id = cumsum(first_line)) |> # create unique paper id
-  select(-c(coder, page_number, comments, # drop team-internal stuff 
-            d, var_d, se_d, checked, 
-            checker_comment, first_line)) |>
+  mutate(unique_paper_id = cur_group_id()) |> # create unique paper id
+  select(-c(coder, page_number, comments, # drop team-internal stuff
+            d, var_d, se_d, checked,
+            checker_comment)) |>
   group_by(unique_paper_id, intervention_name) |> 
   mutate(unique_study_id = cur_group_id()) |> ### create unique study id
   ungroup()
