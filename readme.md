@@ -34,7 +34,7 @@ These are the files in `code/functions/`.
 
 * `dplot.R` is an experimental function that creates a scatterplot of effect size and standard error of effect size. We use this a bit in the exploratory analyses script.
 
-*`map_robust.R` is a wrapper around `metafor::robust()` that allows us to pipe results to the function. It also works with `split | > map` analyses, which we found useful. 
+* `map_robust.R` is a wrapper around `metafor::robust()` that allows us to pipe results to the function. It also works with `split | > map` analyses, which we found useful. 
 
 * `odds_ratio_to_d.R` is used in an appendix to demonstrate why converting from odds ratio to Cohen's D can create a misleading impression about effect size magnitudes. Robin Gomila [makes this point very nicely elsewhere](https://www.robingomila.com/files/publications_pdfs/Gomila_2020_Logistic_vs_Linear.pdf). 
 
@@ -53,3 +53,6 @@ These are the files in `code/functions/`.
 
 ## Results
 Note to self to un-ignore this folder once we're ready to publish
+
+### TODO
+* Something better about the data, so that a person can just start on script 3. Am thinking that we *include* the modified dataset from the getgo, or maybe delete script 1 and just have script 2 be part of script 3? Am not sure.

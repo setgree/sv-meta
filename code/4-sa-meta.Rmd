@@ -299,8 +299,7 @@ cor.test(perp_and_vict_rcts$mean_d_attitudes,
 ```{r correlation_scatterplot}
 dat_has_both <- dat |> filter(has_both == 'both')
 
-dat |>
-  filter(has_both == 'both') |>
+dat_has_both |>
   group_by(author, year, study_design, unique_study_id, scale_type) |>
   filter(delay == min(delay)) |>
   summarise(mean_d = mean(d),
@@ -323,22 +322,17 @@ dat |>
        x = "Effect size (ideas)",
        y = "Effect size (behaviors)",
        color = "Study Design") +
-  guides(color = guide_legend(title = "Study Design")) +
+ guides(color = guide_legend(title = "Study Design:")) +
   # scale_x_continuous(breaks = seq(-.5, 1.5, by = .25), limits = c(-.5,1.6)) +
   # scale_y_continuous(breaks = seq(-.5, 1.5, by = .25), limits = c(-.5,1.6)) +
   # scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5),
-        axis.text = element_text(size = 12),
+        axis.text = element_text(size = 14),
         axis.title = element_text(size = 14),
         legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14),
         legend.position = "bottom",
-        legend.box = "vertical"
-        )
-ggsave("../results/figures/att_beh_corr.pdf", width = 7.2, height = 7.2)
-
-## TODO: compare line by line with JH's figure in 6-exploratory-analyses (
-## (alternative correlation scatterplot)
+        legend.box = "vertical")
+ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 ```
-
-In sum, while attitudes towards rape myths appear to malleable, the problem of rape itself is much more resistant to change. 
