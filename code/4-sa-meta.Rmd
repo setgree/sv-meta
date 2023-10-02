@@ -223,14 +223,9 @@ dat_has_both |> split(~scale_type) |>
   map(map_robust)
 ```
 
-> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (59) = 0.141, p = 0.279 between changes in ideas and changes in behaviors.
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.138, p = 0.292 between changes in ideas and changes in behaviors.
 
 ```{r attitude_behavior_correlation_overall}
-## TODO John-Henry: is there a way to get the behavior_type that corresponds 
-# to the behavior (rather than 'attitude') into this reshaped dataset, 
-# such that we could:
-# A) subsequently filter it down just to look at each kind behavior
-# B) color code the scatterplot 
 
 has_both_means <- dat_has_both |> 
   group_by(unique_study_id, scale_type) |>
@@ -254,7 +249,7 @@ cor.test(x = has_both_reshaped$mean_d_attitudes,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-> We find similar results when looking at the subset of randomized studies; ($\rho$ (25) = 0.16, p = 0.468); just at studies that measure both ideas about sexual violence and either victimization or perpetration  ($\rho$ (42) = 0.153, p = 0.322); and, finally, within randomized studies that measure ideas about sexual violence as well as either victimization or perpetration  ($\rho$ (59) = 0.141, p = 0.279).
+> We find similar results when looking just at randomized studies 
 
 ```{r attitude_behavior_correlation_subsets}
 # RCTs only?
@@ -262,36 +257,6 @@ rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Tri
 cor.test(x = rcts_both$mean_d_attitudes, 
          y = rcts_both$mean_d_behavior)
 
-#perp and vict(and ideas) only?
-perp_and_vict_both <- has_both_means |>
-  group_by(unique_study_id) |>
-  filter(if_else(any(behavior_type %in% c('involvement', 'bystander')), F, T)) |>
-   pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels, decade),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d))
-
-cor.test(perp_and_vict_both$mean_d_attitudes,
-         perp_and_vict_both$mean_d_behavior)
-
-
-# finally, perp and vict (and ideas) only in RCTs only
-
-perp_and_vict_rcts <- has_both_means |>
-  group_by(unique_study_id) |>
-  filter(if_else(any(behavior_type %in% c('Involvement', 'Bystander')), F, T)) |>
-  filter(study_design == 'Randomized Control Trial') |>
-   pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels, decade),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d))
-
-cor.test(perp_and_vict_rcts$mean_d_attitudes,
-         perp_and_vict_rcts$mean_d_behavior)
 ```
 
 > Figure \ref{fig:corr} highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
