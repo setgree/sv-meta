@@ -1,0 +1,22 @@
+October 2023 todos
+
+once Alex's changes get implemented:
+
+1) download everything
+2) re-run script 1
+3) turn it into docmumentation (e.g. make it a txt file)
+
+Then,
+1) implement all of Martin's changes
+
+Then,
+1) rename everything so the scripts are in the right order
+2) modiy the run.sh to reflect new shape
+3) delete all extra datasets
+4) amend the readme accordingly
+
+Then,
+1) significantly amend the codebook (probably using Google Docs to do this) to line up the 
+listed variables with those actually in the dataset
+
+Then, final, comprehensive read-through
