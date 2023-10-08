@@ -97,4 +97,5 @@ dat_to_save <- dat_clean |>
       scale_type == 'behavior' ~ 2)) |>
   ungroup()
 
+
 saveRDS(object = dat_to_save, file = '../data/sa_meta_data_final.rds')

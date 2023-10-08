@@ -37,7 +37,22 @@ library(stringr)
 library(tidyr, quietly = T)
 
 dat <- readRDS(file = '../data/sa_meta_data_final.rds')
+dat |> 
+  select(author, year, stated_purpose, stated_purpose_of_the_intervention) |> 
+  rowwise() |> 
+  mutate(x = stated_purpose == stated_purpose_of_the_intervention) |> 
+  View()
 
+
+dat |> 
+  select(author, year, cluster_type) |> 
+  View()
+
+dat |> 
+  select(paper_title, author, year, 
+         paper_title, intervention_name, scale_name, 
+         delay, u_s_d, d, se_d, var_d) |> 
+  write_csv("effectsizes.csv")
 ```
 
 # The Problem of Sexual Violence
