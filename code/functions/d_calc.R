@@ -17,8 +17,8 @@ d_calc <- function(stat_type , stat, sample_sd , n_t, n_c){
   }
   
   # unspecified null
-  # e.g. if authors report that effects were "not significant" or there was
-  # "no effect" without otherwise providing enough info to 
+  # e.g. if authors report "no effects" nor "ressults were "not significant" 
+  # without otherwise providing enough info to calculate d
   else if (stat_type == "unspecified null") {
     d <- 0.01
   }
