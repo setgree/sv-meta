@@ -441,7 +441,7 @@ dat |>
 # instead of stopping but, for now;
 
 dat |> 
-  filter(intervention_name == "bringing in the bystander") %>% select(behavior_type)
+  filter(intervention_name == "bringing in the bystander") |> select(behavior_type)
 # so it's pretty much all bystander, with one victmization outcome
 dat |> 
   filter(intervention_name == "bringing in the bystander",

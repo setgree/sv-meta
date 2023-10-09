@@ -1,3 +1,13 @@
+#' Creates plots of the relationship between effect sizes and standard errors
+#' 
+#' We ended up not using this function much, but while working on
+#'  _Prejudice Reduction: Progress and Challenges_, I (Seth) found that I was 
+#'  repeating myself a lot while making exploratory plots, so I  experimented
+#'  with a standardized plot function. In the end, all of the plots that made 
+#'  their way into that paper and this one needed too much customization to use
+#'  a function like this one, but it was an interesting experiment and we 
+#'  use it a few times in `4-exploratory-analyses.Rmd`. 
+
 library(broom)
 library(dplyr)
 library(ggplot2)
@@ -46,13 +56,13 @@ dplot  <- function(sa_data = dat, dot_size = 3, condense = F,
     {if(dot_informative) geom_point(aes(color = study_design, 
                                   shape = scale_type), 
                               size = dot_size) } + 
-    {if(dot_informative == F) geom_point(aes(colour = 'black'), size = dot_size) } +
+    {if (dot_informative == F) geom_point(aes(colour = 'black'), size = dot_size) } +
     geom_smooth(method = 'lm') +
     xlab("Standard Errors") + 
     ylab("Effect Sizes") +
     guides(size = "none") +
-    {if(isTRUE(title)) ggtitle("Effect sizes by Standard Errors")} +
-    {if(dot_informative) labs(colour = "Study Design", 
+    {if (isTRUE(title)) ggtitle("Effect sizes by Standard Errors")} +
+    {if (dot_informative) labs(colour = "Study Design", 
                               shape = "Attitudes or Behaviors")} +
     scale_shape_manual(name = "Attitudes or Behaviors",
                        values = c(16, 17), 
