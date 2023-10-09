@@ -1,4 +1,4 @@
-# Difference in Proportion Calculator
+#' Difference in Proportion Calculator
 
 #' this function estimates Glass's $\Delta$ based on two proportions, e.g.
 #' the number of perpetrators in the treatment and control groups divided by

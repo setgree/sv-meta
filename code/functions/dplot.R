@@ -1,5 +1,5 @@
-#' Creates plots of the relationship between effect sizes and standard errors
-#' 
+#' Standardized ggplots of the relationship between effect sizes and standard errors
+
 #' We ended up not using this function much, but while working on
 #'  _Prejudice Reduction: Progress and Challenges_, I (Seth) found that I was 
 #'  repeating myself a lot while making exploratory plots, so I  experimented

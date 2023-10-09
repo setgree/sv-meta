@@ -1,4 +1,4 @@
-# Glass's Delta calculator
+#' Glass's Delta calculator
 
 #' This function turns raw effect sizes into Cohen's D or Glass's $\Delta$,
 #' depending on what measure of sample variance you use for standardization.
