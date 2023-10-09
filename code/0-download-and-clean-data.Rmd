@@ -20,8 +20,8 @@ options(scipen = 99)
 
 ### Download most up-to-date dataset
 ```{r download_data, eval=F}
-# download sheet from google -----------------------------------
-# You, reader, won't have access to this, so don't run this chunk
+#' download sheet from google -----------------------------------
+#' You, reader, won't have access to this, so don't run this chunk
 
 drive_auth(email = T)
 drive_download("Primary Prevention Meta 2020",
@@ -37,7 +37,7 @@ raw_dat <- read.csv('../data/sa_meta_data_raw.csv',
   as_tibble(); 
 problems(raw_dat) # none as of March 2022
 
-# drop 'eliminate' studies & create unique paper ID
+#' drop 'eliminate' studies & create unique paper ID
 raw_dat <- 
 raw_dat |>
   fill(paper_title) |>
@@ -56,9 +56,10 @@ raw_dat |>
 
 # prepare Cohen's D calcs
 ```{r standardizing_inputs}
-# making sure that inputs are all what the functions expect: eff_type, cluster_type, and checking for NAs
+#' making sure that inputs are all what the functions expect: 
+#' eff_type, cluster_type, and checking for NAs
 
-# fix eff_type
+#' fix eff_type
 unique(raw_dat$eff_type)
 raw_dat$eff_type <- str_replace_all(raw_dat$eff_type, 
                                      c("d.i.d" = "d_i_d", 
@@ -80,16 +81,16 @@ raw_dat$eff_type <- str_replace_all(raw_dat$eff_type,
 
 unique(raw_dat$eff_type)
 
-# fix cluster_type data
+#' fix cluster_type data
 raw_dat$cluster_type <- str_replace_all(raw_dat$cluster_type, 
                                         c("n_groups" = "n groups", 
                                           "-" = NA, 
                                           "^$|^ $" = NA))
 
-## change the cluster randomized var to be factors with an NA rather than a -
+#' change the cluster randomized var to be factors with an NA rather than a -
 raw_dat$cluster_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$cluster_type)
 
-## none missingcheck for any missing; March 2022
+#' none missingcheck for any missing; March 2022
 table(raw_dat$eff_type, useNA = 'ifany') 
 ```
 
@@ -104,7 +105,7 @@ raw_dat$ctrl_sd <- str_replace_all(raw_dat$ctrl_sd,
                                    c('no.sd' = NA_character_, 
                                      '-' = NA_character_))
 
-#' Before convert to numeric,check which  will be converted to NA "by coercion" 
+#' Before convert to numeric,check which, if any, will be converted to NA by coercion
 #' as of 6/18/2021. there are no studies converted by coercion
 #' note: if there are some, re-download the data
 sum(which(is.na(as.numeric(raw_dat$ctrl_sd))) != which(is.na(raw_dat$ctrl_sd)))
@@ -114,7 +115,7 @@ raw_dat$ctrl_sd <- as.numeric(raw_dat$ctrl_sd)
 raw_dat <- raw_dat |> 
   mutate(ctrl_sd = ifelse(eff_type == 'd', 1, ctrl_sd))
 
-# no missing SDs where they are needed
+#' check if any necessary SDs are missing
 raw_dat |> 
   filter(is.na(ctrl_sd)) |>
   filter(eff_type == 'd_i_d' | eff_type == 'd_i_m') |>
@@ -124,7 +125,7 @@ raw_dat |>
 
 ### Ns
 ```{r Ns_characters_become_NAs}
-# replace blanks, spaces, dashes, and 'not given' with NA
+#' replace blanks, spaces, dashes, and 'not given' with NA
 
 raw_dat[, c('n_t_pre', 'n_t_post', 'n_c_pre', 
             'n_c_post', 'n_t_group', 'n_c_group')] <-
@@ -147,14 +148,14 @@ cols_to_convert <- c('n_t_pre', 'n_t_post', 'n_c_pre',
                      'n_c_post', 'n_t_group', 'n_c_group',
                      'u_s_d', 'anticipated_direction')
 raw_dat[cols_to_convert] <- lapply(raw_dat[cols_to_convert], as.numeric)
-# Remember that NAs are induced by coercion here; time permitting, check them
+
 rm(cols_to_convert)
 
-## Now checking for outstanding NAs where you really need one, which are n_t_post & n_c_post
+#' Now checking for outstanding NAs where you really need one, which are n_t_post & n_c_post
 na_vals <- subset(raw_dat, is.na(anticipated_direction) | 
                       apply(select(raw_dat, c('n_t_post', 'n_c_post')), 1, anyNA)) 
 
-## beautiful, zero rows rm
+#' beautiful, zero rows rm
 rm(na_vals)
 ```
 
@@ -180,7 +181,7 @@ if ("lab_or_field" %in% colnames(raw_dat)) {
     select(-lab_or_field)
 }
 
-# scale type
+#' scale type
 unique(raw_dat$scale_type) # good 
 ```
 
@@ -240,10 +241,10 @@ raw_dat$intervention_length <-
 
 table(raw_dat$intervention_length, useNA = "ifany")
 
-# replace missing with 0
+#' replace missing with 0
 raw_dat$intervention_length[is.na(raw_dat$intervention_length)] <- "0"
 raw_dat$intervention_length <- as.numeric(raw_dat$intervention_length)
-# NAs introduced by coercion; time permitting double-check these
+#' NAs introduced by coercion; time permitting double-check these
 ```
 
 ### categorize behavior
@@ -322,7 +323,7 @@ raw_dat$participant_sex <- factor(raw_dat$participant_sex,
                                              "male and female with group composition not specified",
                                              "not specified", "general population"))
 
-# stage in life
+#' stage in life
 raw_dat$stage_in_life <- factor(raw_dat$stage_in_life,
                                 levels = 1:4,
                                 labels = c("middle school (5th to 8th grade)", 
@@ -330,7 +331,7 @@ raw_dat$stage_in_life <- factor(raw_dat$stage_in_life,
                                            "college students", "adults"))
 
 
-# control type
+#' control type
 raw_dat$type_of_control <- factor(raw_dat$type_of_control,
                                   levels = 1:4,
                                   labels = c("no treatment/waitlist control", 
