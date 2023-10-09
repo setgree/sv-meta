@@ -1,5 +1,5 @@
 ---
-title: "3-SA-meta-analyis.Rmd"
+title: "2-SA-meta-analyis.Rmd"
 author: "Seth Green"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document

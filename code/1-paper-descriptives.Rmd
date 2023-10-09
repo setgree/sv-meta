@@ -1,5 +1,5 @@
 ---
-title: "5-descriptives"
+title: "1-paper-descriptives"
 author: "Seth Green and Johh-Henry Pezzuto"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output:
