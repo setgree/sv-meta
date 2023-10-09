@@ -1076,3 +1076,22 @@ approach would be, JH, to create a function that has "average within study" as
 an input each time to replace the functions I am using. My intuition is that
 we should not average, because it's more trouble than it's worth to then parse
 out within-study correlations; but I defer to the group.
+
+### Task for Alex
+```{r task_for_alex}
+dat |> 
+  select(author, year, stated_purpose, stated_purpose_of_the_intervention) |> 
+  rowwise() |> 
+  mutate(x = stated_purpose == stated_purpose_of_the_intervention) |> 
+  View()
+
+
+dat |> 
+  select(author, year, cluster_type) |> 
+  View()
+
+dat |> 
+  select(paper_title, author, year, 
+         paper_title, intervention_name, scale_name, 
+         delay, u_s_d, d, se_d, var_d) |> 
+  write_csv("effectsizes.csv")

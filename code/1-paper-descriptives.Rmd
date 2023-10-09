@@ -37,25 +37,9 @@ library(stringr)
 library(tidyr, quietly = T)
 
 dat <- readRDS(file = '../data/sa_meta_data_final.rds')
-dat |> 
-  select(author, year, stated_purpose, stated_purpose_of_the_intervention) |> 
-  rowwise() |> 
-  mutate(x = stated_purpose == stated_purpose_of_the_intervention) |> 
-  View()
-
-
-dat |> 
-  select(author, year, cluster_type) |> 
-  View()
-
-dat |> 
-  select(paper_title, author, year, 
-         paper_title, intervention_name, scale_name, 
-         delay, u_s_d, d, se_d, var_d) |> 
-  write_csv("effectsizes.csv")
 ```
 
-# The Problem of Sexual Violence
+## The Problem of Sexual Violence
 
 Our present review provides empirical results from 13 countries
 
@@ -78,7 +62,7 @@ dat |>
 ```
 
 
-# Overview of the Studies in the Meta-Analytic Database
+## Overview of the Studies in the Meta-Analytic Database
 
 The database spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
 
