@@ -292,46 +292,46 @@ ggsave("../results/figures/descriptive.pdf", width = 7, height = 7)
 
 # Zeitgeist Programs
 
-### The first 15 Years
+### The first decadex
 
-In the first 15 years, we find 110 studies reported in 77 manuscripts (constituting 36% of our database). 
+ In the first 10 years, we find 47 studies reported in 33 manuscripts
+ 
 ```{r early_years_study_count}
 dat |> 
-  filter(between(year, 1985, 2000)) |> 
+  filter(between(year, 1985, 1995)) |> 
   summarise(n_manuscript = n_distinct(unique_paper_id),
             n_studies = n_distinct(unique_study_id))
 
 
 
 dat |> 
-  mutate(early = between(year, 1985, 2000)) |> 
+  mutate(early = between(year, 1985, 1995)) |> 
   distinct(unique_study_id, .keep_all = T) |> 
   summarise(perc_early = mean(early))
 ```
 
-
-This is also apparent when looking at the type of publication; while 56 of these studies are journal articles, 54 are dissertations
+This is also apparent when looking at the type of publication; while 24 of these studies are journal articles, 23 are dissertations
 ```{r early_years_published_dissertation_breakdown}
 dat |> 
-  filter(between(year, 1985, 2000)) |> 
+  filter(between(year, 1985, 1995)) |> 
   distinct(unique_study_id, publication_type) |> 
   count(publication_type)
 ```
 
 
-The majority of these studies are laboratory studies (n = 61) as opposed to field studies (n = 49) that encompass the larger programmatic evaluations that dominate the next generation of studies.
+The majority of these studies are laboratory studies (n = 27) as opposed to field studies (n = 20) that encompass the larger programmatic evaluations that dominate the next generation of studies.
 ```{r early_years_lab_field} 
 dat |> 
-  filter(between(year, 1985, 2000)) |> 
+  filter(between(year, 1985, 1995)) |> 
   distinct(unique_study_id, lab_field, publication_type) |> 
   count(lab_field)
 ```
 
-These studies tend to be smaller than the next generation of studies (with an average of 188 participants)
+These studies tend to be smaller than the next generation of studies (with an average of 191 participants)
 
 ```{r early_years_study_size}
 dat |> 
-  filter(between(year, 1985, 2000)) |> 
+  filter(between(year, 1985, 1995)) |> 
   group_by(unique_study_id) |> 
   summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
   ungroup() |> 
@@ -339,10 +339,11 @@ dat |>
 ```
 
 
-which constitute 56\% of all studies in this time frame), but a relatively high number of studies that target only men (32 studies, which constitute 29\% of all studies in this time frame).
+They target both men and women (30 studies, which constitute 61\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+
 ```{r early_years_gender_breakdown}
 dat |> 
-  filter(between(year, 1985, 2000)) |> 
+  filter(between(year, 1985, 1995)) |> 
       mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
                                                              "male and female with group composition not specified", 
                                                              "male and female in separate groups"), 

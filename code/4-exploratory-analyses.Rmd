@@ -603,4 +603,26 @@ dat |>
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+### earliest behavioral outcomes?
+
+The first decade of studies overwhelmingly measured ideas rather than behaviors (63 ideas-based outcomes compared to 13 behavioral measurements).
+
+```{r first_decade_outcome type}
+dat |> 
+  filter(between(year, 1985, 1995)) |> 
+  group_by(behavior_type) |> 
+  tally()
+
+```
+The first behavioral outcomes in our dataset were recorded in 1991
+
+```{r earliest_behavioral_measure}
+dat |> 
+  filter(scale_type == 'behavior') |> 
+  group_by(unique_paper_id) |>
+  arrange(year) |> 
+  head() |> 
+  select(author, year, paper_title, behavior_type)
+
+```
 
