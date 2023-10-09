@@ -6,6 +6,8 @@ By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy
 
 This repository reproduces every quantitative claim and figure in the accompanying paper. 
 
+It is also available in fully reproducible format here: [INSERT-CODE-OCEAN-LINK]
+
 ## Scripts
 
 These are the main files in `code/`.
