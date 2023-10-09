@@ -10,19 +10,15 @@ This repository reproduces every quantitative claim and figure in the accompanyi
 
 These are the main files in `code/`.
 
-* `run.sh` is a sheby ll script that runs through the data cleaning and analysis scripts, start to finish. (Here is an [introduction to shell scripts](https://swcarpentry.github.io/shell-novice/).)
+* `run.sh` is a shell script that runs through the data cleaning and analysis scripts, start to finish. (Here is an [introduction to shell scripts](https://swcarpentry.github.io/shell-novice/).)
 
-* `1-download-and-clean-data.Rmd` downloads and cleans the data. You won't have access to our original google sheet dataset, so the `download_data` chunk is set to `F`, but the downloaded dataset is included. This script saves a cleaned dataset for use in script 2. 
+* `1-paper-descriptives.Rmd`reproduces every quantitative and descriptive claim that's not in the results section. 
 
-* `2-prep-data-for-analysis.R` calculates Glass's $\Delta$ (pronounced 'Delta') for each study, as well as each estimate's variance and standard error. It then adds some other useful variables.
+* `2-sa-meta.Rmd` reproduces the quantitative results.
 
-* `3-paper-descriptives.Rmd`reproduces every quantitative and descriptive claim that's not in the results section. 
+* `3-appendixes.Rmd` reproduces the analyses in our appendixes.
 
-* `4-sa-meta.Rmd` reproduces the quantitative results.
-
-* `5-appendixes.Rmd` reproduces the analyses in our appendixes.
-
-* `6-exploratory-analyses.Rmd` produces some additional figures and analyses that we didn't include in the main scripts..
+* `4-exploratory-analyses.Rmd` produces some additional figures and analyses that we didn't include in the main scripts.
 
 ## Functions
 
@@ -51,8 +47,11 @@ These are the files in `code/functions/`.
 
 * `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
 
+## Documentation
+
+* `0-download-and-clean-data.txt` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
+
 ## Results
 Note to self to un-ignore this folder once we're ready to publish
 
 ### TODO
-* Something better about the data, so that a person can just start on script 3. Am thinking that we *include* the modified dataset from the getgo, or maybe delete script 1 and just have script 2 be part of script 3? Am not sure.
