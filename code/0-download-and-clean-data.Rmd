@@ -46,8 +46,8 @@ raw_dat |>
   group_by(paper_title) |>
   mutate(unique_paper_id = cur_group_id()) |> # create unique paper id
   select(-c(coder, page_number, comments, # drop team-internal stuff
-            d, var_d, se_d, checked,
-            checker_comment)) |>
+            d, var_d, se_d, checked, X, alex.comments, comments, checked, 
+            checker_comment, is_red, eliminate)) |>
   group_by(unique_paper_id, intervention_name) |> 
   mutate(unique_study_id = cur_group_id()) |> ### create unique study id
   ungroup()
@@ -434,6 +434,11 @@ raw_dat <- raw_dat |>
       scale_type == 'attitudes' ~ 1,
       scale_type == 'behavior' ~ 2)) |>
   ungroup()
+```
+
+### delete team internal things
+```{r delete_internal_notes}
+
 ```
 
 ## Export 

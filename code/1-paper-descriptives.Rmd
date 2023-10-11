@@ -51,7 +51,7 @@ length(unique(dat$country))
 ## Inclusion and Exclusion Criteria for Study Selection
 
 Table 1 details the number of papers for each study design.
-
+TODO: discrepancy with paper (103 vs 104 quasi studies, and 98 vs 99 observational studies)
 ```{r table_one}
 dat |> 
   distinct(unique_paper_id, unique_study_id, study_design) |> 
@@ -65,7 +65,7 @@ dat |>
 ## Overview of the Studies in the Meta-Analytic Database
 
 The database spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
-
+TODO: 298 vs 304 studies. This is a big discrepancy!
 ```{r years_and_countries}
 dat |> 
   summarise(year_min = min(year),
@@ -77,7 +77,7 @@ dat |>
 
 
 Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
-
+TODO: 402 vs 160
 ```{r avg_study_size}
 dat |> 
   group_by(unique_study_id) |> 
@@ -148,12 +148,13 @@ tt_overall     |>
     col = NULL
   )
 
-ggsave("../results/figures/tt_studies.pdf", height = 5)
+ggsave("../results/figures/tt_studies.pdf", height = 5, width = 7.5)
 ```
 
 We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
 come from various places around the world, including Canada, Europe, and Africa.
 
+TODO: it's down to 265 in America and up to 33 for everywhere else?
 ```{r country_distribution}
 dat |> 
   distinct(unique_study_id, country) |> 
@@ -172,6 +173,8 @@ dat |>
 
 
 In fact, 61% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
+TODO: 28% of studies are only men
+TODO: I thought we filled in all the NAs? 
 ```{r gender_breakdown}
 dat |> # 
   mutate(participant_sex = 
@@ -285,9 +288,6 @@ dat |>
   filter(between(year, 1985, 1995)) |> 
   summarise(n_manuscript = n_distinct(unique_paper_id),
             n_studies = n_distinct(unique_study_id))
-
-
-
 dat |> 
   mutate(early = between(year, 1985, 1995)) |> 
   distinct(unique_study_id, .keep_all = T) |> 
@@ -301,7 +301,6 @@ dat |>
   distinct(unique_study_id, publication_type) |> 
   count(publication_type)
 ```
-
 
 The majority of these studies are laboratory studies (n = 27) as opposed to field studies (n = 20) that encompass the larger programmatic evaluations that dominate the next generation of studies.
 ```{r early_years_lab_field} 
