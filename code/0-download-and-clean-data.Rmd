@@ -232,7 +232,7 @@ raw_dat$delay <- as.numeric(raw_dat$delay)
 ```
 
 
-### Convert interevention_length into numeric
+### Convert intervention_length into numeric
 ```{r fix_intervention_length}
 raw_dat$intervention_length <- 
   ifelse(trimws(raw_dat$intervention_length) %in% 
