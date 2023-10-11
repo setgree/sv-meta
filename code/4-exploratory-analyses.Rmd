@@ -6,6 +6,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+
 ## Setup 
 
 ```{r setup, echo=F}
@@ -36,206 +37,8 @@ dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
 
-### bystander interventions are a product of their time and place
-```{r bystander_interventions_over_time}
 
-bystander_dat <- dat |>
-  filter(
-    str_detect(paper_title, "bystander") |
-      str_detect(brief_description_of_the_intervention, "bystander") |
-      str_detect(intervention_name, "bystander") |
-      str_detect(program_name, "bystander") |
-      str_detect(stated_purpose, "4")) |>
-    select(author, year, paper_title, unique_study_id, study_design,
-           d, var_d, se_d, scale_type,
-           behavior_type, has_both, country) |>
-  mutate(perp_vict_grouped = case_when(
-    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
-    behavior_type == 'Involvement' ~ 'involvement',
-    behavior_type == 'Attitude' ~ 'Attitude',
-    behavior_type == 'Bystander' ~ 'Bystander'))
-
-bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
-  ggplot(aes(x = year)) +
-  geom_line(stat = 'count', color = 'light blue') + 
-  labs(x = "Year", 
-       y = "Count", 
-       title = "Bystander interventions over time") +
-  # scale_x_date(date_breaks = "2 years") +
-  scale_x_continuous(n.breaks = 20) +
-  scale_y_continuous(n.breaks = 15) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
-## BTW an alternate way to do this
-dat |>
-  group_by(unique_study_id) |>
-  summarise(
-    bystander_count = ifelse(
-      any(
-        str_detect(c(
-          brief_description_of_the_intervention, 
-          intervention_name, program_name, paper_title), "bystander")) |
-        any(str_detect(stated_purpose, "4")),
-      TRUE, FALSE)
-  ) |> 
-  summarise(
-    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
-    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
-  )
-
-# where do bystander interventions occur
-bystander_dat |> group_by(country) |> study_count()
-```
-
-## alternative correlation scatterplot
-```{r alt_corr_scatterp}
-dat |> 
-  filter(has_both == 'both') |> 
-  drop_na(study_design) |> 
-  group_by(author, year, study_design, unique_study_id, scale_type) |>
-  summarise(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) |> 
-  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
-  ggplot(aes(x = mean_d_attitudes,
-             y = mean_d_behavior)) + 
-  geom_point(aes(color = study_design),
-             size = 3) + 
-  geom_abline(slope = 1, 
-              lty = 'dashed',
-              linewidth = 2) +
-  geom_smooth(lty = "dashed", 
-              method = "lm", 
-              se = FALSE,
-              color = 'grey',
-              linewidth = 2) +  
-    labs(x = "Effect size (Ideas)",
-       y = "Effect size (Behaviors)",
-       color = NULL) +
-  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
-  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12),
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 14),
-    legend.position = "bottom",
-    legend.box = "vertical"
-  )
-```
-
-Here was a rough idea for a 'figure 1' analogous to the D/SE plot in the contact hypothesis paper
-
-```{r d_se_plot}
-dat |>
-  drop_na(study_design) |> 
-  ggplot(aes(x = se_d, y = d)) +
-  geom_point(aes(color = behavior_type,
-                 shape = study_design),
-             size = 3) +
-  geom_smooth(method = "lm",
-              se = F) +
-  #ggtitle("Relationship between effect sizes and standard errors") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_bw() +
-  theme(axis.text = element_text(size = 12),
-        legend.text = element_text(size = 12),
-        legend.position = "bottom",
-        legend.box = "vertical")
-# alternatiely, just 
-dplot(condense = F)
-
-# alternative where we separate by outcome type
-dat |> ggplot(mapping = aes(y = d, 
-                             x = se_d)) + 
-  geom_point(aes(color = behavior_type,
-             shape = study_design),
-             size = 3) + 
-  stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relationship between effect sizes and standard errors") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5))
-
-```
-
-
-
-```{r att_beh_breakdown}
-
-
-dat |> 
-  group_by(has_both) |>
-  study_count()
-
-# sanity check
-length(unique(dat$unique_study_id)) == 207 + 36 + 61 # true
-```
-
-Some further attempts to assess relationship between SE and D within different study design subsets
-```{r viz_attempts}
-dat |> 
-  split(~study_design) |> 
-  map(.f = ~dplot(sa_data = ., dot_size = 2, condense = F,
-                          dot_informative = T))
- 
-```
-
-Here's a much messier way of slicing the data to get at the relationship between attitudinal and behavioral change
-```{r att_beh_change}
-
-## Relationship between attitudes and behaviors 
-has_both <- dat |> filter(has_both == 'both') |> 
-  group_by(unique_study_id, scale_type) |>
-  mutate(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) |>
-  select(author, year, paper_title, unique_study_id, intervention_name,
-         study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type, decade, behavior_type) |>  
-  slice(1) |> 
-  pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels, decade),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d))
-
-has_both |>
-  ggplot(aes(x = mean_d_attitudes, 
-             y = mean_d_behavior,
-             color = study_design)) +
-  geom_point(size = 3) + 
-  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
-  theme_minimal()
-
-# now same with RCTs, and with study labels
-has_both |> 
-  filter(study_design == 'Randomized Control Trial') |> 
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
-  geom_point(size = 3, color = 'blue') + 
-  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
-              method = "lm",
-              show.legend = FALSE, alpha = .1, se = F) +
-  geom_label_repel(mapping = aes(label = labels)) +
-  theme_minimal() +
-  labs(x = "mean d (attitudes)",
-       y = "mean d (behavior)")
-# hard to read in a paper but maybe a good starting point for looking into papers that 
-# have or do not have a strong correlation between attitude and behavior change
-```
-
-### Robustness checks
+## Robustness checks
 
 Group results within study
 
@@ -326,7 +129,7 @@ dat |>
   sum_lm(d, se_d)
 ```
 
-Correlation between attitudes and behaviors -- standard errors of estimates
+Correlation between ideas and behaviors -- standard errors of estimates
 
 ```{r attitude_behavior_correlation_standard_error}
 # thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
@@ -336,7 +139,7 @@ cor.test.plus <- function(x) {
 }
 cor.test.plus(
   cor.test(
-    x = has_both$mean_d_attitudes, 
+    x = has_both$mean_d_ideas, 
     y = has_both$mean_d_behavior))
 ```
 
@@ -358,7 +161,7 @@ dat |> split(~interaction(ra, scale_type)) |>
 # more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
 ```
 
-attitudes and behavior effect sizes over time 
+ideas and behavior effect sizes over time 
 
 ```{r att_beh_over_time}
 dat |> 
@@ -373,8 +176,8 @@ dat |>
   scale_x_continuous(breaks = seq(1986, 2018, 5)) +
     labs(x = "year",
        y = "mean d") +
-  labs(color = "Attitudes or behaviors")
-# both seem to be trending up, more behaviors than attitudes
+  labs(color = "ideas or behaviors")
+# both seem to be trending up, more behaviors than ideas
 # how much is this b/c of bystander and involvement outcomes?
 
 dat |> 
@@ -390,7 +193,7 @@ dat |>
   scale_x_continuous(breaks = seq(1986, 2018, 5)) +
     labs(x = "year",
        y = "mean d") +
-  labs(color = "Attitudes or behaviors")
+  labs(color = "ideas or behaviors")
 # indeed slope goes down, but still up. interesting
 ```
 
@@ -428,7 +231,7 @@ dat |> arrange(n_t_post) |>
 ```
 
 
-What is the 'bringing in the bystander' average effect on attitudes/behaviors
+What is the 'bringing in the bystander' average effect on ideas/behaviors
 
 ```{r repeat_tests}
 
@@ -450,69 +253,6 @@ dat |>
 # d = 0,02
 ```
 
-A forest plot we ultimately did not end up including
-
-dat for forest plot and sign tests:
-
-```{r forest_plot_dat_and_sign_tests}
-dat_for_forest_plot <- dat |> 
-  select(unique_study_id, scale_type, everything()) |>
-  filter(study_design == 'Randomized Control Trial') |>
-  group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
-  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) |>
-  group_by(unique_paper_id, scale_type) |>
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
-  slice(1) |>
-  ungroup(scale_type) |> 
-  mutate(mean_se = mean(se_d)) |>
-  arrange(mean_se) |>
-  ungroup() |>
-  select(study_names, d, se_d, var_d,
-         scale_type, unique_study_id, unique_paper_id)
-
-# sign test: how many studies have an attitude d that's > behavior d
-dat_for_forest_plot |> group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
-  mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) |>
-  count(comparison) |>
-  rename(Comparison = comparison, Count = n)
-binom.test(15, 21, 0.5)
-
-# now the whole thing but not filtering on RCTs
-
-readRDS(file = '../data/sa_meta_data_final.rds') |> 
-  select(unique_study_id, scale_type, everything()) |>
-  group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
-  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
-                              year, " ", "(", scale_type, ")")) |>
-  group_by(unique_paper_id, scale_type) |>
-  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
-  slice(1) |>
-  ungroup(scale_type) |> 
-  mutate(mean_se = mean(se_d)) |>
-  arrange(mean_se) |>
-  ungroup() |>
-    group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "attitudes"]),
-            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
-  mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
-  )) |>
-  count(comparison) |>
-  rename(Comparison = comparison, Count = n)
-binom.test(36, (36 + 12 + 1), 0.5)
-# This code could stand to be cleaned up a lot
-```
 
 Forest Plot (Figure):
 
@@ -525,10 +265,10 @@ overall_forest <- dat_for_forest_plot |>
 
 
 dat_for_forest_plot <- dat_for_forest_plot |> 
-  add_row(study_names = "Overall (Attitudes)",
+  add_row(study_names = "Overall (ideas)",
           d = overall_forest[[1]]$beta,
           se_d = overall_forest[[1]]$se,
-          scale_type = "attitudes",
+          scale_type = "ideas",
           unique_paper_id = NA) |>
   add_row(study_names = "Overall (Behavior)",
           d = overall_forest[[2]]$beta,
@@ -549,13 +289,13 @@ dat_for_forest_plot |>
   scale_y_continuous(name = "", breaks = 1:length(dat_for_forest_plot$study_names),
                      trans = "reverse", labels = dat_for_forest_plot$study_names) + 
   ylab("Study") +
-  geom_vline(xintercept = overall_forest$attitudes$beta, color = '#F8766D', lty = 'dashed') +
+  geom_vline(xintercept = overall_forest$ideas$beta, color = '#F8766D', lty = 'dashed') +
   geom_vline(xintercept = overall_forest$behavior$beta, color = '#00BFC4', lty = 'dashed') +
-  labs(color = "Attitudes or behaviors") +
+  labs(color = "ideas or behaviors") +
   theme_minimal() + 
   theme(axis.text.y = element_text(face = ifelse(
     dat_for_forest_plot$study_names %in% 
-      c("Overall (Attitudes)", "Overall (Behavior)"), 
+      c("Overall (ideas)", "Overall (Behavior)"), 
     "bold", "plain"), 
     margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
   ggtitle("Attitudinal and Behavioral Changes Compared")
@@ -581,7 +321,7 @@ tab
 #reshape and make latex table
 tab |>
   pivot_wider(names_from = scale_type, values_from = n) |>
-  mutate(ratio = attitudes/behavior) |>
+  mutate(ratio = ideas/behavior) |>
   knitr::kable(format = 'latex')
 
 # what was the earliest study to measure behavior as we conceive it?
@@ -626,3 +366,265 @@ dat |>
 
 ```
 
+# Figures we didn't end up including
+
+### bystander interventions are a product of their time and place
+
+
+```{r bystander_interventions_over_time}
+
+bystander_dat <- dat |>
+  filter(
+    str_detect(paper_title, "bystander") |
+      str_detect(brief_description_of_the_intervention, "bystander") |
+      str_detect(intervention_name, "bystander") |
+      str_detect(program_name, "bystander") |
+      str_detect(stated_purpose, "4")) |>
+    select(author, year, paper_title, unique_study_id, study_design,
+           d, var_d, se_d, scale_type,
+           behavior_type, has_both, country) |>
+  mutate(perp_vict_grouped = case_when(
+    behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
+    behavior_type == 'Involvement' ~ 'involvement',
+    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'Bystander' ~ 'Bystander'))
+
+bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
+  ggplot(aes(x = year)) +
+  geom_line(stat = 'count', color = 'light blue') + 
+  labs(x = "Year", 
+       y = "Count", 
+       title = "Bystander interventions over time") +
+  # scale_x_date(date_breaks = "2 years") +
+  scale_x_continuous(n.breaks = 20) +
+  scale_y_continuous(n.breaks = 15) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## BTW an alternate way to do this
+dat |>
+  group_by(unique_study_id) |>
+  summarise(
+    bystander_count = ifelse(
+      any(
+        str_detect(c(
+          brief_description_of_the_intervention, 
+          intervention_name, program_name, paper_title), "bystander")) |
+        any(str_detect(stated_purpose, "4")),
+      TRUE, FALSE)
+  ) |> 
+  summarise(
+    bystander = sum(ifelse(is.na(bystander_count), FALSE, bystander_count)),
+    no_bystander = sum(ifelse(is.na(bystander_count), TRUE, !bystander_count))
+  )
+
+# where do bystander interventions occur
+bystander_dat |> group_by(country) |> study_count()
+rm(bystander_dat)
+```
+
+## alternative correlation scatterplot
+
+This is figure 3 in the main text. This is a slightly different way to code it, including for completeness. 
+
+```{r alt_corr_scatterp}
+dat |> 
+  filter(has_both == 'both') |> 
+  drop_na(study_design) |> 
+  group_by(author, year, study_design, unique_study_id, scale_type) |>
+  summarise(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) |> 
+  pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d)) |>
+  ggplot(aes(x = mean_d_ideas,
+             y = mean_d_behavior)) + 
+  geom_point(aes(color = study_design),
+             size = 3) + 
+  geom_abline(slope = 1, 
+              lty = 'dashed',
+              linewidth = 2) +
+  geom_smooth(lty = "dashed", 
+              method = "lm", 
+              se = FALSE,
+              color = 'grey',
+              linewidth = 2) +  
+    labs(x = "Effect size (Ideas)",
+       y = "Effect size (Behaviors)",
+       color = NULL) +
+  scale_x_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  scale_y_continuous(breaks = seq(-.5, 1.5, by = .5), limits = c(-.5,1.6)) +
+  scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
+    legend.position = "bottom",
+    legend.box = "vertical"
+  )
+```
+
+Here was a rough idea for a 'figure 1' analogous to the D/SE plot in the contact hypothesis paper. But it turned out to not be very informative. 
+
+```{r d_se_plot}
+dat |>
+  drop_na(study_design) |> 
+  ggplot(aes(x = se_d, y = d)) +
+  geom_point(aes(color = behavior_type,
+                 shape = study_design),
+             size = 3) +
+  geom_smooth(method = "lm",
+              se = F) +
+  #ggtitle("Relationship between effect sizes and standard errors") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_bw() +
+  theme(axis.text = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        legend.position = "bottom",
+        legend.box = "vertical")
+# alternatiely, just 
+dplot(condense = F)
+
+# alternative where we separate by outcome type
+dat |> ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+Some further attempts to assess relationship between SE and D within different study design subsets:
+
+```{r viz_attempts}
+dat |> 
+  split(~study_design) |> 
+  map(.f = ~dplot(sa_data = ., dot_size = 2, condense = F,
+                          dot_informative = T))
+ 
+```
+
+### Correlation scatterplot alternatives
+Here's a much messier way of slicing the data to get at the relationship between attitudinal and behavioral change, and then another attempt at showing the relationship:
+
+```{r att_beh_change}
+
+## Relationship between ideas and behaviors 
+has_both <- dat |> filter(has_both == 'both') |> 
+  group_by(unique_study_id, scale_type) |>
+  mutate(mean_d = mean(d), 
+         mean_var_d = mean(var_d), 
+         mean_se_d = mean(se_d)) |>
+  select(author, year, paper_title, unique_study_id, intervention_name,
+         study_design, mean_d, mean_var_d, mean_se_d,
+         ra, labels, scale_type, decade, behavior_type) |>  
+  slice(1) |> 
+  pivot_wider(
+    id_cols = c(author, year, paper_title, unique_study_id,
+                intervention_name,
+                unique_study_id, study_design, ra, labels, decade),
+    names_from = c(scale_type), 
+    values_from = c(mean_d, mean_var_d, mean_se_d))
+
+has_both |>
+  ggplot(aes(x = mean_d_ideas, 
+             y = mean_d_behavior,
+             color = study_design)) +
+  geom_point(size = 3) + 
+  geom_smooth(method = 'lm', se = F, lty = 'dashed') + 
+  theme_minimal()
+```
+
+Now just the RCTs, and with study labels:
+
+```{r labeled_correlation_plot}
+has_both |> 
+  filter(study_design == 'Randomized Control Trial') |> 
+  ggplot(mapping = aes(x = mean_d_ideas, y = mean_d_behavior)) +
+  geom_point(size = 3, color = 'blue') + 
+  geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
+              method = "lm",
+              show.legend = FALSE, alpha = .1, se = F) +
+  geom_label_repel(mapping = aes(label = labels)) +
+  theme_minimal() +
+  labs(x = "mean d (ideas)",
+       y = "mean d (behavior)")
+```
+
+hard to read in this in a PDF, but if you're curious about studies that produce change in ideas but not behaviors, this is a good place to start (look at some of the outliers)
+
+A forest plot we ultimately did not end up including
+
+dat for forest plot and sign tests:
+
+```{r forest_plot_dat_and_sign_tests}
+dat_for_forest_plot <- dat |> 
+  select(unique_study_id, scale_type, everything()) |>
+  filter(study_design == 'Randomized Control Trial') |>
+  group_by(unique_study_id) |>
+         filter(all(c('ideas', 'behavior') %in% scale_type)) |>
+  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
+                              year, " ", "(", scale_type, ")")) |>
+  group_by(unique_paper_id, scale_type) |>
+  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
+  slice(1) |>
+  ungroup(scale_type) |> 
+  mutate(mean_se = mean(se_d)) |>
+  arrange(mean_se) |>
+  ungroup() |>
+  select(study_names, d, se_d, var_d,
+         scale_type, unique_study_id, unique_paper_id)
+
+# sign test: how many studies have an attitude d that's > behavior d
+dat_for_forest_plot |> group_by(unique_paper_id) |>
+  summarise(mean_d_attitude = mean(d[scale_type == "ideas"]),
+            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
+  mutate(comparison = case_when(
+    mean_d_attitude > mean_d_behavior ~ "Higher",
+    mean_d_attitude == mean_d_behavior ~ "Same",
+    mean_d_attitude < mean_d_behavior ~ "Lower"
+  )) |>
+  count(comparison) |>
+  rename(Comparison = comparison, Count = n)
+binom.test(15, 21, 0.5)
+
+# now the whole thing but not filtering on RCTs
+
+readRDS(file = '../data/sa_meta_data_final.rds') |> 
+  select(unique_study_id, scale_type, everything()) |>
+  group_by(unique_study_id) |>
+         filter(all(c('ideas', 'behavior') %in% scale_type)) |>
+  mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
+                              year, " ", "(", scale_type, ")")) |>
+  group_by(unique_paper_id, scale_type) |>
+  mutate(d = mean(d), var_d = mean(var_d), se_d = mean(se_d)) |>
+  slice(1) |>
+  ungroup(scale_type) |> 
+  mutate(mean_se = mean(se_d)) |>
+  arrange(mean_se) |>
+  ungroup() |>
+    group_by(unique_paper_id) |>
+  summarise(mean_d_attitude = mean(d[scale_type == "ideas"]),
+            mean_d_behavior = mean(d[scale_type == "behavior"])) |>
+  mutate(comparison = case_when(
+    mean_d_attitude > mean_d_behavior ~ "Higher",
+    mean_d_attitude == mean_d_behavior ~ "Same",
+    mean_d_attitude < mean_d_behavior ~ "Lower"
+  )) |>
+  count(comparison) |>
+  rename(Comparison = comparison, Count = n)
+binom.test(36, (36 + 12 + 1), 0.5)
+# This code could stand to be cleaned up a lot
