@@ -789,7 +789,7 @@ dat |>
 # so it's pretty much all bystander, with one victmization outcome
 dat |> 
   filter(intervention_name == "bringing in the bystander",
-         behavior_type == 'Victimization')|> 
+         behavior_type == 'Victimization') |> 
   select(paper_title, year, d, se_d)
 # d = 0,02
 ```
