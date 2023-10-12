@@ -7,10 +7,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Setup 
+### Setup 
 
 ```{r setup, echo=F}
 rm(list = ls())
+# libraries
 library(dplyr, warn.conflicts = F)
 library(knitr)
 library(metafor, quietly = T)
@@ -22,25 +23,23 @@ library(stringr)
 library(tidyr, warn.conflicts = F)
 library(tibble)
 
+# data
+dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
+  select(unique_study_id, scale_type, everything())
+
+# functions
 source('./functions/sum_lm.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
-source('./functions/dplot.R')
 
+# personal preference for how digits get rendered
 options(scipen = 99)
-```
-
-**load data**
-
-```{r load_data, echo=F}
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
-  select(unique_study_id, scale_type, everything())
 ```
 
 
 ## Robustness checks
 
-Group results within study
+**Group results within study**
 
 ```{r grouping rbustness checks}
 # robustness check: group by study AND scale_type and average the results
@@ -48,30 +47,30 @@ dat_grouped <- dat |>
   group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d),
          mean_var_d = mean(var_d),
-         mean_se_d = mean(se_d)) |>
-  slice(1)
+         mean_se_d = mean(se_d)) |> 
+  slice(1) 
 
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped),
-       cluster = dat_grouped$unique_study_id)
+dat_grouped |> map_robust()
 
-# alternative specification 
+# alternative specification -- don't cluster on unique_study_id
+
 rma(yi = d, vi = var_d, data = dat_grouped)
 
-# once we've grouped by study_id, clustering changes the SE by just 0.0001
-
-# How about not grouping by scale_type/
-dat_grouped_two <- dat |>
+# How about not grouping by scale_type
+dat |>
   group_by(unique_study_id) |>
   mutate(mean_d = mean(d),
          mean_var_d = mean(var_d),
          mean_se_d = mean(se_d)) |>
-  slice(1)
+  slice(1) %>% map_robust()
+# slightly raises the SE
 
-robust(x = rma(yi = d, vi = var_d, data = dat_grouped_two),
-  cluster = dat_grouped_two$unique_study_id)
+rm(dat_grouped)
 ```
 
-different ways to break down main results:
+
+**Different ways to subset and then analyze the data:**
+
 ```{r alternate_breakdowns}
 # ra vs not (in paper we break down by study)
 dat |> 
@@ -79,20 +78,12 @@ dat |>
   map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
        cluster = .x$unique_study_id))
 
-# We *would* include this next outcome if our behavioral category table 
-# included an 'overall' row
+# by behavior type overall
+table(dat$behavior_type)
 
 dat |> 
   split(~behavior_type) |> 
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-       cluster = .x$unique_study_id)) 
-# this suggests that moving the needle on perpetration is effectively unsolved problem
-
-# in general, the effects on victimization and  perpetration are larger in the rcts, 
-# which is encouraging (and surprising to me).
-
-table(dat$behavior_type)
-# TODO: triple-check that thesse are right.
+  map(map_robust)
 
 # scale type and delay
 dat |> 
@@ -101,7 +92,7 @@ dat |>
        cluster = .x$unique_study_id))
 ```
 
-sum_lm() checks that don't make it into the final paper
+**sum_lm() checks that don't make it into the final paper**
 
 ```{r sum_lm checks}
 dat |>  
@@ -118,7 +109,6 @@ sum_lm(dat, d, study_design)
 
 # scale type?
 sum_lm(dat, d, scale_type)
-# that is a HUGE difference
 
 # publication status?
 sum_lm(dat, d, publication_type)
@@ -129,19 +119,47 @@ dat |>
   sum_lm(d, se_d)
 ```
 
-Correlation between ideas and behaviors -- standard errors of estimates
 
-```{r attitude_behavior_correlation_standard_error}
-# thank you https://stackoverflow.com/questions/16097453/how-to-compute-p-value-and-standard-error-from-correlation-analysis-of-rs-cor
-cor.test.plus <- function(x) {
-  list(x, 
-       Standard.Error = unname(sqrt((1 - x$estimate^2)/x$parameter)))
-}
-cor.test.plus(
-  cor.test(
-    x = has_both$mean_d_ideas, 
-    y = has_both$mean_d_behavior))
+**Quintile check**
+
+```{r quintile}
+dat |> arrange(n_t_post) |>
+  mutate(quintile = ntile(n_t_post, 5)) |> 
+  group_by(unique_paper_id, intervention_name) |> 
+  split(~quintile) |>
+  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
+                   cluster = .x$unique_study_id))
+
 ```
+
+Just reinforces that there's no meaningful relationship between d and se; if anything the largest decile seems to have the largest effect sizes.
+
+
+**What is the 'bringing in the bystander' average effect on ideas/behaviors**
+
+```{r repeat_tests}
+
+dat |> 
+  filter(intervention_name == "bringing in the bystander")|> 
+  split(~scale_type) |> 
+  map(map_robust)
+# a nice-to-have would be a modified map_robust that, if there weren't enough 
+# rows in a set it would just tell you that and continue on with the meta-analysis
+# instead of stopping but, for now;
+
+dat |>
+  filter(intervention_name == "bringing in the bystander") |>
+  group_by(behavior_type) |>
+  summarise(count = n())
+
+# so it's pretty much all bystander, with one victmization outcome
+dat |> 
+  filter(intervention_name == "bringing in the bystander",
+         behavior_type == 'Victimization') |> 
+  select(paper_title, year, d, se_d)
+# d = 0,02
+```
+
 
 Different ways of assessing effect size change over time
 
@@ -216,43 +234,6 @@ ggplot(mapping = aes(x = se_d, y = d)) +
   theme_minimal()
 # a stronger relationship
 ```
-
-
-### Quintile check
-```{r quintile}
-dat |> arrange(n_t_post) |>
-  mutate(quintile = ntile(n_t_post, 5)) |> 
-  group_by(unique_paper_id, intervention_name) |> 
-  split(~quintile) |>
-  map(.f = ~robust(x = rma(yi = .x$d, vi = .x$var_d),
-                   cluster = .x$unique_study_id))
-
-# just reinforces that there's no meaningful relationship between d and se; if anything the largest decile seems to have the largest effect sizes
-```
-
-
-What is the 'bringing in the bystander' average effect on ideas/behaviors
-
-```{r repeat_tests}
-
-dat |> 
-  filter(intervention_name == "bringing in the bystander")|> 
-  split(~scale_type) |> 
-  map(map_robust)
-# a nice todo would be to modify map_robust so that if there weren't enough 
-# rows in a set it would just tell you that and continue on with the meta-analysis
-# instead of stopping but, for now;
-
-dat |> 
-  filter(intervention_name == "bringing in the bystander") |> select(behavior_type)
-# so it's pretty much all bystander, with one victmization outcome
-dat |> 
-  filter(intervention_name == "bringing in the bystander",
-         behavior_type == 'Victimization') |> 
-  select(paper_title, year, d, se_d)
-# d = 0,02
-```
-
 
 Forest Plot (Figure):
 
@@ -487,8 +468,6 @@ dat |>
         legend.text = element_text(size = 12),
         legend.position = "bottom",
         legend.box = "vertical")
-# alternatiely, just 
-dplot(condense = F)
 
 # alternative where we separate by outcome type
 dat |> ggplot(mapping = aes(y = d, 
@@ -505,16 +484,6 @@ dat |> ggplot(mapping = aes(y = d,
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5))
 
-```
-
-Some further attempts to assess relationship between SE and D within different study design subsets:
-
-```{r viz_attempts}
-dat |> 
-  split(~study_design) |> 
-  map(.f = ~dplot(sa_data = ., dot_size = 2, condense = F,
-                          dot_informative = T))
- 
 ```
 
 ### Correlation scatterplot alternatives
@@ -590,12 +559,12 @@ dat_for_forest_plot <- dat |>
 
 # sign test: how many studies have an attitude d that's > behavior d
 dat_for_forest_plot |> group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "ideas"]),
+  summarise(mean_d_ideas = mean(d[scale_type == "ideas"]),
             mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
+    mean_d_ideas > mean_d_behavior ~ "Higher",
+    mean_d_ideas == mean_d_behavior ~ "Same",
+    mean_d_ideas < mean_d_behavior ~ "Lower"
   )) |>
   count(comparison) |>
   rename(Comparison = comparison, Count = n)
@@ -617,14 +586,90 @@ readRDS(file = '../data/sa_meta_data_final.rds') |>
   arrange(mean_se) |>
   ungroup() |>
     group_by(unique_paper_id) |>
-  summarise(mean_d_attitude = mean(d[scale_type == "ideas"]),
+  summarise(mean_d_ideas = mean(d[scale_type == "ideas"]),
             mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
-    mean_d_attitude > mean_d_behavior ~ "Higher",
-    mean_d_attitude == mean_d_behavior ~ "Same",
-    mean_d_attitude < mean_d_behavior ~ "Lower"
+    mean_d_ideas > mean_d_behavior ~ "Higher",
+    mean_d_ideas == mean_d_behavior ~ "Same",
+    mean_d_ideas < mean_d_behavior ~ "Lower"
   )) |>
   count(comparison) |>
   rename(Comparison = comparison, Count = n)
 binom.test(36, (36 + 12 + 1), 0.5)
 # This code could stand to be cleaned up a lot
+```
+
+
+Different ways of assessing effect size change over time
+
+```{r effect_size_over_time}
+dat |> ggplot((aes(x = year, y = d))) + 
+  geom_point() +   
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+# basically no slope
+
+dat |> sum_lm(d, year)
+dat |> split(~interaction(ra, scale_type)) |>
+  map(~ ggplot(data = ., mapping = aes(x = year, y = d)) + 
+        geom_point() + 
+        geom_smooth(method = 'lm') +
+        theme_minimal())
+# more or less the same results as  Anderson, L. A., & Whiston, S.C. (2005)
+```
+
+ideas and behavior effect sizes over time 
+
+```{r att_beh_over_time}
+dat |> 
+  group_by(year, scale_type) |> 
+  summarise(mean_d = mean(d), 
+            mean_se_d = mean(se_d)) |>
+  ggplot(aes(x = year, y = mean_d, 
+             group = scale_type)) +
+  geom_point(aes(color = scale_type)) +
+  geom_smooth(method = 'lm', aes(color = scale_type), se = F) + 
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1986, 2018, 5)) +
+    labs(x = "year",
+       y = "mean d") +
+  labs(color = "ideas or behaviors")
+# both seem to be trending up, more behaviors than ideas
+# how much is this b/c of bystander and involvement outcomes?
+
+dat |> 
+  filter(behavior_type != "Bystander", behavior_type != 'Involvement') |>
+  group_by(year, scale_type) |> 
+  summarise(mean_d = mean(d), 
+            mean_se_d = mean(se_d)) |>
+  ggplot(aes(x = year, y = mean_d, 
+             group = scale_type)) +
+  geom_point(aes(color = scale_type)) +
+  geom_smooth(method = 'lm', aes(color = scale_type), se = F) + 
+  theme_minimal() +
+  scale_x_continuous(breaks = seq(1986, 2018, 5)) +
+    labs(x = "year",
+       y = "mean d") +
+  labs(color = "ideas or behaviors")
+# indeed slope goes down, but still up. interesting
+```
+
+
+additional ways to look at rct perp outcomes
+
+```{r rct_perp}
+# not a big difference
+rct_perp <- dat |> filter(study_design == 'Randomized Control Trial',
+                          behavior_type == 'Perpetration')
+rct_perp |> ggplot(mapping = aes(x = delay, y = d)) + 
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+
+rct_perp |> filter(delay > 30) |>
+ggplot(mapping = aes(x = se_d, y = d)) + 
+  geom_point() +
+  geom_smooth(method = 'lm') + 
+  theme_minimal()
+# a stronger relationship
+```
