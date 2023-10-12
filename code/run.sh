@@ -14,7 +14,7 @@ Rscript -e "rmarkdown::render('./1-paper-descriptives.Rmd',
   output_dir = '../results', clean = T)"
 
 # step 4: meta analysis
-Rscript -e "rmarkdown::render('./2-sa-meta.Rmd',
+Rscript -e "rmarkdown::render('./2-sv-meta.Rmd',
   output_dir = '../results', clean = T)"
 
 # step 5: appendixes
