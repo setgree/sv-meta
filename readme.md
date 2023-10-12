@@ -16,7 +16,7 @@ These are the main files in `code/`.
 
 * `1-paper-descriptives.Rmd`reproduces every quantitative and descriptive claim that's not in the results section. 
 
-* `2-sa-meta.Rmd` reproduces the quantitative results.
+* `2-sv-meta.Rmd` reproduces the quantitative results.
 
 * `3-appendixes.Rmd` reproduces the analyses in our appendixes.
 
@@ -26,9 +26,7 @@ These are the main files in `code/`.
 
 These are the files in `code/functions/`.
 
-* `d_calc.R` calculates Glass's $\Delta$ based on the specified inputs.
-
-* `dip_calc` demonstrates how we calculate a standardized effect size from a reported difference in proportion. This comes up in an appendix.
+* `dip_calc.R` demonstrates how we calculate a standardized effect size from a reported difference in proportion. This comes up in an appendix.
 
 * `dplot.R` is an experimental function that creates a scatterplot of effect size and standard error of effect size. We use this a bit in the exploratory analyses script.
 
@@ -45,7 +43,9 @@ These are the files in `code/functions/`.
 * `write_dockerfile.R` compoes a Dockerfile from information from `sessioninfo::package_info()`. 
 
 ## Data 
-* `sa_meta_data_raw.csv` is the data you need to start from script 1. 
+* `sa_meta_data_raw.csv` is the data you need to start from script 1. (THIS WON'T BE INCLUDED IN THE FINAL VERSION)
+
+* `sv_meta_data.rds` is the main dataset [NOTE TO MAKE SURE IT'S NAMED THIS]
 
 * `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
 
