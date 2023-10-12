@@ -19,7 +19,7 @@ options(scipen = 99)
 ```
 
 ### Download most up-to-date dataset
-```{r download_data, eval=F}
+```{r download_data, eval=F} 
 #' download sheet from google -----------------------------------
 #' You, reader, won't have access to this, so don't run this chunk
 
