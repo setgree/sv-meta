@@ -132,7 +132,7 @@ raw_dat[, c('n_t_pre', 'n_t_post', 'n_c_pre',
                      'n_c_post', 'n_t_group', 'n_c_group')], 
          function(x) {
            x <- gsub(pattern = '-', replacement = NA, x = x)
-           x <- gsub(pattern = '^\\s*$', replacement = NA, x = x) # replace white string characters
+           x <- gsub(pattern = '^\\s*$', replacement = NA, x = x) # replace whitespace string characters
            x <- gsub(pattern = 'not given', replacement = NA, x = x)
            return(x)
          })
@@ -207,9 +207,8 @@ raw_dat <- raw_dat |>
 redesignated <- raw_dat |> 
   filter(robust_quasi_check) |>
   select(author, year, intervention_name, scale_name, delay, 
-         unique_study_id, unique_paper_id)
-nrow(redesignated) # 0 as of July 2023
-
+         unique_study_id, unique_paper_id, n_t_group, n_c_group)
+nrow(redesignated) 
 rm(redesignated)
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 ```
@@ -243,7 +242,6 @@ table(raw_dat$intervention_length, useNA = "ifany")
 #' replace missing with 0
 raw_dat$intervention_length[is.na(raw_dat$intervention_length)] <- "0"
 raw_dat$intervention_length <- as.numeric(raw_dat$intervention_length)
-#' NAs introduced by coercion; time permitting double-check these
 ```
 
 ### categorize behavior
@@ -312,16 +310,6 @@ raw_dat <- raw_dat |>
   ))
 table(raw_dat$condition_gender)
 
-# participant sex
-raw_dat$participant_sex <- factor(raw_dat$participant_sex,
-                                  levels = 1:7,
-                                  labels = c("only male", 
-                                             "only female", 
-                                             "male and female in mixed groups", 
-                                             "male and female in separate groups",
-                                             "male and female with group composition not specified",
-                                             "not specified", "general population"))
-
 #' stage in life
 raw_dat$stage_in_life <- factor(raw_dat$stage_in_life,
                                 levels = 1:4,
@@ -355,11 +343,23 @@ raw_dat$delivery_of_treatment <- factor(raw_dat$delivery_of_treatment,
 
 ### participant_sex 
 ```{r participant_sex}
+# participant sex
+table(raw_dat$participant_sex)
 raw_dat$participant_sex <- str_replace_all(raw_dat$participant_sex,
                                            c("3,4" = "3, 4",
                                              "4,3" = "3, 4",
                                              "^$|^ $" = NA))
 table(raw_dat$participant_sex)
+
+
+raw_dat$participant_sex <- factor(raw_dat$participant_sex,
+                                  labels = c("only male", 
+                                             "only female", 
+                                             "male and female in mixed groups", 
+                                             "male and female in separate groups and also in combined groups",
+                                             "male and female in separate groups",
+                                             "male and female with group composition not specified",
+                                             "general population"))
 ```
 
 
@@ -435,10 +435,6 @@ raw_dat <- raw_dat |>
   ungroup()
 ```
 
-### delete team internal things
-```{r delete_internal_notes}
-
-```
 
 ## Export 
 ```{r save_clean_data}
