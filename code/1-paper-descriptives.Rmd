@@ -36,7 +36,7 @@ library(scales)
 library(stringr)
 library(tidyr, quietly = T)
 
-dat <- readRDS(file = '../data/sa_meta_data_final.rds')
+dat <- readRDS(file = '../data/sv_meta_data.rds')
 ```
 
 ## The Problem of Sexual Violence
@@ -46,7 +46,6 @@ Our present review provides empirical results from 13 countries
 ```{r unique_countries}
 length(unique(dat$country))
 ```
-
 
 ## Inclusion and Exclusion Criteria for Study Selection
 
@@ -64,7 +63,7 @@ dat |>
 
 ## Overview of the Studies in the Meta-Analytic Database
 
-The database spans the years 1985-2018, encompassing 226 manuscripts that describe 304 studies, in which we coded 500 distinct point estimates.
+The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 500 distinct point estimates.
 TODO: 298 vs 304 studies. This is a big discrepancy!
 ```{r years_and_countries}
 dat |> 
@@ -179,8 +178,10 @@ TODO: I thought we filled in all the NAs?
 dat |> # 
   mutate(participant_sex = 
            ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                         "male and female with group composition not specified", 
-                                         "male and female in separate groups"),
+                                         "male and female in separate groups and also in combined groups",
+                                          "male and female in separate groups",
+                                         "male and female with group composition not specified",
+                                         "general population"),
                   "mixed gender groups", 
                   participant_sex)) |>
   distinct(unique_study_id, participant_sex) |>
@@ -234,8 +235,10 @@ dat |> #
 
 dat_participant_sex <- dat |> # participant sex lines
       mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                                             "male and female with group composition not specified", 
-                                                             "male and female in separate groups"), 
+                                         "male and female in separate groups and also in combined groups",
+                                          "male and female in separate groups",
+                                         "male and female with group composition not specified",
+                                         "general population"), 
                                       "mixed gender groups", 
                                       participant_sex)) |>
       distinct(unique_study_id, .keep_all = T) |>
@@ -245,8 +248,6 @@ dat_participant_sex <- dat |> # participant sex lines
       complete(year, participant_sex, fill = list(n = 0)) |>
       mutate(participant_sex = str_to_title(participant_sex)) |>
   mutate(participant_sex = factor(participant_sex, levels = c("Mixed Gender Groups", "Only Male", "Only Female")))
-
-
 
 (tt_gender_fig = dat_participant_sex |>
   ggplot(aes(year, n, col = participant_sex)) +
@@ -295,6 +296,7 @@ dat |>
 ```
 
 This is also apparent when looking at the type of publication; while 24 of these studies are journal articles, 23 are dissertations
+
 ```{r early_years_published_dissertation_breakdown}
 dat |> 
   filter(between(year, 1985, 1995)) |> 
@@ -321,15 +323,16 @@ dat |>
   summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
 ```
 
-
-They target both men and women (30 studies, which constitute 61\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+They target both men and women (33 studies, which constitute 67\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
 
 ```{r early_years_gender_breakdown}
 dat |> 
   filter(between(year, 1985, 1995)) |> 
       mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
-                                                             "male and female with group composition not specified", 
-                                                             "male and female in separate groups"), 
+                                         "male and female in separate groups and also in combined groups",
+                                          "male and female in separate groups",
+                                         "male and female with group composition not specified",
+                                         "general population"), 
                                       "mixed gender groups", 
                                       participant_sex)) |>
       distinct(unique_study_id, participant_sex) |>
@@ -339,7 +342,7 @@ dat |>
 
 ## Trends in Measurement in the Database
 
-outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 355 to 145. 
+outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 354 to 145. 
 
 ```{r ideas_vs_behavior_outcome_count}
 dat |> 
