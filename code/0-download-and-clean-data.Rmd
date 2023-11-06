@@ -97,8 +97,8 @@ table(raw_dat$eff_type, useNA = 'ifany')
 ### ctrl_SDs
 ```{r ctrl_sds}
 class(raw_dat$ctrl_sd)
-which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows
-
+which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows 
+# and again as of 11/6/23 when I changed one blank cell to a - 
 #' convert "no.sd" and "-" to NA
 raw_dat$ctrl_sd <- str_replace_all(raw_dat$ctrl_sd, 
                                    c('no.sd' = NA_character_, 
