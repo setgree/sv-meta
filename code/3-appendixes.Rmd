@@ -250,7 +250,6 @@ dat |>
 ```{r cluster_study_redo}
 
 dat |> group_by(cluster_type) |> study_count()
-dat |> group_by(cluster_type) |> study_count()
 ```
 
 > In practice, there were 10 studies with fewer than 10 clusters, drawn from 8 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from $\Delta$ = 0.2364 to $\Delta$ = 0.2312, and for quasi-experimental studies, from $\Delta$ = 0.2157 to $\Delta$ = 0.2173.
