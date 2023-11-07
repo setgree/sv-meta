@@ -7,6 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
+This script was our main 'pre-analysis script' to get things from our "raw data", which was a messy google sheet, into a workable dataset. We're including the dataset in its 'finalized' form but not the raw data -- the whole pipeline is brittle and liable to break over time -- but we're including this script as an `.md` for completeness.
 ### setup
 ```{r setup}
 rm(list = ls())
@@ -154,7 +155,7 @@ rm(cols_to_convert)
 na_vals <- subset(raw_dat, is.na(anticipated_direction) | 
                       apply(select(raw_dat, c('n_t_post', 'n_c_post')), 1, anyNA)) 
 
-#' beautiful, zero rows rm
+#' zero rows
 rm(na_vals)
 ```
 
@@ -269,6 +270,7 @@ raw_dat <- raw_dat |>
 ### add useful levels
 ```{r levels}
 
+#' setting
 raw_dat$setting <- factor(raw_dat$setting,
   levels = 1:7,
   labels = c(
@@ -280,6 +282,7 @@ raw_dat$setting <- factor(raw_dat$setting,
     "faith based",
     "other"))
 
+#' publication type
 raw_dat$publication_type <- factor(raw_dat$publication_type,
   levels = 1:5,
   labels = c(
@@ -295,7 +298,7 @@ raw_dat$origin <- factor(raw_dat$origin,
   levels = c(1, 2, 3),
   labels = c("DeGue", "Online Search", "Sent by Authors"))
 
-## condition_gender
+#' condition_gender
 table(raw_dat$condition_gender)
 
 raw_dat <- raw_dat |>
@@ -326,7 +329,7 @@ raw_dat$type_of_control <- factor(raw_dat$type_of_control,
                                              "other treatment", 
                                              "no control group"))
 
-# treatment delivery
+#' treatment delivery
 raw_dat$delivery_of_treatment <- factor(raw_dat$delivery_of_treatment,
                                         levels = 1:9,
                                         labels = c("lecture", 
@@ -342,8 +345,10 @@ raw_dat$delivery_of_treatment <- factor(raw_dat$delivery_of_treatment,
 
 
 ### participant_sex 
+This one is a little more complex because some studies have multiple treatment arms, one that's gender-segregreated and one that's mixed.
+
 ```{r participant_sex}
-# participant sex
+#' participant sex
 table(raw_dat$participant_sex)
 raw_dat$participant_sex <- str_replace_all(raw_dat$participant_sex,
                                            c("3,4" = "3, 4",
@@ -435,6 +440,17 @@ raw_dat <- raw_dat |>
   ungroup()
 ```
 
+
+### replace 'attitudes' with 'ideas'
+This was something we got more consistent about over the course of the paper, but at first.
+```{r attitudes_become_ideas}
+raw_dat <- raw_dat %>%
+  rename(ideas_behaviors = attitudes_behaviors) %>%
+  mutate(
+    scale_type = ifelse(scale_type == "attitudes", "ideas", scale_type),
+    behavior_type = ifelse(behavior_type == "Attitude", "ideas", behavior_type)
+  )
+```
 
 ## Export 
 ```{r save_clean_data}

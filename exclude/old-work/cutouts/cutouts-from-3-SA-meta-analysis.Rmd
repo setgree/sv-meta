@@ -1,0 +1,46 @@
+
+
+
+Analysis plan discussed 
+what is the average effect size:
+RCT – behavior
+```{r rct_behavior}
+rct_behavior <- rcts %>% filter(scale_type == 'behavior')
+robust(x = rma(yi = d, vi = var_d, data = rct_behavior), 
+       cluster = rct_behavior$unique_study_id)
+```
+
+RCT – attitude
+```{r rct_attitude}
+rct_attitude <- rcts %>% filter(scale_type == 'attitudes')
+robust(x = rma(yi = d, vi = var_d, data = rct_attitude), 
+       cluster = rct_attitude$unique_study_id)
+```
+
+RCT+Quasi – behavior
+```{r rct_quasi_behavior}
+rct_quasi_behavior <- rcts_and_quasi %>% filter(scale_type == 'behavior')
+robust(x = rma(yi = d, vi = var_d, data = rct_quasi_behavior), 
+       cluster = rct_quasi_behavior$unique_study_id)
+
+```
+
+RCT+Quasi – attitude
+```{r rct_quasi_attitude}
+rct_quasi_attiude <- rcts_and_quasi %>% filter(scale_type == 'attitudes')
+robust(x = rma(yi = d, vi = var_d, data = rct_quasi_attiude), 
+       cluster = rct_quasi_attiude$unique_study_id)
+```
+
+All study types – behavior
+```{r everything_behavior}
+robust(x = rma(yi = d, vi = var_d, data = behavioral_data), 
+       cluster = behavioral_data$unique_study_id)
+```
+
+All study types – attitude
+```{r everything_attitude}
+attitudes <- dat %>% filter(scale_type == 'attitudes') 
+robust(x = rma(yi = d, vi = var_d, data = attitudes), 
+       cluster = attitudes$unique_study_id)
+```

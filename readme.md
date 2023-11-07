@@ -10,7 +10,7 @@ It is also available in fully reproducible format here: [INSERT-CODE-OCEAN-LINK]
 
 ## Scripts
 
-These are the main files in `code/`.
+These are the main files in `code/`. All files presume that that's your working directory (open `sv-meta.Rproj` in Rstudio to have Rstudio take care of this automatically).
 
 * `run.sh` is a shell script that runs through the data cleaning and analysis scripts, start to finish. (Here is an [introduction to shell scripts](https://swcarpentry.github.io/shell-novice/).)
 

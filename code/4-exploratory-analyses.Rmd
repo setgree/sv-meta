@@ -512,3 +512,9 @@ dat_for_forest_plot |>
     margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
   ggtitle("Attitudinal and Behavioral Changes Compared")
 ```
+
+### Reclassifying the robust quasi check studies as RCTs
+They had random assignment,  but fewer than ten clusters, so we called them RCTs. reclassify them, then run the main meta, and by study design as well
+
+
+### What if we ignore all clustering information when calculating standard errors?

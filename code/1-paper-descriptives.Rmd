@@ -39,6 +39,18 @@ library(tidyr, quietly = T)
 dat <- readRDS(file = '../data/sv_meta_data.rds')
 ```
 
+# introduction
+
+Slightly fewer than half (140 of 298) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
+
+```{r rape_myth_measurement}
+dat %>%
+  group_by(unique_study_id) %>%
+  summarize(has_myth_or_IRMA = any(str_detect(scale_name, "myth|irma|illinois"))) %>%
+  count(has_myth_or_IRMA)
+
+```
+
 ## The Problem of Sexual Violence
 
 Our present review provides empirical results from 13 countries

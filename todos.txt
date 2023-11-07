@@ -1,9 +1,9 @@
 October 2023 todos
 
 1. go through all the anticipated direction = 0 studies and make sure that we're not 
-rounding down any real results to 0. There are some Ds calculated and we should be mindful of that
+rounding down any real results to 0. There are some Ds calculated and we should be mindful of that DONE
 
-2. Follow up with JH about the type_of_at_risk var
+2. Follow up with JH about the type_of_at_risk var DONE
 
 once Alex's changes get implemented:
 
@@ -12,7 +12,7 @@ once Alex's changes get implemented:
 3) turn it into docmumentation (e.g. make it a txt file)
 
 Then,
-1) implement all of Martin's changes
+1) implement all of Martin's changes DONE
 
 Then
 1) rename everything so the scripts are in the right order
