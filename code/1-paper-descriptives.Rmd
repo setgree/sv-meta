@@ -352,8 +352,8 @@ dat |>
 ```
 
 
-207 measure outcomes about ideas only
-```{r}
+202 measure outcomes about ideas only
+```{r att_only}
 dat |> 
   select(unique_study_id, scale_type) |> 
   group_by(unique_study_id) |> 
@@ -365,7 +365,7 @@ dat |>
 
 
 36 measure only behaviors; 
-```{r}
+```{r behaviors_only}
 dat |> 
   select(unique_study_id, scale_type) |> 
   group_by(unique_study_id) |> 
@@ -376,7 +376,7 @@ dat |>
 ```
 
 
-61 measure both
+62 measure both
 ```{r}
 dat |> 
   select(unique_study_id, scale_type) |> 
@@ -388,7 +388,7 @@ dat |>
 ```
 
 
-While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was roughly 1:5, 
+While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was 1:4.75, 
 ```{r early_years_ratio_between_ideas_and_beahvior_outcomes}
 dat |> 
   filter(between(year, 1985, 2000)) |>
@@ -397,7 +397,7 @@ dat |>
   mutate(ratio = attitudes/behavior)
 ```
 
-after 2010 this ratio drops to 1:1.4. 
+after 2010 this ratio drops to 1:1.35. 
 ```{r post_2010_ratio_ideas_behavvior}
 dat |> 
   filter(year > 2010) |>
@@ -442,7 +442,7 @@ ggsave("../results/figures/tt_att_beh.pdf", height = 5)
 
 ## Measuring Sexually Violent Behavior
 
-behavioral outcomes that fall into four categories: perpetration, victimization, bystander, and involvement. Figure XX demonstrates the trends over time in these measurements.
+behavioral outcomes that fall into four categories: perpetration, victimization, bystander, and involvement. Figure $\ref{fig:tt_att_beh}$ demonstrates the trends over time in these measurements.
 
 ```{r behavioral_outcomes_by_decade}
 dat |>
