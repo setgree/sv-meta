@@ -431,7 +431,7 @@ raw_dat <- raw_dat |>
   mutate(
     has_both = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 'both',
-      scale_type == 'attitudes' ~ 'attitudes',
+      scale_type == 'attitudes' ~ 'ideas',
       scale_type == 'behavior' ~ 'behavior'),
     attitudes_behaviors = case_when(
       all(c('attitudes', 'behavior') %in% scale_type) ~ 0,
@@ -447,8 +447,8 @@ This was something we got more consistent about over the course of the paper, bu
 raw_dat <- raw_dat %>%
   rename(ideas_behaviors = attitudes_behaviors) %>%
   mutate(
-    scale_type = ifelse(scale_type == "attitudes", "ideas", scale_type),
-    behavior_type = ifelse(behavior_type == "Attitude", "ideas", behavior_type)
+    scale_type = if_else(scale_type == "attitudes", "ideas", scale_type),
+    behavior_type = if_else(behavior_type == "Attitude", "ideas", behavior_type)
   )
 ```
 

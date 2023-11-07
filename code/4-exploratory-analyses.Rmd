@@ -21,7 +21,7 @@ library(tidyr, warn.conflicts = F)
 library(tibble)
 
 # data
-dat <- readRDS(file = '../data/sa_meta_data_final.rds') |>
+dat <- readRDS(file = '../data/sv_meta_data.rds') |>
   select(unique_study_id, scale_type, everything())
 
 # functions
@@ -134,7 +134,7 @@ Just reinforces that there's no meaningful relationship between d and se; if any
 **What is the 'bringing in the bystander' average effect on ideas/behaviors**
 ```{r repeat_tests}
 dat |> 
-  filter(intervention_name == "bringing in the bystander")|> 
+  filter(intervention_name == "bringing in the bystander") |> 
   split(~scale_type) |> 
   map(map_robust)
 # a nice-to-have would be a modified map_robust that, if there weren't enough 
@@ -443,7 +443,7 @@ binom.test(15, 21, 0.5)
 next, regenerating the forest plot from the file itself, but not filtering on RCTs:
 
 ```{r dat_for_forest_plot_not_rcts}
-readRDS(file = '../data/sa_meta_data_final.rds') |> 
+readRDS(file = '../data/sv_meta_data.rds') |> 
   select(unique_study_id, scale_type, everything()) |>
   group_by(unique_study_id) |>
          filter(all(c('ideas', 'behavior') %in% scale_type)) |>

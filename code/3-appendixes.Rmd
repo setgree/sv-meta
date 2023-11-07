@@ -37,7 +37,7 @@ source('./functions/study_count.R')
 
 # read in data
 
-dat <- readRDS(file = '../data/sv_meta_data_final.rds') |>
+dat <- readRDS(file = '../data/sv_meta_data.rds') |>
   select(unique_study_id, scale_type, everything())
 
 # data for 'has both' analyses
