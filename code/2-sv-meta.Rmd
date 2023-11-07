@@ -252,7 +252,7 @@ dat |>
       kable()})
 ```
 
-> Our sample features 28 randomized designs that measure perpetration, which collectively produce a meta-analytic effect of 0.081 (SE = 0.062), with a p-value of 0.198.
+> Our sample features 28 randomized designs that measure perpetration, which collectively produce a meta-analytic effect of 0.086 (SE = 0.061), with a p-value of 0.173.
 
 ```{r rct_perp}
 dat |>
@@ -262,20 +262,19 @@ dat |>
       count_result = study_count(.),
       robust_result = map_robust(.))
 ```
+
 ## Do Changes in Ideas Predict Changes in Behaviors?
 
-
-> A key question for the primary prevention literature concerns the association between ideas about sexual violence and sexual violence itself. Specifically, a primary goal of this review is to examine whether the predicted association between changing ideas and changing behavior actually prevails in the database. To do so, we focus on the 61 studies that measure both type of outcomes.
+> We focus on the 62 studies that measure both type of outcomes.
 
 ```{r dat_has_both_count}
 dat_has_both <- dat |> filter(has_both == 'both')
 dat_has_both |> study_count()
 ```
 
-> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.081 (SE = 0.03), p = 0.009, while the pooled idea change effect is $\Delta$ = 0.278 (SE = 0.036), p $<$0.0001.
+> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.3 (SE = 0.04), p $<$0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
 
 ```{r has_both_behav_att_meta_results}
-dat_has_both |> map_robust()
 dat_has_both |> split(~scale_type) |> 
   map(map_robust)
 ```
@@ -306,8 +305,8 @@ cor.test(x = has_both_reshaped$mean_d_ideas,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-> We find similar results when looking just at randomized studies 
-
+> The relationship remains small and non-significant when looking solely at randomized evaluations (\textit{r} = 0.147, p = 0.464). 
+ 
 ```{r ideas_behavior_correlation_subsets}
 # RCTs only?
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
@@ -319,9 +318,8 @@ cor.test(x = rcts_both$mean_d_ideas,
 > Figure \ref{fig:corr} highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
-dat_has_both <- dat |> filter(has_both == 'both')
 
-dat_has_both |>
+pivoted <- dat_has_both |>
   group_by(author, year, study_design, unique_study_id, scale_type) |>
   filter(delay == min(delay)) |>
   summarise(mean_d = mean(d),
