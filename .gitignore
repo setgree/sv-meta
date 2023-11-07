@@ -10,7 +10,6 @@
 bld/
 cutouts/*
 results/*
-data/*
 seth-notes/*
 old-work/* 
 data/sa_meta_data_raw.csv
@@ -18,3 +17,4 @@ data/sa_meta_data_raw.csv
 !codebook.pdf
 notes/*
 figures/*
+exclude/*
