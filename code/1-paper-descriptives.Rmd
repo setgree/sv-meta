@@ -1,6 +1,6 @@
 ---
 title: "1-paper-descriptives"
-author: "Seth Green and Johh-Henry Pezzuto"
+author: "Johh-Henry Pezzuto"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output:
   rmarkdown::html_document:
@@ -61,8 +61,9 @@ length(unique(dat$country))
 
 ## Inclusion and Exclusion Criteria for Study Selection
 
-Table 1 details the number of papers for each study design.
+Table $\ref{tab:n_designs}$ details the number of papers for each study design.
 TODO: discrepancy with paper (103 vs 104 quasi studies, and 98 vs 99 observational studies)
+TODO: DELETE THIS OR WHAT??
 ```{r table_one}
 dat |> 
   distinct(unique_paper_id, unique_study_id, study_design) |> 

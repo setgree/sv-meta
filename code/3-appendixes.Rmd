@@ -1,6 +1,6 @@
 ---
 title: "3-appendixes"
-author: "Seth Green"
+author: "Seth Ariel Green"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output: html_document
 editor_options: 

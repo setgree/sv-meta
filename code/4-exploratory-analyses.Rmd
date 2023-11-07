@@ -1,6 +1,6 @@
 ---
 title: "4-exploratory-analyses"
-author: "Seth Green"
+author: "Seth Ariel Green"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 editor_options: 
