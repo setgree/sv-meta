@@ -6,8 +6,8 @@ if [ ! -d "../results/figures" ]; then
 fi
 
 # Step 0: clean
-Rscript -e "rmarkdown::render('./0-download-and-clean-data.Rmd', 
-  output_dir = '../results', clean = T)"
+# Rscript -e "rmarkdown::render('./0-download-and-clean-data.Rmd', 
+#   output_dir = '../results', clean = T)"
 
 # step 3: descriptive stats
 Rscript -e "rmarkdown::render('./1-paper-descriptives.Rmd',

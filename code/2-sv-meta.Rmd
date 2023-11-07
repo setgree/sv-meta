@@ -30,6 +30,8 @@ library(tibble)
 source('./functions/sum_lm.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
+source('./functions/d_calc.R')
+source('./functions/var_d_calc.R')
 # NOTE ON SUM_LM: 
 # `sum_lm(dat, d, se_d, coef_only = T)` = `summary(lm(formula = d ~ se_d, 
 #                                          data = dat))$coefficients`
@@ -51,7 +53,7 @@ This chunk checks if the variable `d` is present, and if it's not, it adds it
 if (!"d" %in% names(dat)) {
   dat <- dat |>
     mutate(d = case_when(
-      !is.na(n_t_group) & study_design %in% c('rct') ~ 
+      !is.na(n_t_group) & study_design %in% c('Randomized Control Trial') ~ 
         mapply(
           FUN = d_calc,
           stat_type = eff_type,
@@ -70,7 +72,7 @@ if (!"d" %in% names(dat)) {
     )) |>
     mutate(d = abs(d) * anticipated_direction) |>
     mutate(var_d = case_when(
-      !is.na(n_t_group) & study_design %in% c('rct') ~
+      !is.na(n_t_group) & study_design %in% c('Randomized Control Trial') ~
         mapply(
           FUN = var_d_calc,
           d = d,
@@ -93,7 +95,7 @@ if (!"d" %in% names(dat)) {
 
 ## Overall results and (lack of) publication bias
 
-> Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.281 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
+> Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.282 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
 
 ```{r overall_meta}
 dat |> map_robust()
@@ -103,7 +105,7 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
 
-> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.145 (SE = 0.176), p = 0.412.
+> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.15 (SE = 0.176), p = 0.412.
 
 ```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
@@ -111,6 +113,7 @@ sum_lm(dat, d, se_d, coefs_only = T)
 
 > Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 99, $\beta$ = 0.208, SE = 0.256, p = .373) and quasi-experimental (N = 104, $\beta$ = -0.201, SE = 0.393, p = .597) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 102, $\beta$ = 2.228, SE = 0.64, p $<$ .001), suggesting some publication bias within these studies. 
 
+TODO: this isn't right at all
 ```{r publication_bias_by_study_design}
 # Ns
 dat |>
@@ -130,21 +133,25 @@ dat |>
     study_count()
 
 # sanity check
-length(unique(dat$unique_study_id)) == 186 + 118
+length(unique(dat$unique_study_id)) == 189 + 109
 ```
 
-> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0467), but not at a statistically significant level (p = 0.28) 
+> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0476), but not at a statistically significant level (p = 0.28) 
 
 ```{r publish_relationship_or_not}
 dat |> sum_lm(d, published_unpublished)
 ```
 
-> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant (N = 186, $\beta$ = 0.00302  (SE = 0.256), p = .373); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.5842 (SE = 0.360)), the relationship is still statistically non-significant (p = 0.106).
+> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant 
 
-```{r publish_unpublish_split_effect_size_standard_error}
+```{r pub_unpub_se_d}
 
 dat |> split(~published_unpublished) |> map(sum_lm)
+```
 
+>  while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.5842 (SE = 0.360)), the relationship is still statistically non-significant (p = 0.106).
+
+```{r pub_unpub_eff_size}
 dat |> split(~published_unpublished) |> map(map_robust)
 ```
 
