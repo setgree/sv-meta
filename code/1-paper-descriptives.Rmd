@@ -369,8 +369,8 @@ dat |>
 dat |> 
   select(unique_study_id, scale_type) |> 
   group_by(unique_study_id) |> 
-  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
-  filter(perc_attitudes == 1) |> 
+  summarise(perc_ideas = sum(scale_type == "ideas") / n()) |> 
+  filter(perc_ideas == 1) |> 
   ungroup() |> 
   nrow()
 ```
@@ -381,8 +381,8 @@ dat |>
 dat |> 
   select(unique_study_id, scale_type) |> 
   group_by(unique_study_id) |> 
-  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
-  filter(perc_attitudes == 0) |> 
+  summarise(perc_ideas = sum(scale_type == "ideas") / n()) |> 
+  filter(perc_ideas == 0) |> 
   ungroup() |> 
   nrow()
 ```
@@ -393,8 +393,8 @@ dat |>
 dat |> 
   select(unique_study_id, scale_type) |> 
   group_by(unique_study_id) |> 
-  summarise(perc_attitudes = sum(scale_type == "attitudes") / n()) |> 
-  filter(!perc_attitudes %in% c(0,1)) |> 
+  summarise(perc_ideas = sum(scale_type == "ideas") / n()) |> 
+  filter(!perc_ideas %in% c(0,1)) |> 
   ungroup() |> 
   nrow()
 ```
@@ -406,7 +406,7 @@ dat |>
   filter(between(year, 1985, 2000)) |>
   count(scale_type) |> 
   pivot_wider(names_from = scale_type, values_from = n) |> 
-  mutate(ratio = attitudes/behavior)
+  mutate(ratio = ideas/behavior)
 ```
 
 after 2010 this ratio drops to 1:1.35. 
@@ -415,7 +415,7 @@ dat |>
   filter(year > 2010) |>
   count(scale_type) |> 
   pivot_wider(names_from = scale_type, values_from = n) |> 
-  mutate(ratio = attitudes/behavior)
+  mutate(ratio = ideas/behavior)
 ```
 
 
@@ -423,7 +423,7 @@ Fig 3 displays the relationship between these outcomes over time.
 
 ```{r fig_tt_att_beh}
 dat |> 
-  mutate(scale_type = str_to_title(ifelse(scale_type == "attitudes", "ideas", "behavior"))) |> 
+  mutate(scale_type = str_to_title(ifelse(scale_type == "ideas", "ideas", "behavior"))) |> 
   distinct(year, unique_study_id, scale_type) |> 
   count(year, scale_type) |> 
   add_row(year = 1985, scale_type = "Behavior") |> 
@@ -458,7 +458,7 @@ behavioral outcomes that fall into four categories: perpetration, victimization,
 
 ```{r behavioral_outcomes_by_decade}
 dat |>
-  filter(behavior_type != "Attitude") |> 
+  filter(behavior_type != "ideas") |> 
   distinct(unique_study_id, decade, behavior_type) |> 
   count(decade, behavior_type) |> 
   complete(decade, behavior_type, fill = list(n = 0)) |> 
@@ -491,7 +491,7 @@ Overall these and other myth measures constitute 56% of the measures we coded th
 ```{r myth_percentage}
 dat |> 
   select(scale_name, behavior_type) |> 
-  filter(behavior_type == "Attitude") |> 
+  filter(behavior_type == "ideas") |> 
   mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth")) |> 
   group_by(myth_scale) |> 
   summarise(n = n()) |> 

@@ -159,14 +159,14 @@ dat |> split(~published_unpublished) |> map(map_robust)
 
 > Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.072 (SE = 0.022), p = .0013; whereas the overall effect size for idea-based outcomes is ∆ = 0.367 (SE = .03), p < 0.0001.
 
-```{r differences_by_attitude_behavior}
+```{r differences_by_ideas_behavior}
 
 dat |> split(~scale_type) |> map(.f = map_robust)
 ```
 
 > We further report on the meta-analytic effect of primary prevention interventions on behavior, and on ideas about sexual violence by study design (see Table 2). This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are about 18 times larger than behavioral responses. Turning specifically to primary prevention programs’ effect on behavioral outcomes, we observe that the largest behavioral effects are found within randomized studies, which are the most rigorous designs, while the smallest are found within observational designs. However, while the meta-analytic effect for behavioral outcomes is statistically significant at p < .05 in both randomized and quasi-experimental designs, neither meet the conventional standard for a “small” effect size (∆ = 0.2).
 
-```{r behavior_attitudes_discrepancy_within_study_designs}
+```{r behavior_ideas_discrepancy_within_study_designs}
 
 # first, Ns
 dat |> 
@@ -183,7 +183,7 @@ dat |>
 
 \subsection{Do bystander interventions Change Behavior?}
 
-> We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure ideas about sexual violence like beliefs, attitudes, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
+> We tested this on the 96 bystander-related interventions in our database, the majority (76/96) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
 
 ```{r bystander_interventions_overall}
 # create bystander dataset
@@ -203,7 +203,7 @@ bystander_dat <- dat |>
   mutate(perp_vict_grouped = case_when(
     behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
     behavior_type == 'Involvement' ~ 'involvement',
-    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'ideas' ~ 'ideas',
     behavior_type == 'Bystander' ~ 'Bystander'))
 
 # how many studies overall?
@@ -212,7 +212,7 @@ bystander_dat |>  study_count()
 # how many studies look at ideas?
 bystander_dat |> group_by(behavior_type) |> study_count()
 
-bystander_dat |> filter(behavior_type == 'Attitude') |> map_robust()
+bystander_dat |> filter(behavior_type == 'ideas') |> map_robust()
 
 ```
 
@@ -277,7 +277,7 @@ dat_has_both |> split(~scale_type) |>
 
 > Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.138, p = 0.292 between changes in ideas and changes in behaviors.
 
-```{r attitude_behavior_correlation_overall}
+```{r ideas_behavior_correlation_overall}
 
 has_both_means <- dat_has_both |> 
   group_by(unique_study_id, scale_type) |>
@@ -297,16 +297,16 @@ has_both_reshaped <- has_both_means |>
     names_from = c(scale_type), 
     values_from = c(mean_d, mean_var_d, mean_se_d))
 
-cor.test(x = has_both_reshaped$mean_d_attitudes, 
+cor.test(x = has_both_reshaped$mean_d_ideas, 
          y = has_both_reshaped$mean_d_behavior)
 ```
 
 > We find similar results when looking just at randomized studies 
 
-```{r attitude_behavior_correlation_subsets}
+```{r ideas_behavior_correlation_subsets}
 # RCTs only?
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
-cor.test(x = rcts_both$mean_d_attitudes, 
+cor.test(x = rcts_both$mean_d_ideas, 
          y = rcts_both$mean_d_behavior)
 
 ```
@@ -325,7 +325,7 @@ dat_has_both |>
   pivot_wider(id_cols = c(author, year, unique_study_id, study_design),
     names_from = c(scale_type),
     values_from = c(mean_d, mean_var_d, mean_se_d)) |>
-  ggplot(aes(x = mean_d_attitudes,
+  ggplot(aes(x = mean_d_ideas,
              y = mean_d_behavior)) +
   geom_point(aes(color = study_design),
              size = 3) +
@@ -335,7 +335,7 @@ dat_has_both |>
               method = "lm",
               se = FALSE,
               color = 'grey') +
-  labs(#title = "Correlation between attitudinal and behavioral change",
+  labs(#title = "Correlation between ideas and behavioral change",
        x = "Effect size (ideas)",
        y = "Effect size (behaviors)",
        color = "Study Design") +

@@ -192,7 +192,7 @@ bystander_dat <- dat |>
   mutate(perp_vict_grouped = case_when(
     behavior_type == 'Victimization' | behavior_type == 'Perpetration' ~ 'perp_vict',
     behavior_type == 'Involvement' ~ 'involvement',
-    behavior_type == 'Attitude' ~ 'Attitude',
+    behavior_type == 'ideas' ~ 'ideas',
     behavior_type == 'Bystander' ~ 'Bystander'))
 
 bystander_dat |> group_by(unique_study_id) |> slice(1) |> ungroup() |>
@@ -389,7 +389,7 @@ Then, looking at the correlation between ideas and behaviors just within the RCT
 ```{r labeled_correlation_plot}
 has_both |> 
   filter(study_design == 'Randomized Control Trial') |> 
-  ggplot(mapping = aes(x = mean_d_attitudes, y = mean_d_behavior)) +
+  ggplot(mapping = aes(x = mean_d_ideas, y = mean_d_behavior)) +
   geom_point(size = 3, color = 'blue') + 
   geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
               method = "lm",
@@ -413,7 +413,7 @@ dat_for_forest_plot <- dat |>
   select(unique_study_id, scale_type, everything()) |>
   filter(study_design == 'Randomized Control Trial') |>
   group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
+         filter(all(c('ideas', 'behavior') %in% scale_type)) |>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                               year, " ", "(", scale_type, ")")) |>
   group_by(unique_paper_id, scale_type) |>
@@ -426,9 +426,9 @@ dat_for_forest_plot <- dat |>
   select(study_names, d, se_d, var_d,
          scale_type, unique_study_id, unique_paper_id)
 
-# sign test: how many studies have an attitude d that's > behavior d
+# sign test: how many studies have an ideas d that's > behavior d
 dat_for_forest_plot |> group_by(unique_paper_id) |>
-  summarise(mean_d_ideas = mean(d[scale_type == "attitudes"]),
+  summarise(mean_d_ideas = mean(d[scale_type == "ideas"]),
             mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
     mean_d_ideas > mean_d_behavior ~ "Higher",
@@ -446,7 +446,7 @@ next, regenerating the forest plot from the file itself, but not filtering on RC
 readRDS(file = '../data/sa_meta_data_final.rds') |> 
   select(unique_study_id, scale_type, everything()) |>
   group_by(unique_study_id) |>
-         filter(all(c('attitudes', 'behavior') %in% scale_type)) |>
+         filter(all(c('ideas', 'behavior') %in% scale_type)) |>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
                               year, " ", "(", scale_type, ")")) |>
   group_by(unique_paper_id, scale_type) |>
@@ -457,7 +457,7 @@ readRDS(file = '../data/sa_meta_data_final.rds') |>
   arrange(mean_se) |>
   ungroup() |>
     group_by(unique_paper_id) |>
-  summarise(mean_d_ideas = mean(d[scale_type == "attitudes"]),
+  summarise(mean_d_ideas = mean(d[scale_type == "ideas"]),
             mean_d_behavior = mean(d[scale_type == "behavior"])) |>
   mutate(comparison = case_when(
     mean_d_ideas > mean_d_behavior ~ "Higher",
@@ -510,7 +510,7 @@ dat_for_forest_plot |>
       c("Overall (ideas)", "Overall (Behavior)"), 
     "bold", "plain"), 
     margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
-  ggtitle("Attitudinal and Behavioral Changes Compared")
+  ggtitle("Ideas and Behavioral Changes Compared")
 ```
 
 ### Reclassifying the robust quasi check studies as RCTs

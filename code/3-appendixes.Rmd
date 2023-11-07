@@ -32,7 +32,7 @@ source('./functions/study_count.R')
 # read in data, add in two useful variables
 # labels that paste together author and year for plots;  
 # reading later results);
-# add attitudes_behaviors (for studies that have both), one or the other;
+# add ideas_behaviors (for studies that have both), one or the other;
 # new var for random assignment (probably should remove 'contains randomization')
 
 # read in data
@@ -43,7 +43,7 @@ dat <- readRDS(file = '../data/sv_meta_data_final.rds') |>
 # data for 'has both' analyses
 
 has_both <- dat |> 
-filter(all(c('attitudes', 'behavior') %in% scale_type)) |> 
+filter(all(c('ideas', 'behavior') %in% scale_type)) |> 
   group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
@@ -124,7 +124,7 @@ dat |> sum_lm(y = d, x = delay)
 table(dat$yes_delay)
 
 dat |> sum_lm(d, yes_delay)
-## What's the longest attitude/behavior delay measurement?
+## What's the longest ideas/behavior delay measurement?
 dat |>
   group_by(scale_type) |>
   summarize(max_delay = max(delay))
@@ -220,24 +220,24 @@ dat |> filter(behavior_type == 'Perpetration',
                yes_delay == T) |>
   map_robust()
 ```
-> Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of attitudes and behaviors will be assessed in the full sample of studies.)
+> Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of ideas and behaviors will be assessed in the full sample of studies.)
 
 We have already reported on behavioral outcomes in the short- and long-term within quasi-experimental and randomized designs. 
 
-Within randomized and quasi-experimental designs,  103 studies measure attitudinal outcomes immediately after treatment, with a pooled effect size of $\Delta$ = 0.313 (se = 0.043), p< 0.0001. By contrast,  114 randomized and quasi-experimental evaluations measure attitudes with a delay, and find a pooled effect size of  $\Delta$ = 0.286 (se = 0.032), p< 0.0001.
+Within randomized and quasi-experimental designs,  103 studies measure attitudinal outcomes immediately after treatment, with a pooled effect size of $\Delta$ = 0.313 (se = 0.043), p< 0.0001. By contrast,  114 randomized and quasi-experimental evaluations measure ideas with a delay, and find a pooled effect size of  $\Delta$ = 0.286 (se = 0.032), p< 0.0001.
 
-```{r attitudes_behaviors_quasi_random_delay_yes_no}
+```{r ideas_behaviors_quasi_random_delay_yes_no}
 
  dat |> 
   filter(study_design == 'Quasi-Experimental' | 
            study_design == 'Randomized Control Trial',
-         scale_type == 'attitudes') |>
+         scale_type == 'ideas') |>
   group_by(yes_delay) |> study_count()
   
 dat |> 
   filter(study_design == 'Quasi-Experimental' | 
            study_design == 'Randomized Control Trial',
-         scale_type == 'attitudes') |>
+         scale_type == 'ideas') |>
   split(~yes_delay) |> map(map_robust)
 
 ``` 
