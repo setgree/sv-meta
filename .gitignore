@@ -8,5 +8,5 @@
 .Rproj.user
 *.Rapp.history
 bld/
-results/*
-exclude/*
+results/
+exclude/
