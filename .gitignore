@@ -8,10 +8,5 @@
 .Rproj.user
 *.Rapp.history
 bld/
-cutouts/*
 results/*
-seth-notes/*
-old-work/* 
-notes/*
-figures/*
 exclude/*
