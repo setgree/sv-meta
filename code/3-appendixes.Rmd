@@ -8,10 +8,11 @@ editor_options:
 ---
 
 
-## Libraries and data 
+**Libraries and data**
 
 ```{r setup, include=F, echo=F}
-rm(list = ls())
+
+#' libraries
 library(dplyr, warn.conflicts = F)
 library(lubridate)
 library(metafor, quietly = T)
@@ -21,40 +22,18 @@ library(purrr, warn.conflicts = F)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 
-source('./functions/sum_lm.R')
+#' functions
+source('./functions/d_calc.R')
 source('./functions/dip_calc.R')
-source('./functions/odds_ratio_to_d.R')
 source('./functions/map_robust.R')
+source('./functions/odds_ratio_to_d.R')
 source('./functions/study_count.R')
-```
+source('./functions/sum_lm.R')
+source('./functions/var_d_calc.R')
 
-```{r load_data, include=F, echo=F}
-# read in data, add in two useful variables
-# labels that paste together author and year for plots;  
-# reading later results);
-# add ideas_behaviors (for studies that have both), one or the other;
-# new var for random assignment (probably should remove 'contains randomization')
-
-# read in data
-
+#' data
 dat <- readRDS(file = '../data/sv_meta_data.rds') |>
   select(unique_study_id, scale_type, everything())
-
-# data for 'has both' analyses
-
-has_both <- dat |> 
-filter(all(c('ideas', 'behavior') %in% scale_type)) |> 
-  group_by(unique_study_id, scale_type) |>
-  mutate(mean_d = mean(d), 
-         mean_var_d = mean(var_d), 
-         mean_se_d = mean(se_d)) |>
-  slice(1) |> 
-  pivot_wider(
-    id_cols = c(author, year, paper_title, unique_study_id,
-                intervention_name,
-                unique_study_id, study_design, ra, labels),
-    names_from = c(scale_type), 
-    values_from = c(mean_d, mean_var_d, mean_se_d))
 
 ```
 
@@ -69,18 +48,18 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 
 ```
 
-Clustering at the level of paper rather than study raises the standard error to 0.0280, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+Clustering at the level of paper rather than study raises the standard error to 0.0287, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
 ```{r cluster_paper_level}
 # cluster at paper
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_paper_id)
-
+0.0287 - 0.0247
 #no cluster
 rma(yi = d, vi = var_d, data = dat)
 
 ```
 
- Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.331 (se = 0.028), p < .0001,
+ Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.326 (se = 0.028), p < .0001,
 ```{r collapse_individual_ds}
 
 dat |> group_by(unique_study_id) |>
@@ -90,7 +69,7 @@ dat |> group_by(unique_study_id) |>
   map_robust()
 ```
 
-while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.307
+while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.302
 ```{r collapse_ds_within_study_and_scale_type}
 dat |> group_by(unique_study_id, scale_type) |>
   mutate(d = mean(d),
@@ -98,6 +77,7 @@ dat |> group_by(unique_study_id, scale_type) |>
   slice(1) |>
   map_robust()
 ```
+
 
 ## Additional checks for publication bias
  In our sample, the pooled effect size in the largest quintile of studies, with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.

@@ -11,12 +11,11 @@ editor_options:
 
 This document works through our results section. Each chunk corresponds to, and is preceded by, a quantitative claim in the results section. 
 
-### Setup
-
-**libraries and functions**
+**libraries, functions, options, and data **
 
 ```{r setup, include=F, echo=F}
-rm(list = ls())
+
+#' libraries
 library(dplyr, warn.conflicts = F)
 library(knitr)
 library(metafor, quietly = T)
@@ -27,6 +26,7 @@ library(stringr)
 library(tidyr, warn.conflicts = F)
 library(tibble)
 
+#' functions
 source('./functions/sum_lm.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
@@ -34,17 +34,15 @@ source('./functions/d_calc.R')
 source('./functions/var_d_calc.R')
 
 options(scipen = 99)
-```
 
-**load data**
-
-```{r load_data, include=F, echo=F}
+#' data
 dat <- readRDS(file = '../data/sv_meta_data.rds') |>
   select(unique_study_id, scale_type, everything())
 ```
 
 **Add Glass's Delta, Variance, and Standard Error**
-This chunk checks if the variable `d` is present, and if it's not, it adds it
+
+This chunk checks if `d` is present, and if not, adds d, var_d, and se_d
 
 ```{r delta_var_se}
 if (!"d" %in% names(dat)) {
@@ -88,6 +86,7 @@ if (!"d" %in% names(dat)) {
 }
 
 ```
+
 # Results 
 
 ## Overall results and (lack of) publication bias
@@ -284,21 +283,37 @@ dat_has_both |> split(~scale_type) |>
 dat |> split(~scale_type) |> 
    imap(~map_robust(.x) |> kable('markdown'))
 ```
-> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.112, p = 0.928 between changes in ideas and changes in behaviors.
+
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.135, p = 0.372 between changes in ideas and changes in behaviors.
 
 ```{r ideas_behavior_correlation_overall}
 
-has_both_means <- dat_has_both |> 
+#' First, a kind of hacky solution to a hard problem, which is that some studies
+#' offer some outcomes that can be evaluated quasi-experimentally (i.e. compare 
+#' a treatment group to a non-randomly assigned control group) but other outcomes
+#' that can only be evaluated pre-post. Peterson (2014) evaluates its behavioral 
+#' outcomes -- bystander behaviors -- quasi-experimentally, but its ideas-based
+#' outcomes pre-post. (Things in this category are also why we get an N of 
+#' 301 when divide the studies into design and then count unique_study_ids, 
+#' but we only have 298 unique study IDs). This means that when we pivot
+#' the data to have one column for mean attitude outcomes and one for mean
+#' behavioral outcomes, Peterson 2014 is getting treated as two studies b/c
+#' the identifying information is inconsistent. This results in a few rows of
+#' NAs. You can ignore this and still get basically the same results, but
+#' just for completeness, here we're assigning 'Quasi-Experimental' to 
+#' to the study design for all Peterson 2014 results so that every attitude
+#' outcome has a corresponding behavior outcome.
+
+dat_has_both <- dat_has_both |> mutate(
+  study_design = if_else(author == 'peterson', 'Quasi-Experimental',
+                         study_design))
+
+has_both_reshaped  <- dat_has_both |> 
   group_by(unique_study_id, scale_type) |>
   mutate(mean_d = mean(d), 
          mean_var_d = mean(var_d), 
          mean_se_d = mean(se_d)) |>
-  select(author, year, paper_title, unique_study_id, intervention_name,
-         study_design, mean_d, mean_var_d, mean_se_d,
-         ra, labels, scale_type, decade, behavior_type) |>  
-  slice(1) 
-
-has_both_reshaped <- has_both_means |> 
+    slice(1) |> 
   pivot_wider(
     id_cols = c(author, year, paper_title, unique_study_id,
                 intervention_name,
@@ -356,12 +371,6 @@ dat_has_both |>
         legend.position = "bottom",
         legend.box = "vertical")
 ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
-
-#' note on warning message about removed rows -- that's Peterson 2014, which, 
-#' for some variables, gave us enough info to make 'quasi-experimental' comparisons
-#' one of two treatments vs a non-randomly selected control) but didn't for IRMA
-#' so the attitude variable is effectively a pre-post observation even though the study is 
-#' quasi-experimental. That was hard to square with the way we made the figure.
 ```
 
 

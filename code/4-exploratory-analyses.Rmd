@@ -24,7 +24,6 @@ library(tibble)
 dat <- readRDS(file = '../data/sv_meta_data.rds') |>
   select(unique_study_id, scale_type, everything())
 
-# functions
 source('./functions/sum_lm.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
@@ -514,7 +513,69 @@ dat_for_forest_plot |>
 ```
 
 ### Reclassifying the robust quasi check studies as RCTs
-They had random assignment,  but fewer than ten clusters, so we called them RCTs. reclassify them, then run the main meta, and by study design as well
 
 
 ### What if we ignore all clustering information when calculating standard errors?
+ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a powerful relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. Accounting for clustering is important!
+
+```{r redoing Ds without any cluster info}
+no_clusters <- dat |> 
+  select(author, year, paper_title,  unique_paper_id, unique_study_id, n_t_post,
+         n_c_post, eff_type, u_s_d, ctrl_sd, anticipated_direction,
+         behavior_type, study_design, scale_type) |> 
+  mutate(d = 
+           mapply(
+             FUN = d_calc,
+             stat_type = eff_type,
+             stat =  u_s_d,
+             sample_sd = ctrl_sd,
+             n_t = n_t_post,
+             n_c = n_c_post
+             ),
+         var_d =
+           mapply(
+               FUN = var_d_calc,
+               d = d,
+               n_t = n_t_post,
+               n_c = n_c_post),
+           se_d = sqrt(var_d)
+         ) |> 
+  mutate(d = d * anticipated_direction)
+no_clusters |> sum_lm()
+no_clusters |> map_robust()
+
+# alternative where we separate by outcome type
+no_clusters |> ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# without ideas outcomes? 
+
+no_clusters |> 
+  filter(scale_type == 'behavior') |>
+    ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
