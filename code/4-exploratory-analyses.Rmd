@@ -512,11 +512,9 @@ dat_for_forest_plot |>
   ggtitle("Ideas and Behavioral Changes Compared")
 ```
 
-### Reclassifying the robust quasi check studies as RCTs
-
-
 ### What if we ignore all clustering information when calculating standard errors?
-ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a powerful relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. Accounting for clustering is important!
+
+Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a powerful relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
 
 ```{r redoing Ds without any cluster info}
 no_clusters <- dat |> 
@@ -578,4 +576,6 @@ no_clusters |>
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
+
+Accounting for clustering is important!
 
