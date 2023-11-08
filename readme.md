@@ -30,8 +30,6 @@ These are the files in `code/functions/`.
 
 * `dip_calc.R` demonstrates how we calculate a standardized effect size from a reported difference in proportion. This comes up in an appendix.
 
-* `dplot.R` is an experimental function that creates a scatterplot of effect size and standard error of effect size. We use this a bit in the exploratory analyses script.
-
 * `map_robust.R` is a wrapper around `metafor::robust()` that allows us to pipe results to the function. It also works with `split | > map` analyses, which we found useful. 
 
 * `odds_ratio_to_d.R` is used in an appendix to demonstrate why converting from odds ratio to Cohen's D can create a misleading impression about effect size magnitudes. Robin Gomila [makes this point very nicely elsewhere](https://www.robingomila.com/files/publications_pdfs/Gomila_2020_Logistic_vs_Linear.pdf). 
@@ -42,7 +40,7 @@ These are the files in `code/functions/`.
 
 * `var_d_calc.R` calculates the variance of $\Delta$.
 
-* `write_dockerfile.R` compoes a Dockerfile from information from `sessioninfo::package_info()`. 
+* `write_dockerfile.R` composes a Dockerfile from information from `sessioninfo::package_info()`. 
 
 ## Data 
 
