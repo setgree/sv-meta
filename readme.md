@@ -26,6 +26,8 @@ These are the main files in `code/`. All files presume that that's your working 
 
 These are the files in `code/functions/`.
 
+* `d_calc.R` is the main function for calculating Glass's $\Delta$ or Cohen's d, depending on what you standardize on. This paper uses Glass's $\Delta$. This function was developed and refined over the course of the Contact and Prejudice reduction metas that Seth and John-Henry worked on previously. 
+
 * `dip_calc.R` demonstrates how we calculate a standardized effect size from a reported difference in proportion. This comes up in an appendix.
 
 * `dplot.R` is an experimental function that creates a scatterplot of effect size and standard error of effect size. We use this a bit in the exploratory analyses script.
@@ -43,17 +45,14 @@ These are the files in `code/functions/`.
 * `write_dockerfile.R` compoes a Dockerfile from information from `sessioninfo::package_info()`. 
 
 ## Data 
-* `sa_meta_data_raw.csv` is the data you need to start from script 1. (THIS WON'T BE INCLUDED IN THE FINAL VERSION)
 
-* `sv_meta_data.rds` is the main dataset [NOTE TO MAKE SURE IT'S NAMED THIS]
+* `sv_meta_data.rds` is the main dataset
 
-* `codebook.csv` and `codebook.pdf` provide some guidance about variable names.
+* `codebook.csv` provideS guidance about variable names.
 
 ## Documentation
 
-* `0-download-and-clean-data.txt` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
+* `0-download-and-clean-data.md` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
 
 ## Results
 Note to self to un-ignore this folder once we're ready to publish
-
-### TODO
