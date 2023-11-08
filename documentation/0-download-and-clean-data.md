@@ -7,7 +7,8 @@ editor_options:
   chunk_output_type: console
 ---
 
-This script was our main 'pre-analysis script' to get things from our "raw data", which was a messy google sheet, into a workable dataset. We're including the dataset in its 'finalized' form but not the raw data -- the whole pipeline is brittle and liable to break over time -- but we're including this script as an `.md` for completeness.
+This script was our main 'pre-analysis script' to get things from our "raw data", which was a messy google sheet, into a workable dataset. We're including the dataset in its 'finalized' form but not the raw data, which has some team internal comments, but we're including this script as an `.md` for completeness.
+
 ### setup
 ```{r setup}
 rm(list = ls())
@@ -20,7 +21,7 @@ options(scipen = 99)
 ```
 
 ### Download most up-to-date dataset
-```{r download_data, eval=F} 
+```{r download_data, eval=T} 
 #' download sheet from google -----------------------------------
 #' You, reader, won't have access to this, so don't run this chunk
 

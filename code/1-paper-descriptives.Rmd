@@ -14,6 +14,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+This document reproduces every quatntitative claim and figure in all of the paper's sections up to the meta-analysis itself.
+
 ### set up
 knitr options, libraries, and load data
 ```{r setup, echo=FALSE}
@@ -53,6 +55,13 @@ dat %>%
 
 ## The Problem of Sexual Violence
 
+(The PRISMA Flow Diagram (Appendix Figure \ref{fig:prisma}) explains how we winnowed the original pool of studies down to the 225 manuscripts)
+
+```{r num_unique_papers}
+range(dat$unique_paper_id)
+
+```
+
 Our present review provides empirical results from 13 countries
 
 ```{r unique_countries}
@@ -62,8 +71,6 @@ length(unique(dat$country))
 ## Inclusion and Exclusion Criteria for Study Selection
 
 Table $\ref{tab:n_designs}$ details the number of papers for each study design.
-TODO: discrepancy with paper (103 vs 104 quasi studies, and 98 vs 99 observational studies)
-TODO: DELETE THIS OR WHAT??
 ```{r table_one}
 dat |> 
   distinct(unique_paper_id, unique_study_id, study_design) |> 
@@ -76,8 +83,8 @@ dat |>
 
 ## Overview of the Studies in the Meta-Analytic Database
 
-The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 500 distinct point estimates.
-TODO: 298 vs 304 studies. This is a big discrepancy!
+The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 409 distinct point estimates.
+
 ```{r years_and_countries}
 dat |> 
   summarise(year_min = min(year),
@@ -89,7 +96,6 @@ dat |>
 
 
 Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
-TODO: 402 vs 160
 ```{r avg_study_size}
 dat |> 
   group_by(unique_study_id) |> 
@@ -110,7 +116,8 @@ dat |>
 ```
 
 
-### number of studies over time
+Over these years, we observed an uneven rise in the study of primary prevention efforts. This rise is depicted in \textbf{Figure \ref{fig:tt_studies}}. 
+
 ```{r studies_over_time}
 tt_overall = dat |> # overall line
       group_by(year) |>
@@ -124,14 +131,6 @@ zeitgeist = tibble(year = c(1998, 2000, 2007),
 tt_overall     |>
   ggplot(aes(year, n)) +
   geom_line(linewidth = 2) +
-  # geom_segment(aes(x = year, ## add "flag poles"
-  #                  xend = year,
-  #                  y = 0,
-  #                  yend = n,
-  #                  label = NULL),
-  #              inherit.aes = F, 
-  #              linewidth = 1.5,
-  #              data = zeitgeist) +
     geom_label_repel(mapping = aes(x = year, ## labels
                                    y = n,
                                    label = event),
@@ -163,10 +162,8 @@ tt_overall     |>
 ggsave("../results/figures/tt_studies.pdf", height = 5, width = 7.5)
 ```
 
-We observe that 270 studies which constitute 89% of the database were conducted in the United States. The remaining 34 studies
-come from various places around the world, including Canada, Europe, and Africa.
+We observe that 265 studies which constitute 89% of the database were conducted in the United States. The remaining 33 studies come from various places around the world, including Canada, Europe, and Africa.
 
-TODO: it's down to 265 in America and up to 33 for everywhere else?
 ```{r country_distribution}
 dat |> 
   distinct(unique_study_id, country) |> 
@@ -183,10 +180,8 @@ dat |>
   mutate(perc = round(n / sum(n), 3))
 ```
 
+In fact, 67% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
 
-In fact, 61% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
-TODO: 28% of studies are only men
-TODO: I thought we filled in all the NAs? 
 ```{r gender_breakdown}
 dat |> # 
   mutate(participant_sex = 
@@ -317,7 +312,9 @@ dat |>
   count(publication_type)
 ```
 
+
 The majority of these studies are laboratory studies (n = 27) as opposed to field studies (n = 20) that encompass the larger programmatic evaluations that dominate the next generation of studies.
+
 ```{r early_years_lab_field} 
 dat |> 
   filter(between(year, 1985, 1995)) |> 

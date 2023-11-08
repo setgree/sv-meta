@@ -92,7 +92,7 @@ if (!"d" %in% names(dat)) {
 
 ## Overall results and (lack of) publication bias
 
-> Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.282 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
+> Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.28 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
 
 ```{r overall_meta}
 dat |> map_robust()
@@ -102,13 +102,13 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
 
-> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.15 (SE = 0.176), p = 0.412.
+> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.16 (SE = 0.176), p = 0.412.
 
 ```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
 
-> Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 99, $\beta$ = 0.208, SE = 0.256, p = .373) and quasi-experimental (N = 104, $\beta$ = -0.201, SE = 0.393, p = .597) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 102, $\beta$ = 2.228, SE = 0.64, p $<$ .001), suggesting some publication bias within these studies. 
+> Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 105, $\beta$ = 0.208, SE = 0.256, p = .373) and quasi-experimental (N = 104, $\beta$ = -0.201, SE = 0.393, p = .597) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 102, $\beta$ = 2.228, SE = 0.64, p $<$ .001), suggesting some publication bias within these studies. 
 
 ```{r publication_bias_by_study_design}
 # Ns
@@ -119,7 +119,7 @@ dat |>
 # effect sizes
 dat |> 
   split(~study_design) |> 
-  imap(.f = ~sum_lm())
+  map(~sum_lm(.))
 ```
 
 
@@ -134,7 +134,7 @@ dat |>
 length(unique(dat$unique_study_id)) == 189 + 109
 ```
 
-> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.0476), but not at a statistically significant level (p = 0.28) 
+> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.047), but not at a statistically significant level (p = 0.28) 
 
 ```{r publish_relationship_or_not}
 dat |> sum_lm(d, published_unpublished)
@@ -155,7 +155,7 @@ dat |> split(~published_unpublished) |> map(map_robust)
 
 ## The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
 
-> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.072 (SE = 0.022), p = .0013; whereas the overall effect size for idea-based outcomes is ∆ = 0.367 (SE = .03), p < 0.0001.
+> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.071 (SE = 0.022), p = .0015; whereas the overall effect size for idea-based outcomes is ∆ = 0.367 (SE = .03), p < 0.0001.
 
 ```{r differences_by_ideas_behavior}
 
@@ -167,7 +167,7 @@ dat |> split(~scale_type) |> map(.f = map_robust)
 ```{r behavior_ideas_discrepancy_within_study_designs}
 dat |>
   split(~interaction(scale_type, study_design)) |>
-  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable()
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
     }) 
 ```
 
@@ -180,7 +180,7 @@ round(0.504 / 0.024)
 
 \subsection{Do bystander interventions Change Behavior?}
 
-> We tested this on the 96 bystander-related interventions in our database, the majority (74/92) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
+> We tested this on the 92 bystander-related interventions in our database, the majority (74/92) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
 
 ```{r bystander_interventions_overall}
 # create bystander dataset
@@ -216,10 +216,9 @@ bystander_dat |> filter(behavior_type == 'ideas') |> map_robust()
 
 ```{r bystander scale_type}
 bystander_dat |> group_by(scale_type) |> study_count()
-
 ```
 
-> Overall, 22 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.154 (SE = 0.056), p = 0.013. In our database, 29 studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019, SE = 0.019, p = 0.329) or victimization ($\Delta$ =-0.009, SE = 0.041,  p = 0.835).
+> Overall, 22 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.154 (SE = 0.056), p = 0.013. In our database, 20 bystander studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019, SE = 0.019, p = 0.329) or victimization ($\Delta$ =-0.009, SE = 0.041,  p = 0.835).
 
 ```{r bystander_dv_count}
 # filter out the one 'involvement' outcome because 
@@ -231,11 +230,11 @@ bystander_dat |>
  bystander_dat |>
   filter(behavior_type != 'Involvement') |>
   split(~behavior_type) |>
-  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable()
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
   })
  
  # how many measure perpetration or victimization?
-bystander_dat %>%
+bystander_dat |>
   filter(perp_vict_grouped == 'perp_vict') |> 
   study_count()
 ```
@@ -248,8 +247,8 @@ bystander_dat %>%
 ```{r eff_size_by_outcome_type}
 dat |>
   split(~behavior_type) |>
-  imap(~{bind_cols(study_count(.x), map_robust(.x)) %>%
-      kable()})
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |>
+      kable('markdown')})
 ```
 
 > Our sample features 28 randomized designs that measure perpetration, which collectively produce a meta-analytic effect of 0.086 (SE = 0.061), with a p-value of 0.173.
@@ -355,4 +354,10 @@ pivoted <- dat_has_both |>
         legend.position = "bottom",
         legend.box = "vertical")
 ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
+
+#' note on warning message about removed rows -- that's Peterson 2014, which, 
+#' for some variables, gave us enough info to make "quasi-experimental" comparisons
+#' one of two treatments vs a non-randomly selected control) but didn't for IRMA
+#' so the attitude variable is effectively a pre-post observation even though the study is 
+#' quasi-experimental. That was hard to square with the way we made the figure.
 ```
