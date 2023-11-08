@@ -8,7 +8,7 @@ editor_options:
 ---
 
 
-**Libraries and data**
+**Libraries, functions and data**
 
 ```{r setup, include=F, echo=F}
 
@@ -39,7 +39,7 @@ dat <- readRDS(file = '../data/sv_meta_data.rds') |>
 
 ## Robustness checks
 
-Our main meta-analytic result comes from a random effects meta-analysis clustering at the level of individual studies.
+> Our main meta-analytic result comes from a random effects meta-analysis clustering at the level of individual studies.
 
 ```{r main_result_for_comparison}
 
@@ -48,7 +48,8 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 
 ```
 
-Clustering at the level of paper rather than study raises the standard error to 0.0287, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+> Clustering at the level of paper rather than study raises the standard error to 0.0287, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+
 ```{r cluster_paper_level}
 # cluster at paper
 robust(x = rma(yi = d, vi = var_d, data = dat),
@@ -59,7 +60,8 @@ rma(yi = d, vi = var_d, data = dat)
 
 ```
 
- Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.326 (se = 0.028), p < .0001,
+> Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.326 (se = 0.028), p < .0001,
+ 
 ```{r collapse_individual_ds}
 
 dat |> group_by(unique_study_id) |>
@@ -69,7 +71,8 @@ dat |> group_by(unique_study_id) |>
   map_robust()
 ```
 
-while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.302
+> while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.302
+ 
 ```{r collapse_ds_within_study_and_scale_type}
 dat |> group_by(unique_study_id, scale_type) |>
   mutate(d = mean(d),
@@ -80,7 +83,8 @@ dat |> group_by(unique_study_id, scale_type) |>
 
 
 ## Additional checks for publication bias
- In our sample, the pooled effect size in the largest quintile of studies, with at least 405 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
+
+> In our sample, the pooled effect size in the largest quintile of studies, with at least 496 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
 
 ```{r quintile_check}
 # what are the quantiles
@@ -91,11 +95,10 @@ dat |> group_by(quantile_var) |>
 dat |> 
   split(~quantile_var) |> map(.f = map_robust)
   
-## well it's not *nothing*...but it's pretty small
 dat |> sum_lm(y = d, x = quantile_var) # it's basically nothing
 ```
 
-Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121.
+> Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121.
 
 ```{r d_and_delays}
 
@@ -110,9 +113,34 @@ dat |>
   summarize(max_delay = max(delay))
 ```
 
-This suggests that results are not being driven by short-term outcome measurement. However, we caution to note that our perpetration and victimization behavioral outcomes are \textit{counts of incidents}, which means they can only either flatline or increase in magnitude over time. Comparing the relationship between behavioral effect  and elapsed time to the relationship betewen  mentalizing effects and the passage of time is not comparing like to like. We also note that our measure of `delay' captures the number of days between a treatment's \textit{conclusion} and outcome measurement. If a treatment had multiple `doses' \tetxemdash for example, multiple classroom sessions over the course of a semester \textemdash then a behavioral survey administered on the last session would be recording incidents of sexual violence over a whole semester, but be marked in our study as having a delay of zero. Thus we caution readers to not read too much into the relationship between effect sizes and time elapsed. 
+## Pre-registered analyses not in the main text
 
-# Pre-registered analyses (from Prospero Doc)
+**Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term**
+
+> Seventeen studies measure behavioral outcomes within one day of the conclusion of treatment and produce a combined effect size of $\Delta$ = 0.125 (SE = 0.057), p = 0.0426, while 83 studies measure behavioral outcomes at least a day after treatment concludes, and produce a combined effect size of $\Delta$ = 0.063 (SE = 0.023), p = 0.0081.
+
+```{r short_long_term_behavioral}
+dat |> 
+  filter(scale_type == 'behavior') |>
+  split(~yes_delay) |> 
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
+    }) 
+#' note that this is larger than the number of studies that measure behavior
+#' because some studies have outcome measurements at 
+#' multiple points
+
+#' big diff, but is that just capturing 
+#' difference between bystander/involvement
+#' and victimization/perpetration?
+
+dat |> 
+  split(~interaction(yes_delay, behavior_type)) |>
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
+    }) 
+
+#' yes, bystander behaviors tend to be much larger than other categories.
+#' we cover this in the main text.
+```
 
 > Analysis of subgroups or subsets: We will compare subsets of the data according to classifications of evaluation methodology (i.e., observational vs. quasi-experimental vs. experimental methods) and of outcome measurement (i.e., general behavior indices vs. perpetration behavior, and attitudinal measurement vs. behavioral measurement). 
 
@@ -120,58 +148,15 @@ This we did in the main text.
 
 > Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term. 
 
-```{r}
-# number of studies that measure behavior
-dat |> 
-  filter(scale_type == 'behavior') |>
-  study_count()
-
-# study count with and without a delay?
-dat |> 
-  filter(scale_type == 'behavior') |>
-  group_by(yes_delay) |> 
-  study_count()
-# note that this is larger than the number of studies that measure behavior
-# because some studies have outcome measurements at 
-# multiple points
-
-# now effect sizes
-dat |> filter(scale_type == 'behavior') |>
-  split(~yes_delay) |>
-  map(.f = map_robust)
-# big diff, but is that just capturing 
-# difference between bystander/involvement
-# and victimization/perpetration?
-
-dat |> 
-  filter(behavior_type %in% c('Victimization', 'Perpetration')) |>
-  split(~yes_delay) |>
-  map(.f = map_robust)
-# now the relationship is in the opposite direction
-# how many studies measure vict/perp with no delay?
-
-dat |> 
-  filter(behavior_type %in% c('Victimization', 'Perpetration')) |> 
-  group_by(yes_delay) |>
-  study_count()
-# very few
-
-```
-
-
 > Compare the effect size of behavioral outcomes for experimental and quasi-experimental studies vs. non-experimental observational studies, both in the short- and in the long-term. 
 
 ```{r behavioral_attenuation_by_study_design}
 # N of studies
 dat |> 
   filter(scale_type == 'behavior') |>
-  group_by(study_design, yes_delay) |> 
-  study_count()
-
-dat |>
-  filter(scale_type == 'behavior') |>
-  split(~interaction(study_design, yes_delay)) |>
-  map(map_robust)
+  split(~interaction(study_design, yes_delay)) |> 
+  imap(~{bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')})
+  
 
 ```
 

@@ -12,18 +12,20 @@ output:
     toc_depth: 4
 editor_options: 
   chunk_output_type: console
+knitr:
+  opts_chunk:
+    echo: FALSE
+    cache: FALSE
+    message: FALSE
+    warning: FALSE
+    results: 'markup'
 ---
 
 This document reproduces every quatntitative claim and figure in all of the paper's sections up to the meta-analysis itself.
 
-**knitr options, libraries, and load data**
-```{r setup, echo=FALSE}
-knitr::opts_chunk$set(echo = FALSE,
-                      cache = FALSE,
-                      message = FALSE,
-                      warning = FALSE, 
-                      results = 'markup')
+**libraries and data**
 
+```{r setup, echo=FALSE}
 library(dplyr, warn.conflicts = F)
 library(forcats)
 library(ggrepel)
