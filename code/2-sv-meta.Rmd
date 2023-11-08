@@ -174,7 +174,7 @@ dat |>
 > This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are about 21 times larger than behavioral responses. 
 
 ```{r obs_ideas_beh_multiplier}
-round(0.504 / 0.024)
+round(0.503 / 0.024)
 ```
 
 
@@ -278,7 +278,13 @@ dat_has_both |> split(~scale_type) |>
   map(map_robust)
 ```
 
-> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.138, p = 0.292 between changes in ideas and changes in behaviors.
+> In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
+
+```{r reitirating_main_effects}
+dat |> split(~scale_type) |> 
+   imap(~map_robust(.x) |> kable('markdown'))
+```
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.112, p = 0.928 between changes in ideas and changes in behaviors.
 
 ```{r ideas_behavior_correlation_overall}
 
@@ -304,21 +310,20 @@ cor.test(x = has_both_reshaped$mean_d_ideas,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-> The relationship remains small and non-significant when looking solely at randomized evaluations (\textit{r} = 0.147, p = 0.464). 
+> The relationship remains small and non-significant when looking solely at randomized evaluations (\textit{r} = 0.138, p = 0.48). 
  
 ```{r ideas_behavior_correlation_subsets}
-# RCTs only?
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
 cor.test(x = rcts_both$mean_d_ideas, 
          y = rcts_both$mean_d_behavior)
-
+rm(rcts_both)
 ```
 
 > Figure \ref{fig:corr} highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
 
-pivoted <- dat_has_both |>
+dat_has_both |>
   group_by(author, year, study_design, unique_study_id, scale_type) |>
   filter(delay == min(delay)) |>
   summarise(mean_d = mean(d),
@@ -342,9 +347,6 @@ pivoted <- dat_has_both |>
        y = "Effect size (behaviors)",
        color = "Study Design") +
  guides(color = guide_legend(title = "")) +
-  # scale_x_continuous(breaks = seq(-.5, 1.5, by = .25), limits = c(-.5,1.6)) +
-  # scale_y_continuous(breaks = seq(-.5, 1.5, by = .25), limits = c(-.5,1.6)) +
-  # scale_color_manual(values = ggthemes::stata_pal("s2color")(3)) +
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text = element_text(size = 14),
@@ -356,8 +358,16 @@ pivoted <- dat_has_both |>
 ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 
 #' note on warning message about removed rows -- that's Peterson 2014, which, 
-#' for some variables, gave us enough info to make "quasi-experimental" comparisons
+#' for some variables, gave us enough info to make 'quasi-experimental' comparisons
 #' one of two treatments vs a non-randomly selected control) but didn't for IRMA
 #' so the attitude variable is effectively a pre-post observation even though the study is 
 #' quasi-experimental. That was hard to square with the way we made the figure.
+```
+
+
+### record computational environment
+```{r write_dockerfile}
+source('./functions/write_dockerfile.R')
+
+write_dockerfileR(dir = '../documentation/')
 ```

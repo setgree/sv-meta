@@ -46,11 +46,13 @@ These are the files in `code/functions/`.
 
 * `sv_meta_data.rds` is the main dataset
 
-* `codebook.csv` provideS guidance about variable names.
 
 ## Documentation
 
 * `0-download-and-clean-data.md` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
+
+* `codebook.csv` provides guidance about variable names.
+
 
 ## Results
 Note to self to un-ignore this folder once we're ready to publish
