@@ -16,8 +16,7 @@ editor_options:
 
 This document reproduces every quatntitative claim and figure in all of the paper's sections up to the meta-analysis itself.
 
-### set up
-knitr options, libraries, and load data
+**knitr options, libraries, and load data**
 ```{r setup, echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       cache = FALSE,
