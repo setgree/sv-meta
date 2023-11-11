@@ -28,8 +28,8 @@ This document reproduces every quatntitative claim and figure in all of the pape
 ```{r setup, echo=FALSE}
 library(dplyr, warn.conflicts = F)
 library(forcats)
-library(ggrepel)
-library(ggtext)
+library(ggrepel, warn.conflicts = F)
+library(ggtext, warn.conflicts = F)
 library(ggthemes)
 library(janitor)
 library(kableExtra)
