@@ -14,6 +14,7 @@ editor_options:
 
 #' libraries
 library(dplyr, warn.conflicts = F)
+library(knitr)
 library(lubridate)
 library(metafor, quietly = T)
 library(ggplot2, warn.conflicts = F)
