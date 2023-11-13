@@ -7,7 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-### Setup 
+**Libraries, functions and data**
 
 ```{r setup, message=F}
 # libraries
@@ -33,7 +33,7 @@ options(scipen = 99)
 ```
 
 
-## Robustness checks
+## additional Robustness checks
 
 **Group results within study**
 
@@ -64,7 +64,6 @@ dat |>
 
 rm(dat_grouped)
 ```
-
 
 **Different ways to subset and then analyze the data:**
 
@@ -512,7 +511,7 @@ dat_for_forest_plot |>
   ggtitle("Ideas and Behavioral Changes Compared")
 ```
 
-### What if we ignore all clustering information when calculating standard errors?
+## What if we ignore all clustering information when calculating standard errors?
 
 Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a powerful relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
 
@@ -578,4 +577,3 @@ no_clusters |>
 ```
 
 Accounting for clustering is important!
-
