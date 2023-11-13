@@ -7,9 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-### Overview
-
-This document works through our results section. Each chunk corresponds to, and is preceded by, a quantitative claim in the results section. 
+This document works through Section 8, "Quantitative meta-analysis," of the accompanying paper Each chunk corresponds to, and is preceded by, a quantitative claim in the results section. 
 
 **libraries, functions, options, and data **
 
@@ -87,9 +85,9 @@ if (!"d" %in% names(dat)) {
 
 ```
 
-# Results 
+# 8 Quantitative meta-analysis
 
-## Overall results and (lack of) publication bias
+### 8.2 Overall results and (lack of) publication bias
 
 > Our random effects meta-analysis of all primary prevention strategies from 1985 to 2018 reveals an overall effect size, across all interventions on all kinds of outcomes, of $\Delta$ = 0.28 (se = 0.024). This effect is statistically significant at p $<$ 0.0001.
 
@@ -152,7 +150,7 @@ dat |> split(~published_unpublished) |> map(sum_lm)
 dat |> split(~published_unpublished) |> map(map_robust)
 ```
 
-## The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
+### 8.3 The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
 
 > Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.071 (SE = 0.022), p = .0015; whereas the overall effect size for idea-based outcomes is ∆ = 0.367 (SE = .03), p < 0.0001.
 
@@ -176,7 +174,7 @@ round(0.503 / 0.024)
 ```
 
 
-\subsection{Do bystander interventions Change Behavior?}
+#### 8.3.1 Do bystander interventions Change Sexually Violent Behavior?
 
 > We tested this on the 92 bystander-related interventions in our database, the majority (74/92) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
 
@@ -236,10 +234,9 @@ bystander_dat |>
   study_count()
 ```
 
+#### 8.3.2 A Closer Look at Behavioral Outcomes
 
-# A Closer Look at Behavioral Outcomes
-
-> Table \ref{tab:meta_beh} shows the number of studies which measure each behavioral category and their pooled effect sizes. We also provide the overall effect size for idea-based outcomes for reference. We find that on an aggregate level, primary prevention programs haven't been effective in reducing perpetration and victimization behaviors at all. The corresponding effect sizes for these two critical outcomes are neither meaningful in magnitude nor statistically significant. It appears that primary prevention programming is currently effective in increasing only bystander or involvement behavior \textemdash and changing ideas about sexual violence. 
+> Table 3 shows the number of studies which measure each behavioral category and their pooled effect sizes. We also provide the overall effect size for idea-based outcomes for reference. We find that on an aggregate level, primary prevention programs haven't been effective in reducing perpetration and victimization behaviors at all. The corresponding effect sizes for these two critical outcomes are neither meaningful in magnitude nor statistically significant. It appears that primary prevention programming is currently effective in increasing only bystander or involvement behavior \textemdash and changing ideas about sexual violence. 
 
 ```{r eff_size_by_outcome_type}
 dat |>
@@ -259,7 +256,7 @@ dat |>
       robust_result = map_robust(.))
 ```
 
-## Do Changes in Ideas Predict Changes in Behaviors?
+### 8.4 Do Changes in Ideas Predict Changes in Behaviors?
 
 > We focus on the 62 studies that measure both type of outcomes.
 
@@ -282,7 +279,7 @@ dat |> split(~scale_type) |>
    imap(~map_robust(.x) |> kable('markdown'))
 ```
 
-> Unfortunately, in these studies, we find a small, statistically non-significant correlation of $\rho$ (58) = 0.135, p = 0.372 between changes in ideas and changes in behaviors.
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of *r* (60) = 0.136, p = 0.293 between changes in ideas and changes in behaviors
 
 ```{r ideas_behavior_correlation_overall}
 
@@ -323,7 +320,7 @@ cor.test(x = has_both_reshaped$mean_d_ideas,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-> The relationship remains small and non-significant when looking solely at randomized evaluations (\textit{r} = 0.138, p = 0.48). 
+> The relationship remains small and non-significant when looking solely at randomized evaluations (*r* = 0.138, p = 0.48). 
  
 ```{r ideas_behavior_correlation_subsets}
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Control Trial')
@@ -332,7 +329,7 @@ cor.test(x = rcts_both$mean_d_ideas,
 rm(rcts_both)
 ```
 
-> Figure \ref{fig:corr} highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
+> Figure 5 highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
 
@@ -371,8 +368,8 @@ dat_has_both |>
 ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 ```
 
+**record computational environment**
 
-### record computational environment
 ```{r write_dockerfile}
 source('./functions/write_dockerfile.R')
 
