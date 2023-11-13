@@ -167,7 +167,7 @@ dat |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')) 
 ```
 
-> This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are about 21 times larger than behavioral responses. 
+> This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are more than 20 times larger than behavioral responses. 
 
 ```{r obs_ideas_beh_multiplier}
 round(0.503 / 0.024)
