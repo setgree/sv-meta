@@ -27,6 +27,8 @@ dat <- readRDS(file = '../data/sv_meta_data.rds') |>
 source('./functions/sum_lm.R')
 source('./functions/map_robust.R')
 source('./functions/study_count.R')
+source('./functions/d_calc.R')
+source('./functions/var_d_calc.R')
 
 # personal preference for how digits get rendered
 options(scipen = 99)
@@ -573,7 +575,4 @@ no_clusters |>
        shape = "Study Design") +
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5))
-
 ```
-
-Accounting for clustering is important!
