@@ -1,36 +1,3 @@
 November 2023 next steps
 
-1. Roni: revise PRISMA diagram and upload to Overleaf (I sent a separate email)
-2. JH/Roni: provide guidance on a few undocumented variables (I sent a separate email)
-3. Anyone: read the paper and appendix one more time...? We could be past that but I wouldn't mind someone double-checking that I didn't put anything crazy in while updating the #s
-4. Seth/Alex update codebook.csv based on coding instructions.docx and data_extraction_items.docx. (@Alex Sanchez is this something you can get started on? I'd like for us to have a CSV file that corresponds column-by-column to our final dataset, sv_meta_data.rds, where the first row is the name of the variable and the second row is an explanation of that variable.)
-5. Seth: Once that's all done, tidy the accompanying materials up for online publication on Dataverse
 6. someone: email the final draft, appendix, and bibliography of database to Becca and Nora 😃 😃 😃 
-
-
-October 2023 todos
-
-1. go through all the anticipated direction = 0 studies and make sure that we're not 
-rounding down any real results to 0. There are some Ds calculated and we should be mindful of that DONE
-
-2. Follow up with JH about the type_of_at_risk var DONE
-
-once Alex's changes get implemented:  DONE
-1) download everything
-2) re-run script 1
-3) turn it into docmumentation (e.g. make it a txt file)
-
-Then,
-1) implement all of Martin's changes DONE
-
-Then DONE
-1) rename everything so the scripts are in the right order
-2) modiy the run.sh to reflect new shape
-3) delete all extra datasets
-4) amend the readme accordingly
-
-Then, 
-1) significantly amend the codebook (probably using Google Docs to do this) to line up the 
-listed variables with those actually in the dataset
-
-Then, final, comprehensive read-through
