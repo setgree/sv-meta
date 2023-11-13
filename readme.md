@@ -1,8 +1,3 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 # Code and Data for _Preventing Sexual Violence -- A Behavioral Problem Without a Behaviorally-Informed Solution_
 
 By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy Paluck.
