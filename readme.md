@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # Code and Data for _Preventing Sexual Violence -- A Behavioral Problem Without a Behaviorally-Informed Solution_
 
 By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy Paluck.
@@ -6,11 +11,9 @@ By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy
 
 This repository reproduces every quantitative claim and figure in the accompanying paper. 
 
-It is also available in fully reproducible format here: [INSERT-CODE-OCEAN-LINK]
+### Code
 
-## Scripts
-
-These are the main files in `code/`. All files presume that that's your working directory (open `sv-meta.Rproj` in Rstudio to have Rstudio take care of this automatically).
+The files in this directory reproduce all of the quantitative analyses in our paper and appendix. All files presume that `./code` is your working directory (open `sv-meta.Rproj` in Rstudio to have Rstudio take care of this automatically).
 
 * `run.sh` is a shell script that runs through the data cleaning and analysis scripts, start to finish. (Here is an [introduction to shell scripts](https://swcarpentry.github.io/shell-novice/).)
 
@@ -22,9 +25,9 @@ These are the main files in `code/`. All files presume that that's your working 
 
 * `4-exploratory-analyses.Rmd` produces some additional figures and analyses that we didn't include in the main scripts.
 
-## Functions
+#### Functions
 
-These are the files in `code/functions/`.
+These files are in `code/functions/`.
 
 * `d_calc.R` is the main function for calculating Glass's $\Delta$ or Cohen's d, depending on what you standardize on. This paper uses Glass's $\Delta$. This function was developed and refined over the course of the Contact and Prejudice reduction metas that Seth and John-Henry worked on previously. 
 
@@ -42,17 +45,24 @@ These are the files in `code/functions/`.
 
 * `write_dockerfile.R` composes a Dockerfile from information from `sessioninfo::package_info()`. 
 
-## Data 
+### Data 
 
-* `sv_meta_data.rds` is the main dataset
+* `sv_meta_data.rds` is our dataset.
 
-
-## Documentation
+### Documentation
 
 * `0-download-and-clean-data.md` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
 
-* `codebook.csv` provides guidance about variable names.
+* `codebook.csv` provides guidance about variables.
 
+* `Dockerfile` reproduces the computational environment that produced the main results.
 
-## Results
-Note to self to un-ignore this folder once we're ready to publish
+### Results
+
+There are 4 HTML files, each corresponding to one of the main script, that intersperse relevant text, code, and results, and a figures folder with figures 1-5.
+
+* `tt_studies.pdf` is Figure 1;
+* `descriptive.pdf` is Figure 2;
+* `tt_att_beh.pdf` is Figure 3;
+* `tt_beh_type` is Figure 4;
+* `corr.pdf` is Figure 5.
