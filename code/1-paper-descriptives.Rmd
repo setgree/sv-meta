@@ -10,8 +10,6 @@ output:
     toc_float:
       collapsed: true
     toc_depth: 4
-editor_options: 
-  chunk_output_type: console
 knitr:
   opts_chunk:
     echo: FALSE
@@ -19,13 +17,16 @@ knitr:
     message: FALSE
     warning: FALSE
     results: 'markup'
+editor_options: 
+  chunk_output_type: console
+
 ---
 
 This document reproduces every quatntitative claim and figure in all of the paper's sections up to the meta-analysis itself.
 
 **libraries and data**
 
-```{r setup, echo=FALSE}
+```{r setup, message=FALSE}
 library(dplyr, warn.conflicts = F)
 library(forcats)
 library(ggrepel, warn.conflicts = F)
@@ -42,9 +43,9 @@ library(tidyr, quietly = T)
 dat <- readRDS(file = '../data/sv_meta_data.rds')
 ```
 
-# introduction
+## 2 introduction
 
-Slightly fewer than half (140 of 298) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
+> Slightly fewer than half (140 of 298) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
 
 ```{r rape_myth_measurement}
 dat %>%
@@ -54,24 +55,22 @@ dat %>%
 
 ```
 
-## The Problem of Sexual Violence
+### 4.1 Inclusion and Exclusion Criteria for Study Selection
 
-(The PRISMA Flow Diagram (Appendix Figure \ref{fig:prisma}) explains how we winnowed the original pool of studies down to the 225 manuscripts)
+> (The PRISMA Flow Diagram (Appendix Figure \ref{fig:prisma}) explains how we winnowed the original pool of studies down to the 225 manuscripts)
 
 ```{r num_unique_papers}
 range(dat$unique_paper_id)
-
 ```
 
-Our present review provides empirical results from 13 countries
+> Our present review provides empirical results from 13 countries
 
 ```{r unique_countries}
 length(unique(dat$country))
 ```
 
-## Inclusion and Exclusion Criteria for Study Selection
+> Table 1 details the number of papers for each study design.
 
-Table $\ref{tab:n_designs}$ details the number of papers for each study design.
 ```{r table_one}
 dat |> 
   distinct(unique_paper_id, unique_study_id, study_design) |> 
@@ -81,10 +80,9 @@ dat |>
   kable(format = "latex", booktabs = T)
 ```
 
+## 5 Overview of the Studies in the Meta-Analytic Database
 
-## Overview of the Studies in the Meta-Analytic Database
-
-The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 409 distinct point estimates.
+> The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 409 distinct point estimates.
 
 ```{r years_and_countries}
 dat |> 
@@ -95,8 +93,8 @@ dat |>
             n_point_estimates = n())
 ```
 
+> Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
 
-Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
 ```{r avg_study_size}
 dat |> 
   group_by(unique_study_id) |> 
@@ -107,7 +105,7 @@ dat |>
 ```
 
 
-In addition, 30% percent of these studies test primary prevention efforts that span more than one day.
+> In addition, 30% percent of these studies test primary prevention efforts that span more than one day.
 
 ```{r perc_greater_1_day}
 dat |>
@@ -116,8 +114,7 @@ dat |>
   summarise(perc_greater_1_day = mean(intervention_length, na.rm = T))
 ```
 
-
-Over these years, we observed an uneven rise in the study of primary prevention efforts. This rise is depicted in \textbf{Figure \ref{fig:tt_studies}}. 
+> Over these years, we observed an uneven rise in the study of primary prevention efforts. This rise is depicted in Figure 1
 
 ```{r studies_over_time}
 tt_overall = dat |> # overall line
@@ -163,7 +160,7 @@ tt_overall     |>
 ggsave("../results/figures/tt_studies.pdf", height = 5, width = 7.5)
 ```
 
-We observe that 265 studies which constitute 89% of the database were conducted in the United States. The remaining 33 studies come from various places around the world, including Canada, Europe, and Africa.
+> We observe that 265 studies which constitute 89% of the database were conducted in the United States. The remaining 33 studies come from various places around the world, including Canada, Europe, and Africa.
 
 ```{r country_distribution}
 dat |> 
@@ -172,7 +169,7 @@ dat |>
   mutate(perc = round(n / sum(n), 3))
 ```
 
-Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted in the workplace, and 2% in community settings. 
+> Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted in the workplace, and 2% in community settings. 
 
 ```{r study_settings}
 dat |> 
@@ -181,7 +178,7 @@ dat |>
   mutate(perc = round(n / sum(n), 3))
 ```
 
-In fact, 67% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
+> In fact, 67% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
 
 ```{r gender_breakdown}
 dat |> # 
@@ -241,7 +238,6 @@ dat |> #
         legend.text = element_text(size = 14),
         plot.title = element_markdown()))
 
-
 dat_participant_sex <- dat |> # participant sex lines
       mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
                                          "male and female in separate groups and also in combined groups",
@@ -286,12 +282,9 @@ country_fig / setting_fig / tt_gender_fig
 ggsave("../results/figures/descriptive.pdf", width = 7, height = 7)
 ```
 
+#### 6.1.1 The First ten years
 
-# Zeitgeist Programs
-
-### The first decadex
-
- In the first 10 years, we find 47 studies reported in 33 manuscripts
+> In the first 10 years, we find 47 studies reported in 33 manuscripts
  
 ```{r early_years_study_count}
 dat |> 
@@ -304,7 +297,7 @@ dat |>
   summarise(perc_early = mean(early))
 ```
 
-This is also apparent when looking at the type of publication; while 24 of these studies are journal articles, 23 are dissertations
+> This is also apparent when looking at the type of publication; while 24 of these studies are journal articles, 23 are dissertations
 
 ```{r early_years_published_dissertation_breakdown}
 dat |> 
@@ -313,8 +306,7 @@ dat |>
   count(publication_type)
 ```
 
-
-The majority of these studies are laboratory studies (n = 27) as opposed to field studies (n = 20) that encompass the larger programmatic evaluations that dominate the next generation of studies.
+> The majority of these studies are laboratory studies (n = 27) as opposed to field studies (n = 20) that encompass the larger programmatic evaluations that dominate the next generation of studies.
 
 ```{r early_years_lab_field} 
 dat |> 
@@ -323,7 +315,7 @@ dat |>
   count(lab_field)
 ```
 
-These studies tend to be smaller than the next generation of studies (with an average of 191 participants)
+> These studies tend to be smaller than the next generation of studies (with an average of 191 participants)
 
 ```{r early_years_study_size}
 dat |> 
@@ -334,7 +326,7 @@ dat |>
   summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
 ```
 
-They target both men and women (33 studies, which constitute 67\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+> They target both men and women (33 studies, which constitute 67\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
 
 ```{r early_years_gender_breakdown}
 dat |> 
@@ -351,9 +343,9 @@ dat |>
   mutate(perc = n / sum(n))
 ```
 
-## Trends in Measurement in the Database
+## 7 Trends in Measurement in the Database
 
-outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 354 to 145. 
+> Overall, outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 354 to 145. 
 
 ```{r ideas_vs_behavior_outcome_count}
 dat |> 
@@ -362,8 +354,8 @@ dat |>
   summarise(n = n())
 ```
 
+> 202 measure outcomes about ideas only
 
-202 measure outcomes about ideas only
 ```{r att_only}
 dat |> 
   select(unique_study_id, scale_type) |> 
@@ -374,8 +366,8 @@ dat |>
   nrow()
 ```
 
+> 36 measure only behaviors; 
 
-36 measure only behaviors; 
 ```{r behaviors_only}
 dat |> 
   select(unique_study_id, scale_type) |> 
@@ -386,8 +378,8 @@ dat |>
   nrow()
 ```
 
+> 62 measure both
 
-62 measure both
 ```{r}
 dat |> 
   select(unique_study_id, scale_type) |> 
@@ -398,8 +390,8 @@ dat |>
   nrow()
 ```
 
+> While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was 1:4.75, 
 
-While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was 1:4.75, 
 ```{r early_years_ratio_between_ideas_and_beahvior_outcomes}
 dat |> 
   filter(between(year, 1985, 2000)) |>
@@ -408,7 +400,8 @@ dat |>
   mutate(ratio = ideas/behavior)
 ```
 
-after 2010 this ratio drops to 1:1.35. 
+> after 2010 this ratio drops to 1:1.35. 
+
 ```{r post_2010_ratio_ideas_behavvior}
 dat |> 
   filter(year > 2010) |>
@@ -417,8 +410,7 @@ dat |>
   mutate(ratio = ideas/behavior)
 ```
 
-
-Fig 3 displays the relationship between these outcomes over time.
+> Figure 3 displays the relationship between these outcomes over time.
 
 ```{r fig_tt_att_beh}
 dat |> 
@@ -450,10 +442,9 @@ dat |>
 ggsave("../results/figures/tt_att_beh.pdf", height = 5)
 ```
 
+### 7.1. Measuring Sexually Violent Behavior
 
-## Measuring Sexually Violent Behavior
-
-behavioral outcomes that fall into four categories: perpetration, victimization, bystander, and involvement. Figure $\ref{fig:tt_att_beh}$ demonstrates the trends over time in these measurements.
+> behavioral outcomes...fall into four categories: perpetration, victimization, bystander, and involvement. Figure 4 demonstrates the trends over time in these measurements.
 
 ```{r behavioral_outcomes_by_decade}
 dat |>
@@ -483,10 +474,10 @@ dat |>
 ggsave("../results/figures/tt_beh_type.pdf")
 ```
 
+### 7.2 Measuring ideas
 
-## Measuring ideas
+> Overall these and other myth measures constitute 56% of the measures we coded that assessed ideas about sexual violence
 
-Overall these and other myth measures constitute 56% of the measures we coded that assessed ideas about sexual violence
 ```{r myth_percentage}
 dat |> 
   select(scale_name, behavior_type) |> 

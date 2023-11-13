@@ -9,7 +9,7 @@ editor_options:
 
 ### Setup 
 
-```{r setup, echo=F}
+```{r setup, message=F}
 # libraries
 library(dplyr, warn.conflicts = F)
 library(metafor, quietly = T)

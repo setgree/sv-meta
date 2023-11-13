@@ -13,7 +13,7 @@ This document works through our results section. Each chunk corresponds to, and 
 
 **libraries, functions, options, and data **
 
-```{r setup, include=F, echo=F}
+```{r setup, message=F, echo=F}
 
 #' libraries
 library(dplyr, warn.conflicts = F)
@@ -210,7 +210,7 @@ bystander_dat |> filter(behavior_type == 'ideas') |> map_robust()
 
 ```
 
-> 43 of the 96 bystander studies measure behaviors.
+> 43 of the 92 bystander studies measure behaviors.
 
 ```{r bystander scale_type}
 bystander_dat |> group_by(scale_type) |> study_count()
@@ -291,8 +291,8 @@ dat |> split(~scale_type) |>
 #' a treatment group to a non-randomly assigned control group) but other outcomes
 #' that can only be evaluated pre-post. Peterson (2014) evaluates its behavioral 
 #' outcomes -- bystander behaviors -- quasi-experimentally, but its ideas-based
-#' outcomes pre-post. (Things in this category are also why we get an N of 
-#' 301 when divide the studies into design and then count unique_study_ids, 
+#' outcomes pre-post. (Things like this issue are why we get an N of 
+#' 301 when we divide the studies into design and then count unique_study_ids, 
 #' but we only have 298 unique study IDs). This means that when we pivot
 #' the data to have one column for mean attitude outcomes and one for mean
 #' behavioral outcomes, Peterson 2014 is getting treated as two studies b/c

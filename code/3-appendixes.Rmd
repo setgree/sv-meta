@@ -10,7 +10,7 @@ editor_options:
 
 **Libraries, functions and data**
 
-```{r setup, include=F, echo=F}
+```{r setup, message=F, echo=F}
 
 #' libraries
 library(dplyr, warn.conflicts = F)
@@ -194,7 +194,7 @@ dat |> filter(behavior_type == 'Perpetration',
 
 # A note on clustered study designs
 
-> In this study's pre-analysis plan, we detailed a search for studies that were either ``purely observational,\ldots quasi-experimental,\ldots or experimental,''defined as featuring random assignment. We did not anticipate, however, the quantity of cluster-assigned studies in our sample (174 cluster assignemnts, and 54 of 100 featuring random assignment.) 
+> In this study's pre-analysis plan, we detailed a search for studies that were either ``purely observational,\ldots quasi-experimental,\ldots or experimental,'' defined as featuring random assignment. We did not anticipate, however, the quantity of cluster-assigned studies in our sample (174 cluster assignemnts, and 54 of 100 featuring random assignment.) 
 
 ```{r cluster_study_redo}
 
