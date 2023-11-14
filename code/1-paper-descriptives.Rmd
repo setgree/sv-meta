@@ -183,7 +183,7 @@ dat |>
 ```{r gender_breakdown}
 dat |> # 
   mutate(participant_sex = 
-           ifelse(participant_sex %in% c("male and female in mixed groups", 
+           if_else(participant_sex %in% c("male and female in mixed groups", 
                                          "male and female in separate groups and also in combined groups",
                                           "male and female in separate groups",
                                          "male and female with group composition not specified",
@@ -239,7 +239,7 @@ dat |> #
         plot.title = element_markdown()))
 
 dat_participant_sex <- dat |> # participant sex lines
-      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+      mutate(participant_sex = if_else(participant_sex %in% c("male and female in mixed groups", 
                                          "male and female in separate groups and also in combined groups",
                                           "male and female in separate groups",
                                          "male and female with group composition not specified",
@@ -331,7 +331,7 @@ dat |>
 ```{r early_years_gender_breakdown}
 dat |> 
   filter(between(year, 1985, 1995)) |> 
-      mutate(participant_sex = ifelse(participant_sex %in% c("male and female in mixed groups", 
+      mutate(participant_sex = if_else(participant_sex %in% c("male and female in mixed groups", 
                                          "male and female in separate groups and also in combined groups",
                                           "male and female in separate groups",
                                          "male and female with group composition not specified",
