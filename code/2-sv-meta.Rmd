@@ -264,7 +264,7 @@ dat_has_both <- dat |> filter(has_both == 'both')
 dat_has_both |> study_count()
 ```
 
-> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.3 (SE = 0.04), p $<$0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
+> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.29 (SE = 0.04), p < 0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
 
 ```{r has_both_behav_att_meta_results}
 dat_has_both |> split(~scale_type) |> 
