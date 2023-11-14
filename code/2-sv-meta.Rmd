@@ -11,7 +11,7 @@ This document works through Section 8, "Quantitative meta-analysis," of the acco
 
 **libraries, functions, options, and data **
 
-```{r setup, message=F, echo=F}
+```{r setup, message=F}
 
 #' libraries
 library(dplyr, warn.conflicts = F)
