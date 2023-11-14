@@ -61,3 +61,7 @@ There are 4 HTML files, each corresponding to one of the main script, that inter
 * `tt_att_beh.pdf` is Figure 3;
 * `tt_beh_type` is Figure 4;
 * `corr.pdf` is Figure 5.
+
+### Licenses
+
+In accordance with the [Reproducible Research Standard](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1362040), our code is available under the [MIT license](https://opensource.org/license/mit/) and our data under the [Creative Commons 0](https://creativecommons.org/publicdomain/zero/1.0/) license.
