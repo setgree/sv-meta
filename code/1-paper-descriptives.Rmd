@@ -326,7 +326,7 @@ dat |>
   summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
 ```
 
-> They target both men and women (33 studies, which constitute 67\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+> They target both men and women (34 studies, which constitute 69i\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
 
 ```{r early_years_gender_breakdown}
 dat |> 
@@ -341,6 +341,10 @@ dat |>
       distinct(unique_study_id, participant_sex) |>
   count(participant_sex, sort = T) |> 
   mutate(perc = n / sum(n))
+
+#' Note that the Ns don't quite match up here -- some studies have multiple 
+#' treatment arms whe (some with mixed gender groups, some with single-gender)
+#' so they get reported twice when we tally participant_sex up
 ```
 
 ## 7 Trends in Measurement in the Database
