@@ -34,8 +34,7 @@ source('./functions/var_d_calc.R')
 options(scipen = 99)
 
 #' data
-dat <- readRDS(file = '../data/sv_meta_data.rds') |>
-  select(unique_study_id, scale_type, everything())
+dat <- readRDS(file = '../data/sv_meta_data.rds')
 ```
 
 **Add Glass's Delta, Variance, and Standard Error**
