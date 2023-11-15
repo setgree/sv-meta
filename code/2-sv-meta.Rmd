@@ -17,12 +17,12 @@ This document works through Section 8, "Quantitative meta-analysis," of the acco
 library(metafor, quietly = T)
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
+library(knitr)
 library(lubridate, warn.conflicts = F)
 library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
 library(tibble)
-library(knitr)
 
 #' functions
 source('./functions/sum_lm.R')
