@@ -467,7 +467,6 @@ readRDS(file = '../data/sv_meta_data.rds') |>
   count(comparison) |>
   rename(Comparison = comparison, Count = n)
 binom.test(36, (36 + 12 + 1), 0.5)
-# This code could stand to be cleaned up a lot
 ```
 
 **Forest Plot (Figure):**
