@@ -270,6 +270,7 @@ raw_dat <- raw_dat |>
 
 ### add useful levels
 ```{r levels}
+raw_dat <- separate(raw_dat, setting, into = c("setting", "setting2"))
 
 #' setting
 raw_dat$setting <- factor(raw_dat$setting,
@@ -282,6 +283,19 @@ raw_dat$setting <- factor(raw_dat$setting,
     "community",
     "faith based",
     "other"))
+
+#' setting2
+raw_dat$setting2 <- factor(raw_dat$setting2,
+  levels = 1:7,
+  labels = c(
+    "middle school",
+    "high school",
+    "college",
+    "work",
+    "community",
+    "faith based",
+    "other"))
+
 
 #' publication type
 raw_dat$publication_type <- factor(raw_dat$publication_type,
@@ -427,7 +441,7 @@ raw_dat <- raw_dat |>
       "Randomized Control Trial",
       "Quasi-Experimental",
       "Observational")),
-    behavior_type = str_to_title(behavior_type)) %>%
+    behavior_type = str_to_title(behavior_type)) |>
   group_by(unique_study_id) |>
   mutate(
     has_both = case_when(
@@ -445,8 +459,8 @@ raw_dat <- raw_dat |>
 ### replace 'attitudes' with 'ideas'
 This was something we got more consistent about over the course of the paper, but at first.
 ```{r attitudes_become_ideas}
-raw_dat <- raw_dat %>%
-  rename(ideas_behaviors = attitudes_behaviors) %>%
+raw_dat <- raw_dat |>
+  rename(ideas_behaviors = attitudes_behaviors) |>
   mutate(
     scale_type = if_else(scale_type == "attitudes", "ideas", scale_type),
     behavior_type = if_else(behavior_type == "Attitude", "ideas", behavior_type)

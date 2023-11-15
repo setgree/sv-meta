@@ -175,7 +175,7 @@ sum_lm(x = "se_d + year")
 dat |>
   split(~interaction(scale_type, study_design)) |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |> 
-         kable()) 
+         kable('markdown')) 
 ```
 
 > This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are more than 20 times larger than behavioral responses. 
@@ -241,7 +241,8 @@ bystander_dat |>
  bystander_dat |>
   filter(behavior_type != 'Involvement') |>
   split(~behavior_type) |>
-  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable())
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
+       )
  
  # how many measure perpetration or victimization?
 bystander_dat |>
@@ -257,7 +258,7 @@ bystander_dat |>
 dat |>
   split(~behavior_type) |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |>
-      kable())
+      kable('markdown'))
 ```
 
 > Our sample features 28 randomized designs that measure perpetration, which collectively produce a meta-analytic effect of 0.086 (SE = 0.061), with a p-value of 0.173.
@@ -291,7 +292,7 @@ dat_has_both |> split(~scale_type) |>
 
 ```{r reitirating_main_effects}
 dat |> split(~scale_type) |> 
-   imap(~map_robust(.x) |> kable())
+   imap(~map_robust(.x) |> kable('markdown'))
 ```
 
 > Unfortunately, in these studies, we find a small, statistically non-significant correlation of *r* (60) = 0.136, p = 0.293 between changes in ideas and changes in behaviors
