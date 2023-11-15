@@ -19,55 +19,58 @@ knitr:
     results: 'markup'
 editor_options: 
   chunk_output_type: console
-
 ---
 
-This document reproduces every quatntitative claim and figure in all of the paper's sections up to the meta-analysis itself.
+This document reproduces every quantitative claim and figure in all of the paper's sections up to the meta-analysis itself.
 
 **libraries and data**
 
 ```{r setup, message=FALSE}
 library(dplyr, warn.conflicts = F)
 library(forcats)
-library(ggrepel, warn.conflicts = F)
-library(ggtext, warn.conflicts = F)
-library(ggthemes)
-library(janitor)
-library(kableExtra)
-library(knitr) 
-library(patchwork)
-library(scales)
 library(stringr)
 library(tidyr, quietly = T)
+library(knitr) 
+library(kableExtra)
+library(janitor)
+library(ggthemes)
+library(ggrepel, warn.conflicts = F)
+library(ggtext, warn.conflicts = F)
+library(patchwork)
+library(scales)
 
 dat <- readRDS(file = '../data/sv_meta_data.rds')
 ```
 
-## 2 introduction
+## 2 Introduction
 
 > Slightly fewer than half (140 of 298) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
 
 ```{r rape_myth_measurement}
 dat %>%
   group_by(unique_study_id) %>%
-  summarize(has_myth_or_IRMA = any(str_detect(scale_name, "myth|irma|illinois"))) %>%
-  count(has_myth_or_IRMA)
-
+  summarize(has_myth_or_IRMA = any(str_detect(str_to_lower(scale_name), "myth|irma|illinois"))) %>%
+  count(has_myth_or_IRMA) |> 
+  janitor::adorn_totals(where = "row")
 ```
 
-### 4.1 Inclusion and Exclusion Criteria for Study Selection
 
-> (The PRISMA Flow Diagram (Appendix Figure \ref{fig:prisma}) explains how we winnowed the original pool of studies down to the 225 manuscripts)
-
-```{r num_unique_papers}
-range(dat$unique_paper_id)
-```
+## 3 The Problem of Sexual Violence
 
 > Our present review provides empirical results from 13 countries
 
 ```{r unique_countries}
 length(unique(dat$country))
 ```
+
+### 4.1 Inclusion and Exclusion Criteria for Study Selection
+
+> (The PRISMA Flow Diagram (Appendix Figure 1) explains how we winnowed the original pool of studies down to the 225 manuscripts)
+
+```{r num_unique_papers}
+range(dat$unique_paper_id)
+```
+
 
 > Table 1 details the number of papers for each study design.
 
@@ -82,11 +85,11 @@ dat |>
 
 ## 5 Overview of the Studies in the Meta-Analytic Database
 
-> The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 409 distinct point estimates.
+> The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 499 distinct point estimates.
 
 ```{r years_and_countries}
 dat |> 
-  summarise(year_min = min(year),
+  summarise(year_min = min(year), # 1986, but we start search in 1985
             year_max = max(year),
             n_manuscripts = n_distinct(unique_paper_id),
             n_studies = n_distinct(unique_study_id),
@@ -96,9 +99,10 @@ dat |>
 > Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
 
 ```{r avg_study_size}
+
 dat |> 
   group_by(unique_study_id) |> 
-  summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
+  summarise(mean_n_per_study = mean(total_n, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
   ungroup() |> 
   summarise(mean_n = mean(mean_n_per_study), # then collapse studies in estimate
             median_n = median(mean_n_per_study))
@@ -110,8 +114,11 @@ dat |>
 ```{r perc_greater_1_day}
 dat |>
   distinct(unique_study_id, intervention_length) |> 
-  mutate(intervention_length = ifelse(intervention_length > 1, 1, 0)) |> 
-  summarise(perc_greater_1_day = mean(intervention_length, na.rm = T))
+  group_by(unique_study_id) |> 
+  filter(intervention_length == max(intervention_length)) |> 
+  mutate(long_intervention = ifelse(intervention_length > 1, 1, 0)) |> 
+  ungroup() |> 
+  summarise(perc_greater_1_day = mean(long_intervention, na.rm = T))
 ```
 
 > Over these years, we observed an uneven rise in the study of primary prevention efforts. This rise is depicted in Figure 1
@@ -124,26 +131,27 @@ tt_overall = dat |> # overall line
 
 zeitgeist = tibble(year = c(1998, 2000, 2007), 
                    n = pull(filter(tt_overall, year %in% c(1998, 2000, 2007)), n),
-                   event = c("Safe dates", "Men's Program", "Bringing in\nthe Bystander"))
+                   event = c("Safe dates", "Men's\nProgram", "Bringing in\nthe Bystander"))
 
 tt_overall     |>
   ggplot(aes(year, n)) +
-  geom_line(linewidth = 2) +
     geom_label_repel(mapping = aes(x = year, ## labels
                                    y = n,
                                    label = event),
                      size = 6,
+                     segment.color = 'gray60',
                      segment.size	= 1.5,
                      inherit.aes = F,
                      data =  zeitgeist,
-                     nudge_x = c(2, 2.5, -1.9),
-                     nudge_y = c(6, 5.5, 5),
+                     nudge_x = c(2.9, 3.5, 6),
+                     nudge_y = c(5.8, 4, 0),
                      min.segment.length = 0, 
-                     force = 0.3) +
+                     force = 0.5) +
   scale_x_continuous(
     limits = c(1985, 2018),
     breaks = c(1985, seq(1985, 2020, by = 5), 2018)
   ) +
+  geom_line(linewidth = 2) +
   theme_bw() +
   theme(
     axis.text = element_text(size = 12),
@@ -160,39 +168,55 @@ tt_overall     |>
 ggsave("../results/figures/tt_studies.pdf", height = 5, width = 7.5)
 ```
 
-> We observe that 265 studies which constitute 89% of the database were conducted in the United States. The remaining 33 studies come from various places around the world, including Canada, Europe, and Africa.
+> We observe that 265 studies which constitute 89% of the database were conducted in the United States. 
+
+```{r n_usa}
+dat |> 
+  distinct(unique_study_id, country) |> 
+  count(country, sort = T) |> 
+  mutate(perc = round(n / sum(n), 3)) |> 
+  filter(country == "USA")
+```
+
+> The remaining 33 studies come from various places around the world, including Canada, Europe, and Africa.
 
 ```{r country_distribution}
 dat |> 
   distinct(unique_study_id, country) |> 
   count(country, sort = T) |> 
-  mutate(perc = round(n / sum(n), 3))
+  mutate(perc = round(n / sum(n), 3)) |> 
+  filter(country != "USA") |> 
+  janitor::adorn_totals(where = "row")
 ```
 
-> Nearly 69% of all studies are conducted among college students. Another 13% focus on high school students, while 9% percent focus on middle school students. Outside of the education sphere, we find that 4% of studies were conducted in the workplace, and 2% in community settings. 
+
+> Nearly 67\% of all studies are conducted within college campuses. Another 15\% are conducted in high schools, while 11\% are conducted in middle schools. Four percent of studies were conducted in the workplace, and three percent in community settings.
 
 ```{r study_settings}
 dat |> 
-  distinct(unique_study_id, setting) |> 
+  distinct(unique_study_id, setting, setting2) |> 
+  pivot_longer(cols = c("setting", "setting2"), values_to = "setting") |> 
+  drop_na(setting) |> 
   count(setting, sort = T) |> 
   mutate(perc = round(n / sum(n), 3))
 ```
 
-> In fact, 67% of the studies targeted both men and women, while 27% targeted only men, and 6% targeted only women (1% of studies did not report the gender target).
+> In fact, 67% of the studies targeted both men and women, while 27\% targeted only men, and 6\% targeted only women.
 
 ```{r gender_breakdown}
 dat |> # 
   mutate(participant_sex = 
            if_else(participant_sex %in% c("male and female in mixed groups", 
-                                         "male and female in separate groups and also in combined groups",
+                                          "male and female in separate groups and also in combined groups",
                                           "male and female in separate groups",
-                                         "male and female with group composition not specified",
-                                         "general population"),
+                                          "male and female with group composition not specified",
+                                          "general population"),
                   "mixed gender groups", 
                   participant_sex)) |>
   distinct(unique_study_id, participant_sex) |>
   count(participant_sex, sort = T) |> 
-  mutate(perc = round(n / sum(n), 3))
+  mutate(perc = round(n / sum(n), 4)) |> 
+  as.data.frame() # to show the decimals in output
 ```
 
 
@@ -219,9 +243,10 @@ dat |> #
        col = NULL))
   
 (setting_fig = dat |> 
-  distinct(unique_study_id, .keep_all = T) |> 
-  count(setting, sort = T) |> 
+  distinct(unique_study_id, setting, setting2) |> 
+  pivot_longer(cols = c("setting", "setting2"), values_to = "setting") |> 
   drop_na(setting) |> 
+  count(setting, sort = T) |> 
   mutate(setting = fct_rev(fct_reorder(setting, n)), 
          perc = n / sum(n)) |>
   ggplot(aes(setting, n, fill = setting)) +
@@ -239,14 +264,15 @@ dat |> #
         plot.title = element_markdown()))
 
 dat_participant_sex <- dat |> # participant sex lines
-      mutate(participant_sex = if_else(participant_sex %in% c("male and female in mixed groups", 
-                                         "male and female in separate groups and also in combined groups",
-                                          "male and female in separate groups",
-                                         "male and female with group composition not specified",
-                                         "general population"), 
+      mutate(participant_sex = if_else(participant_sex %in% 
+                                         c("male and female in mixed groups", 
+                                           "male and female in separate groups and also in combined groups",
+                                           "male and female in separate groups",
+                                           "male and female with group composition not specified",
+                                           "general population"), 
                                       "mixed gender groups", 
                                       participant_sex)) |>
-      distinct(unique_study_id, .keep_all = T) |>
+      distinct(year, unique_study_id, participant_sex) |>
       filter(participant_sex %in% c("mixed gender groups", "only male", "only female")) |>
       count(year, participant_sex) |>
       add_row(year = 1985, participant_sex = "mixed gender groups") |>
@@ -282,6 +308,43 @@ country_fig / setting_fig / tt_gender_fig
 ggsave("../results/figures/descriptive.pdf", width = 7, height = 7)
 ```
 
+
+## 6 The Leading Approach to Reducing Sexual Violence
+
+> As depicted in Figure 3, in our database, ideas about sexual violence are consistently measured more often than behaviors (typically self-reported).
+
+```{r fig_tt_att_beh}
+dat |> 
+  mutate(scale_type = str_to_title(ifelse(scale_type == "ideas", "ideas", "behavior"))) |> 
+  distinct(year, unique_study_id, scale_type) |> 
+  count(year, scale_type) |> 
+  add_row(year = 1985, scale_type = "Behavior") |> 
+  complete(year, scale_type, fill = list(n = 0)) |> 
+  mutate(scale_type = factor(scale_type, levels = c("Ideas", "Behavior"))) |> 
+  ggplot(aes(x = year, y = n, color = scale_type)) +
+  geom_line(linewidth = 3) + 
+  labs(
+    x = NULL,
+    y = "# of studies",
+    col = NULL
+  ) +
+  scale_x_continuous(
+    limits = c(1985, 2018),
+    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
+  ) +
+  scale_color_manual(values = ggthemes::tableau_color_pal('Color Blind')(2)) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 12), 
+    axis.title = element_text(size = 14),
+    legend.text = element_text(size = 14),
+    legend.position = "bottom"
+  )
+
+ggsave("../results/figures/tt_att_beh.pdf", height = 5)
+```
+
+
 #### 6.1.1 The First ten years
 
 > In the first 10 years, we find 47 studies reported in 33 manuscripts
@@ -297,7 +360,7 @@ dat |>
   summarise(perc_early = mean(early))
 ```
 
-> This is also apparent when looking at the type of publication; while 24 of these studies are journal articles, 23 are dissertations
+> This is also apparent when looking at the type of publication; while 24 of these studies are from journal articles, 23 are from dissertations
 
 ```{r early_years_published_dissertation_breakdown}
 dat |> 
@@ -321,12 +384,12 @@ dat |>
 dat |> 
   filter(between(year, 1985, 1995)) |> 
   group_by(unique_study_id) |> 
-  summarise(mean_n_per_study = mean(n_t_post, na.rm = T) + mean(n_c_post, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
+  summarise(mean_n_per_study = mean(total_n, na.rm = T)) |>  # collapse outcomes first, so studies with more outcomes don't have more weight
   ungroup() |> 
   summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
 ```
 
-> They target both men and women (34 studies, which constitute 69i\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+> They target both men and women (34 intervention arms, which constitute 69\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
 
 ```{r early_years_gender_breakdown}
 dat |> 
@@ -411,40 +474,11 @@ dat |>
   filter(year > 2010) |>
   count(scale_type) |> 
   pivot_wider(names_from = scale_type, values_from = n) |> 
-  mutate(ratio = ideas/behavior)
+  mutate(ratio = ideas/behavior) |> 
+  as.data.frame()
 ```
 
-> Figure 3 displays the relationship between these outcomes over time.
 
-```{r fig_tt_att_beh}
-dat |> 
-  mutate(scale_type = str_to_title(ifelse(scale_type == "ideas", "ideas", "behavior"))) |> 
-  distinct(year, unique_study_id, scale_type) |> 
-  count(year, scale_type) |> 
-  add_row(year = 1985, scale_type = "Behavior") |> 
-  complete(year, scale_type, fill = list(n = 0)) |> 
-  ggplot(aes(x = year, y = n, color = scale_type)) +
-  geom_line(linewidth = 3) + 
-  labs(
-    x = NULL,
-    y = "# of studies",
-    col = NULL
-  ) +
-  scale_x_continuous(
-    limits = c(1985, 2018),
-    breaks = c(1985, seq(1985, 2020, by = 5), 2018)
-  ) +
-  scale_color_manual(values = ggthemes::tableau_color_pal('Color Blind')(2)) +
-  theme_bw() +
-  theme(
-    axis.text = element_text(size = 12), 
-    axis.title = element_text(size = 14),
-    legend.text = element_text(size = 14),
-    legend.position = "bottom"
-  )
-
-ggsave("../results/figures/tt_att_beh.pdf", height = 5)
-```
 
 ### 7.1. Measuring Sexually Violent Behavior
 
@@ -456,15 +490,12 @@ dat |>
   distinct(unique_study_id, decade, behavior_type) |> 
   count(decade, behavior_type) |> 
   complete(decade, behavior_type, fill = list(n = 0)) |> 
+  mutate(behavior_type = factor(behavior_type, levels = c("Perpetration", "Victimization", "Bystander", "Involvement"))) |> 
   ggplot(aes(x = decade, y = n, color = behavior_type, group = behavior_type)) +
   geom_line(linewidth = 3) + 
   labs(x = NULL, 
        y = "# of studies", 
        col = NULL) +
-  # scale_x_continuous(
-  #   limits = c(1985, 2018),
-  #   breaks = c(1985, seq(1985, 2020, by = 5), 2018)
-  # ) +
   scale_color_manual(values = ggthemes::stata_pal("s1color")(4)) +
   theme_bw() +
     theme(
@@ -486,7 +517,7 @@ ggsave("../results/figures/tt_beh_type.pdf")
 dat |> 
   select(scale_name, behavior_type) |> 
   filter(behavior_type == "ideas") |> 
-  mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth")) |> 
+  mutate(myth_scale = str_detect(str_to_lower(scale_name), "myth|irma|illinois")) |> 
   group_by(myth_scale) |> 
   summarise(n = n()) |> 
   mutate(perc = n / sum(n))
