@@ -515,7 +515,7 @@ dat_for_forest_plot |>
 
 ## What if we ignore all clustering information when calculating standard errors?
 
-Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a powerful relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
+Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a strong relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
 
 ```{r redoing Ds without any cluster info}
 no_clusters <- dat |> 
