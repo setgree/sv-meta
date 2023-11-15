@@ -386,7 +386,7 @@ ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 
 **record computational environment**
 
-```{r write_dockerfile, eval=FALSE}
+```{r write_dockerfile}
 source('./functions/write_dockerfile.R')
 
 write_dockerfileR(dir = '../documentation/')
