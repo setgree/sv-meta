@@ -575,3 +575,18 @@ no_clusters |>
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+The one bystander study that measured involvement found much bigger effects than the other categories on average:
+
+```{r bystander_involvement}
+ dat |>
+  filter(
+    str_detect(paper_title, "[Bb]ystander") |
+      str_detect(brief_description_of_the_intervention, "[Bb]ystander") |
+      str_detect(intervention_name, "[Bb]ystander") |
+      str_detect(program_name, "[Bb]ystander") |
+      str_detect(stated_purpose, "4")) |>
+  filter(behavior_type == 'Involvement') |>
+  select(author, year, paper_title, n_t_post, n_c_post, d, se_d)
+
+```

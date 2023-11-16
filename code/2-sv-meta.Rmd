@@ -14,11 +14,11 @@ This document works through Section 8, "Quantitative meta-analysis," of the acco
 ```{r setup, message=F}
 
 #' libraries
-library(metafor, quietly = T)
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
 library(knitr)
 library(lubridate, warn.conflicts = F)
+library(metafor, quietly = T)
 library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
@@ -119,7 +119,7 @@ dat |>
 ```
 
 
-> Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 186) and those that were not (N = 118). 
+> Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 189) and those that were not (N = 118). 
 
 ```{r published_vs_unpubished}
 dat |> 
@@ -136,35 +136,31 @@ length(unique(dat$unique_study_id)) == 189 + 109
 dat |> sum_lm(d, published_unpublished)
 ```
 
-> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant 
+> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant ($\beta$ = 0.021, SE 0.199, p = 0.914); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.591, SE = 0.361), the relationship is still statistically non-significant (p = 0.106).
 
 ```{r pub_unpub_se_d}
 
 dat |> split(~published_unpublished) |> map(sum_lm)
 ```
 
->  while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.591 (SE = 0.361)), the relationship is still statistically non-significant (p = 0.106).
 
-```{r pub_unpub_eff_size}
-dat |> split(~published_unpublished) |> map(map_robust)
-```
+
+
 
 ### 8.3 The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
 
-> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is ∆ = 0.071 (SE = 0.022), p = .0015; whereas the overall effect size for idea-based outcomes is ∆ = 0.366 (SE = .031), p < 0.0001.
+> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is $\Delta$ = 0.071 (SE = 0.022), p = .0015; whereas the overall effect size for idea-based outcomes is $\Delta$ = 0.366 (SE = .031), p < 0.0001.
 
 ```{r differences_by_ideas_behavior}
-
 dat |> split(~scale_type) |> map(.f = map_robust)
 ```
 
 
 
-> We also observe a negligible, statistically non-signiﬁcant relationship between effect size and year of publication ( β = 0.003, SE = 0.002),
+> We also observe a negligible, statistically non-signiﬁcant relationship between effect size and year of publication ($\beta$ = 0.003, SE = 0.002),
 
 ```{r}
 sum_lm(x = "se_d + year")
-
 ```
 
 
@@ -187,7 +183,7 @@ round(0.503 / 0.024)
 
 #### 8.3.1 Do bystander interventions Change Sexually Violent Behavior?
 
-> We tested this on the 96 bystander-related interventions in our database, the majority (78/96) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = .398 (SE = 0.069), p $<$ 0.0001.  
+> We tested this on the 96 bystander-related interventions in our database, the majority (78/96) of which measure ideas about sexual violence like beliefs, ideas, and knowledge, and are successful at changing them, $\Delta$ = 0.398 (SE = 0.069), p $<$ 0.0001.  
 
 ```{r bystander_interventions_overall}
 # create bystander dataset
@@ -232,11 +228,8 @@ bystander_dat |>
 > Overall, 22 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.154 (SE = 0.056), p = 0.011. In our database, 20 bystander studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019, SE = 0.019, p = 0.329) or victimization ($\Delta$ =-0.009, SE = 0.041,  p = 0.835).
 
 ```{r bystander_dv_count}
-# filter out the one 'involvement' outcome because 
-# having just one cluster breaks the meta-analysis function
-bystander_dat |> 
-  filter(behavior_type == 'Involvement') |>
-  select(author, year, paper_title, d, se_d)
+#' filter out the one 'involvement' outcome because 
+#' having just one cluster breaks the meta-analysis function
 
  bystander_dat |>
   filter(behavior_type != 'Involvement') |>
@@ -244,7 +237,7 @@ bystander_dat |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')
        )
  
- # how many measure perpetration or victimization?
+#' how many measure perpetration or victimization?
 bystander_dat |>
   filter(perp_vict_grouped == 'perp_vict') |> 
   study_count()
@@ -281,14 +274,14 @@ dat_has_both <- dat |> filter(has_both == 'both')
 dat_has_both |> study_count()
 ```
 
-> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.29 (SE = 0.04), p < 0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
+> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.29 (SE = 0.039), p < 0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
 
 ```{r has_both_behav_att_meta_results}
 dat_has_both |> split(~scale_type) |> 
   map(map_robust)
 ```
 
-> In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
+> In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.366, SE = 0.031), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071, 0.022).
 
 ```{r reitirating_main_effects}
 dat |> split(~scale_type) |> 
@@ -386,7 +379,7 @@ ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 
 **record computational environment**
 
-```{r write_dockerfile}
+```{r write_dockerfile, eval=FALSE, k}
 source('./functions/write_dockerfile.R')
 
 write_dockerfileR(dir = '../documentation/')
