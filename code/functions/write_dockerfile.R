@@ -1,5 +1,4 @@
-#' Convert the output from `sessioninfo::package_info()` into the contents of a Dockerfile
-#' Generates a Dockerfile based on R package information
+#' Generates a Dockerfile based on sessioninfo::package_info()
 #'
 #' @param write_file Boolean indicating whether to write the Dockerfile to disk
 #' @param org The organization, defaulting to "rocker"
