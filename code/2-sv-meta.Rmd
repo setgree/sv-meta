@@ -12,6 +12,7 @@ This document works through Section 8, "Quantitative meta-analysis," of the acco
 **libraries, functions, options, and data **
 
 ```{r setup, message=F}
+
 #' libraries
 library(dplyr, warn.conflicts = F)
 library(ggplot2, warn.conflicts = F)
@@ -378,7 +379,8 @@ ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 
 **optional: record computational environment**
 Here's how we recorded our computational environoment as a Dockerfile. See the [Rocker project](https://rocker-project.org/) for more on this approach to reproducibility.
-```{r write_dockerfile, eval = T}
+
+```{r write_dockerfile, eval = F}
 source('./functions/write_dockerfile.R')
 
 write_dockerfileR(dir = '../documentation/')
