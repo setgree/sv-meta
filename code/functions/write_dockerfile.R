@@ -1,32 +1,16 @@
 #' Convert the output from `sessioninfo::package_info()` into the contents of a Dockerfile
+#' Generates a Dockerfile based on R package information
 #'
-#' @param write_file Defaults to TRUE, which will write a dockerfile. Else,
-#' output will be written to console (or whatever connection is open).
-#' console (or whatever connection you have open). The dockerfile's name
-#' will combine the dir and filename parameterss: by default, './Dockerfile'.
-#' Writing a file will overwrite any Dockerfile in the same location.
-#' 'TRUE' is probably appropriate for exporting to a tool like mybinder.org;
-#' 'FALSE ' is appropriate if you already have a Dockerfile and you prefer
-#' to paste sections from this function into it.
-#' @param org Defaults to Rocker (https://www.rocker-project.org/); another
-#' option is Docker's official R images (https://hub.docker.com/_/r-base).
-#' For more on Rocker, see https://arxiv.org/abs/1710.03675.
-#' @param image Defaults to r-base:latest, whose source code is on Rocker's
-#' GitHub:
-#' https://github.com/rocker-org/rocker/blob/master/r-base/latest/Dockerfile.
-#' available tags for r-base are listed here:
-#' https://hub.docker.com/r/rocker/r-base/tags.
-#' @param apt_packages should standard needed apt packages be installed? 
-#' Defaults to true and installs libcurl4-openssl-dev, libssl-dev, and 
-#' libxml2-dev.
-#' Other Rocker images can be browsed here: https://hub.docker.com/u/rocker.
-#' @param dir Defaults to current directory, './'.
-#' @param filename Defaults to 'Dockerfile', making the composite file
-#' './Dockerfile'.
+#' @param write_file Boolean indicating whether to write the Dockerfile to disk
+#' @param org The organization, defaulting to "rocker"
+#' @param image The Docker image, defaulting to "r-base:latest"
+#' @param apt_packages Boolean to install standard apt packages (default: TRUE)
+#' @param dir Directory to save the Dockerfile (default: './')
+#' @param filename Name of the Dockerfile (default: 'Dockerfile')
 #' @export
 #'
-#'@importFrom sessioninfo package_info
-#'@importFrom utils installed.packages
+#' @importFrom sessioninfo package_info
+#' @importFrom utils installed.packages
 #'
 write_dockerfileR <- function(write_file = TRUE,
                               org = "rocker",
@@ -35,89 +19,98 @@ write_dockerfileR <- function(write_file = TRUE,
                               dir = './',
                               filename = 'Dockerfile') {
   
-  ## is sessioninfo available? 
+  # Check if 'sessioninfo' package is available
   if ("sessioninfo" %in% rownames(installed.packages()) == FALSE) {
-    stop("please install the library `sessioninfo` before proceeding")
+    stop("Please install the 'sessioninfo' library before proceeding.")
   }
   
-  ## Write the Dockerfile as a new file, or save to current connection?
+  # Write the Dockerfile to disk or output to console
   if (isTRUE(write_file)) {
     Dockerfile = paste0(dir, filename)
     file.create(Dockerfile)
-    sink(file = Dockerfile, append = T)
+    sink(file = Dockerfile, append = TRUE)
   }
   
-  
-  ## Top of Dockerfile: add base image; 
-  ## if apt_packages=T add standard apt packages
-  ## if len(pkgs) !=0, add  and 'remotes' 
+  # Top of Dockerfile: add base image; install standard apt packages if required
   cat(paste0("FROM ", org, "/", image, "\n", "\n"))
   
   if (isTRUE(apt_packages)) {
-    cat(paste0("RUN apt-get update \\", "\n", "  && apt-get install -y \\", "\n",
+    cat(paste0("RUN apt-get update \\", "\n",
+               "  && apt-get install -y \\", "\n",
                "    \"libcurl4-openssl-dev\" \\", "\n",
                "    \"libssl-dev\" \\", "\n",
                "    \"libxml2-dev\" \\", "\n",
                "  && rm -rf /var/lib/apt/lists/*", "\n", "\n"))
   }
   
-  pkgs <- sort(sessioninfo::package_info((pkgs = .packages()), 
-                            dependencies = F)$package)
+  # Retrieve package information
+  pkgs <- sort(sessioninfo::package_info(pkgs = .packages(), 
+                                         dependencies = FALSE)$package)
+  
+  # Install 'remotes' if necessary
   if (length(pkgs) != 0) {
-    cat(paste0("RUN Rscript -e 'if(!require(\"remotes\")) install.packages(\"remotes\")'", "\n"))
-  }
-  if (any(grep('Bioconductor', sessioninfo::package_info()$source))) {
-    cat(paste0("RUN Rscript -e 'options(warn = 2); if(!require(\"BiocManager\")) install.packages(\"BiocManager\")'", "\n"))
+    cat(paste0("RUN Rscript -e 'if(!require(\"remotes\")) ",
+               "install.packages(\"remotes\")'", "\n"))
   }
   
-  ## Separate packages into CRAN, Bioconductor, and GitHub packages
+  # Check for Bioconductor packages
+  if (any(grep('Bioconductor', sessioninfo::package_info()$source))) {
+    cat(paste0("RUN Rscript -e 'options(warn = 2); ",
+               "if(!require(\"BiocManager\")) ",
+               "install.packages(\"BiocManager\")'", "\n"))
+  }
+  
+  # Separate packages into CRAN, Bioconductor, and GitHub packages
   cran_packs <- list()
   bioc_packs <- list()
   github_packs <- list()
   
+  # Categorize packages
   for (pkg in pkgs) {
-    if (any(grep("CRAN",
-                sessioninfo::package_info(pkg, dependencies = FALSE)$source))) {
-      cran_packs <- c(cran_packs, pkg)}
-    else if (any(grep("Bioconductor",
-                      sessioninfo::package_info(pkg, dependencies = FALSE)$source))) {
+    # Categorize by source type
+    if (any(grep("CRAN", sessioninfo::package_info(pkg, 
+                                                   dependencies = FALSE)$source))) {
+      cran_packs <- c(cran_packs, pkg)
+    } else if (any(grep("Bioconductor", sessioninfo::package_info(pkg, 
+                                                                  dependencies = FALSE)$source))) {
       bioc_packs <- c(bioc_packs, pkg)
-    }
-    else if (any(grep("Github",
-                      sessioninfo::package_info(pkg, dependencies = FALSE)$source))) {
+    } else if (any(grep("Github", sessioninfo::package_info(pkg, 
+                                                            dependencies = FALSE)$source))) {
       github_packs <- c(github_packs, pkg)
     }
   }
   
-  ### add one space after initial installation lines
-  cat(paste0("\n"))
+  # Add space after initial installation lines
+  cat("\n")
   
-  ### install CRAN packages
+  # Install CRAN packages
   for (pkg in cran_packs) {
-    cat(paste0(noquote("RUN Rscript -e '"),
-               noquote("remotes::install_version(package = "), '"', pkg, '"',
-               ",", " version = ", '"', getNamespaceVersion(pkg), '"', ")", "'", "\n"))
+    cat(paste0("RUN Rscript -e '",
+               "remotes::install_version(package = '", pkg, "', ",
+               "version = '", getNamespaceVersion(pkg), "')'", "\n"))
   }
-  if (length(cran_packs) != 0) {cat(paste0("\n"))}
+  if (length(cran_packs) != 0) {
+    cat("\n")
+  }
   
-  ### install Bioconductor packages, iff there are bioconductor packages
+  # Install Bioconductor packages
   if (length(bioc_packs) != 0) {
-    cat(paste0(noquote("RUN Rscript -e '"), noquote("options(warn = 2); "),
-               noquote("BiocManager::install(c(" ), " ", "\\", "\n", "  ",  '"'))
-    cat(paste(bioc_packs, collapse = '", \\ \n  "'))
-    cat(paste0('"', " \\", "\n", '  )', ')', "'", "\n"))
+    cat("RUN Rscript -e 'options(warn = 2); ",
+        "BiocManager::install(c(",
+        paste(bioc_packs, collapse = ', '),
+        "))'\n\n")
   }
-  if (length(bioc_packs) != 0) {cat(paste0("\n"))}
   
-  ### install GitHub packages iff there are GitHub packages
+  # Install GitHub packages
   for (pkg in github_packs) {
-    source <- sessioninfo::package_info(pkg, dependencies = F)$source
-    cat(paste0(noquote("RUN Rscript -e '"),
-               noquote("remotes::install_github(repo = "), '"',
+    source <- sessioninfo::package_info(pkg, dependencies = FALSE)$source
+    cat(paste0("RUN Rscript -e '",
+               "remotes::install_github(repo = '",
                gsub(pattern = ".*\\((.*)\\).*", replacement =  "\\1", source),
-               '"', ")", "'", "\n"))
+               "')'", "\n"))
   }
   
+  # Stop writing to file if applicable
   if (isTRUE(write_file)) {
     sink()
   }
