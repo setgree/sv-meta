@@ -12,9 +12,10 @@ editor_options:
 ```{r setup, message=F}
 # libraries
 library(dplyr, warn.conflicts = F)
-library(metafor, quietly = T)
+library(knitr)
 library(ggplot2, warn.conflicts = F)
 library(ggrepel, warn.conflicts = F)
+library(metafor, quietly = T)
 library(purrr)
 library(stringr)
 library(tidyr, warn.conflicts = F)
@@ -60,7 +61,7 @@ dat |>
   mutate(mean_d = mean(d),
          mean_var_d = mean(var_d),
          mean_se_d = mean(se_d)) |>
-  slice(1) %>% map_robust()
+  slice(1) |> map_robust()
 
 # slightly raises the SE
 
@@ -131,6 +132,76 @@ dat |> arrange(n_t_post) |>
 
 Just reinforces that there's no meaningful relationship between d and se; if anything the largest decile seems to have the largest effect sizes.
 
+## Additional analyses
+
+**Effect size heterogeneity by country/region?**
+
+```{r eff_size_hetereogeneity}
+# can't do meta-analysis when there's 1 country or 1 unique_study_id_per country
+dat |>
+  mutate(country = as.character(country)) |> # drop the variable's levels
+  group_by(country) |> 
+  filter(n() > 1 & n_distinct(unique_study_id) >= 2) |> 
+  ungroup() |> split(~country) |>   
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')) 
+
+# just look at the ones where n = 1 per country
+
+dat |> group_by(country) |> filter(n() <= 3) |> 
+  select(author, year, paper_title, study_design, n_t_post, n_c_post, d, se_d, behavior_type)
+
+# this is suggestive that a US vs everywhere else analysis might be fruitful
+
+dat |> mutate(us_dummy = if_else(country == 'USA', TRUE, FALSE)) |> 
+  split(~us_dummy) |>  
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown')) 
+
+# what about by Continent?
+
+dat <- dat |>
+  mutate(continent = case_when(
+    country %in% c("Canada", "USA", "Mexico") ~ "North America",
+    country %in% c("Germany", "Netherlands", "Spain") ~ "Europe",
+    country %in% c("Ghana", "Kenya", "Uganda") ~ "Africa",
+    country %in% c("Haiti", "St. Lucia") ~ "Caribbean",
+    country == "Israel" ~ "Asia",
+    TRUE ~ "Other"))
+ 
+  dat |>  filter(!(continent %in% c('Asia', 'Caribbean', 'Other'))) |>
+  split(~continent) |>
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown'))
+
+  # look at the core results of the studies we excluded here
+  
+dat |>  filter(continent %in% c('Asia', 'Caribbean', 'Other')) |> 
+  select(author, year, paper_title, continent, 
+         study_design, d, se_d)
+
+
+```
+
+
+**heterogeneity bylab_field or setting?**
+
+```{r pop_lab_field_hetereogeneity}
+
+dat |> split(~lab_field) |> 
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown'))
+
+dat |> mutate(setting = as.character(setting)) |> split(~setting) |>  # fix a 'level' problem
+  imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown'))
+```
+
+
+**How many studies say that they are testing behavioral theories, and what are their reported effects?**
+
+```{r behavior_theories_of_change}
+dat |> 
+  filter(str_detect(paper_title, regex("behavior", ignore_case = TRUE))) |> sum_lm()
+# slightly higher
+
+```
+
 **What is the 'bringing in the bystander' average effect on ideas/behaviors**
 ```{r repeat_tests}
 dat |> 
@@ -173,6 +244,84 @@ dat |> filter(scale_type == 'behavior') |>
 
 ```
 
+**What if we ignore all clustering information when calculating standard errors?**
+
+Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a strong relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
+
+```{r redoing Ds without any cluster info}
+no_clusters <- dat |> 
+  select(author, year, paper_title,  unique_paper_id, unique_study_id, n_t_post,
+         n_c_post, eff_type, u_s_d, ctrl_sd, anticipated_direction,
+         behavior_type, study_design, scale_type) |> 
+  mutate(d = 
+           mapply(
+             FUN = d_calc,
+             stat_type = eff_type,
+             stat =  u_s_d,
+             sample_sd = ctrl_sd,
+             n_t = n_t_post,
+             n_c = n_c_post
+             ),
+         var_d =
+           mapply(
+               FUN = var_d_calc,
+               d = d,
+               n_t = n_t_post,
+               n_c = n_c_post),
+           se_d = sqrt(var_d)
+         ) |> 
+  mutate(d = d * anticipated_direction)
+no_clusters |> sum_lm()
+no_clusters |> map_robust()
+
+# alternative where we separate by outcome type
+no_clusters |> ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+# without ideas outcomes? 
+
+no_clusters |> 
+  filter(scale_type == 'behavior') |>
+    ggplot(mapping = aes(y = d, 
+                             x = se_d)) + 
+  geom_point(aes(color = behavior_type,
+             shape = study_design),
+             size = 3) + 
+  stat_smooth(method = 'lm', se = F) + 
+  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
+  labs(x = "Standard errors",
+       y = "Effect size",
+       color = "Outcome type",
+       shape = "Study Design") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+**The one bystander study that measured involvement found much bigger effects than the other categories on average:**
+
+```{r bystander_involvement}
+ dat |>
+  filter(
+    str_detect(paper_title, "[Bb]ystander") |
+      str_detect(brief_description_of_the_intervention, "[Bb]ystander") |
+      str_detect(intervention_name, "[Bb]ystander") |
+      str_detect(program_name, "[Bb]ystander") |
+      str_detect(stated_purpose, "4")) |>
+  filter(behavior_type == 'Involvement') |>
+  select(author, year, paper_title, n_t_post, n_c_post, d, se_d)
+
+```
 
 ## Supplementary figures
 
@@ -510,83 +659,4 @@ dat_for_forest_plot |>
     "bold", "plain"), 
     margin = margin(t = 0.5, b = 0.5, unit = "cm"))) +
   ggtitle("Ideas and Behavioral Changes Compared")
-```
-
-## What if we ignore all clustering information when calculating standard errors?
-
-Ignoring all information about clustering \textemdash treating all sample sizes as if treatment was assigned individually every time \textemdash creates a strong relationship between standard errors and $\Delta$: $\Beta$ = 0.677 (se = 0.3), p = 0.0246. 
-
-```{r redoing Ds without any cluster info}
-no_clusters <- dat |> 
-  select(author, year, paper_title,  unique_paper_id, unique_study_id, n_t_post,
-         n_c_post, eff_type, u_s_d, ctrl_sd, anticipated_direction,
-         behavior_type, study_design, scale_type) |> 
-  mutate(d = 
-           mapply(
-             FUN = d_calc,
-             stat_type = eff_type,
-             stat =  u_s_d,
-             sample_sd = ctrl_sd,
-             n_t = n_t_post,
-             n_c = n_c_post
-             ),
-         var_d =
-           mapply(
-               FUN = var_d_calc,
-               d = d,
-               n_t = n_t_post,
-               n_c = n_c_post),
-           se_d = sqrt(var_d)
-         ) |> 
-  mutate(d = d * anticipated_direction)
-no_clusters |> sum_lm()
-no_clusters |> map_robust()
-
-# alternative where we separate by outcome type
-no_clusters |> ggplot(mapping = aes(y = d, 
-                             x = se_d)) + 
-  geom_point(aes(color = behavior_type,
-             shape = study_design),
-             size = 3) + 
-  stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5))
-
-# without ideas outcomes? 
-
-no_clusters |> 
-  filter(scale_type == 'behavior') |>
-    ggplot(mapping = aes(y = d, 
-                             x = se_d)) + 
-  geom_point(aes(color = behavior_type,
-             shape = study_design),
-             size = 3) + 
-  stat_smooth(method = 'lm', se = F) + 
-  ggtitle("Relationship between effect sizes and standard errors if we don't do any cluster adjustment") +
-  labs(x = "Standard errors",
-       y = "Effect size",
-       color = "Outcome type",
-       shape = "Study Design") +
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5))
-```
-
-The one bystander study that measured involvement found much bigger effects than the other categories on average:
-
-```{r bystander_involvement}
- dat |>
-  filter(
-    str_detect(paper_title, "[Bb]ystander") |
-      str_detect(brief_description_of_the_intervention, "[Bb]ystander") |
-      str_detect(intervention_name, "[Bb]ystander") |
-      str_detect(program_name, "[Bb]ystander") |
-      str_detect(stated_purpose, "4")) |>
-  filter(behavior_type == 'Involvement') |>
-  select(author, year, paper_title, n_t_post, n_c_post, d, se_d)
-
 ```
