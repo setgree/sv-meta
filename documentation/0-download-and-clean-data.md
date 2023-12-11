@@ -34,6 +34,7 @@ drive_download("Primary Prevention Meta 2020",
 
 ## read data and do initial cleaning
 ```{r clean_data}
+
 raw_dat <- read.csv('../data/sa_meta_data_raw.csv', 
                     na.strings = c("NA")) |> 
   as_tibble(); 
@@ -53,6 +54,9 @@ raw_dat <- raw_dat |>
   mutate(unique_study_id = cur_group_id()) |> ### create unique study id
   ungroup()
 ```
+
+
+
 
 
 # prepare Cohen's D calcs
