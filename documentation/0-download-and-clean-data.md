@@ -34,7 +34,6 @@ drive_download("Primary Prevention Meta 2020",
 
 ## read data and do initial cleaning
 ```{r clean_data}
-
 raw_dat <- read.csv('../data/sa_meta_data_raw.csv', 
                     na.strings = c("NA")) |> 
   as_tibble(); 
@@ -48,8 +47,12 @@ raw_dat <- raw_dat |>
   group_by(paper_title) |>
   mutate(unique_paper_id = cur_group_id()) |> # create unique paper id
   select(-c(coder, page_number, comments, # drop team-internal stuff
-            d, var_d, se_d, checked, X, alex.comments, comments, checked, 
-            checker_comment, is_red, eliminate)) |>
+            d, var_d, se_d, checked, alex.comments, checked, 
+            partial_analysis,
+            lead.author.department.training,
+            authors.department.education.in.case.belongs.to.center,
+            checker_comment, is_red, eliminate,
+            )) |>
   group_by(unique_paper_id, intervention_name) |> 
   mutate(unique_study_id = cur_group_id()) |> ### create unique study id
   ungroup()
