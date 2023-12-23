@@ -38,8 +38,11 @@ library(ggrepel, warn.conflicts = F)
 library(ggtext, warn.conflicts = F)
 library(patchwork)
 library(scales)
+library(vtable)
 
 dat <- readRDS(file = '../data/sv_meta_data.rds')
+
+vtable(dat)
 ```
 
 ## 2 Introduction
