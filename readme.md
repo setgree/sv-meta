@@ -48,7 +48,7 @@ These files are in `code/functions/`.
 
 * `0-download-and-clean-data.md` is the script we used to download and clean the data (it was originally an `.Rmd`). You won't have access to our original google sheet dataset or raw data, but we're including this script as documentation.
 
-* `codebook.csv` provides guidance about variables. Also provided in `.md` and `.docx` formats.
+* `codebook.csv` provides guidance about variables (duplicated in `codebook.md` and `codebook.docx`).
 
 ### Results
 
