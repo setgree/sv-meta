@@ -181,7 +181,7 @@ dat |>  filter(continent %in% c('Asia', 'Caribbean', 'Other')) |>
 ```
 
 
-**heterogeneity bylab_field or setting?**
+**heterogeneity by lab_field or setting?**
 
 ```{r pop_lab_field_hetereogeneity}
 
