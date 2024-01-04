@@ -94,7 +94,7 @@ if (!"d" %in% names(dat)) {
 ```{r overall_meta}
 dat |> map_robust()
 
-# more verbose version of
+# more verbose version:
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
