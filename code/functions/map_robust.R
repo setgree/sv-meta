@@ -4,9 +4,11 @@
 #' The typical usage involves piping a dataset into the split/map paradigm: `dat |> split(~some_var) |> map(map_robust)`.
 #' Alternatively, `dat |> map_robust()` can also be used.
 #' 
-#' @importFrom metafor robust
+#' @importFrom metafor robust rma
 #' @importFrom tibble as_tibble
 #'
+#' @param x The dataset or subset to perform meta-analysis on.
+#' @return A tibble/data frame with meta-analysis results.
 
 map_robust <- function(x) {
   # Perform robust meta-analysis using metafor::robust function
@@ -17,7 +19,7 @@ map_robust <- function(x) {
     beta = round(result$beta, 3),
     se = round(result$se, 3),
     pval = ifelse(result$pval < 0.0001, "< 0.0001", round(result$pval, digits = 4))
-  ) %>% 
+  ) |>
     as_tibble()
   
   return(output)

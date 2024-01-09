@@ -10,16 +10,14 @@
 #' @param coefs_only Logical, indicating whether to display only the coefficients table (default: TRUE).
 #' @param dgts Number of digits for rounding coefficients (default: 5).
 #' @return If coefs_only is TRUE, returns a rounded coefficients table; otherwise, returns the full summary.
-#'
+#' @importFrom stats lm as.formula
+#' @importFrom dplyr enexpr
+#' @note `dat` is the default dataset name, but you can put in whatever
 
 sum_lm <- function(dataset = dat, y = d, x = se_d, coefs_only = TRUE, dgts = 5) {
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    message("Install dplyr before you run this function.")
-    return(invisible())
-  }
-  
-  y <- dplyr::enexpr(y)
-  x <- dplyr::enexpr(x)
+
+  y <- enexpr(y)
+  x <- enexpr(x)
   
   print_obj <- summary(lm(formula = as.formula(paste(y, '~', x)), data = dataset))
   
