@@ -2,6 +2,8 @@
 
 By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy Paluck.
 
+[![DOI](https://zenodo.org/badge/704228878.svg)](https://zenodo.org/doi/10.5281/zenodo.10694447)
+
 ## Overview
 
 This repository reproduces every quantitative claim and figure in the accompanying paper. 
