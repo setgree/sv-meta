@@ -54,7 +54,7 @@ These files are in `code/functions/`.
 
 ### Results
 
-There are 4 HTML files, each corresponding to one of the main script, that intersperse relevant text, code, and results, and a figures folder with figures 1-5.
+The code produces 4 HTML files, each corresponding to one of the main script, that intersperse relevant text, code, and results, and a figures folder with figures 1-5.
 
 * `tt_studies.pdf` is Figure 1;
 * `descriptive.pdf` is Figure 2;
