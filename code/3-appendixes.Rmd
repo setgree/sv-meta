@@ -162,18 +162,18 @@ See above table.
 ```{r perp_rcts_short_long_term}
 
 dat |> filter(behavior_type == 'Perpetration',
-               study_design == 'Randomized Control Trial') |>
+               study_design == 'Randomized Controlled Trial') |>
   group_by(yes_delay) |> study_count()
 
 # what is the *one* RCT with short-term perpetration measurement
 dat |> filter(behavior_type == 'Perpetration',
-               study_design == 'Randomized Control Trial', 
+               study_design == 'Randomized Controlled Trial', 
                yes_delay == F) |> 
   select(author, year, intervention_name, scale_name, delay, d, se_d)
 
 # average effect size for the remaining studies
 dat |> filter(behavior_type == 'Perpetration',
-               study_design == 'Randomized Control Trial',
+               study_design == 'Randomized Controlled Trial',
                yes_delay == T) |>
   map_robust()
 ```
@@ -186,7 +186,7 @@ dat |> filter(behavior_type == 'Perpetration',
 
  dat |> 
   filter(study_design == 'Quasi-Experimental' | 
-           study_design == 'Randomized Control Trial',
+           study_design == 'Randomized Controlled Trial',
          scale_type == 'ideas') |>
   split(~yes_delay) |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |> kable('markdown'))
@@ -217,7 +217,7 @@ dat |> split(~study_design) |> map(map_robust)
 
 dat |>
   mutate(study_design = if_else(robust_quasi_check,
-                                'Randomized Control Trial', 
+                                'Randomized Controlled Trial', 
                                 as.character(study_design))) |>
   split(~study_design) |>
   map(map_robust)

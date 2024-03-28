@@ -10,6 +10,7 @@ editor_options:
 This script was our main 'pre-analysis script' to get things from our "raw data", which was a messy google sheet, into a workable dataset. We're including the dataset in its 'finalized' form but not the raw data, which has some team internal comments, but we're including this script as an `.md` for completeness.
 
 ### setup
+
 ```{r setup}
 rm(list = ls())
 library(dplyr, warn.conflicts = FALSE)
@@ -21,7 +22,8 @@ options(scipen = 99)
 ```
 
 ### Download most up-to-date dataset
-```{r download_data, eval=T} 
+
+```{r download_data, eval=T}
 #' download sheet from google -----------------------------------
 #' You, reader, won't have access to this, so don't run this chunk
 
@@ -33,6 +35,7 @@ drive_download("Primary Prevention Meta 2020",
 ```
 
 ## read data and do initial cleaning
+
 ```{r clean_data}
 raw_dat <- read.csv('../data/sa_meta_data_raw.csv', 
                     na.strings = c("NA")) |> 
@@ -58,11 +61,8 @@ raw_dat <- raw_dat |>
   ungroup()
 ```
 
-
-
-
-
 # prepare Cohen's D calcs
+
 ```{r standardizing_inputs}
 #' making sure that inputs are all what the functions expect: 
 #' eff_type, cluster_type, and checking for NAs
@@ -102,8 +102,8 @@ raw_dat$cluster_type <- gsub(pattern = '-', replacement = NA, x = raw_dat$cluste
 table(raw_dat$eff_type, useNA = 'ifany') 
 ```
 
-
 ### ctrl_SDs
+
 ```{r ctrl_sds}
 class(raw_dat$ctrl_sd)
 which(raw_dat$ctrl_sd == "") # as of 06/18/2021, this is no rows 
@@ -130,8 +130,8 @@ raw_dat |>
     nrow()
 ```
 
-
 ### Ns
+
 ```{r Ns_characters_become_NAs}
 #' replace blanks, spaces, dashes, and 'not given' with NA
 
@@ -147,8 +147,8 @@ raw_dat[, c('n_t_pre', 'n_t_post', 'n_c_pre',
          })
 ```
 
-
 # Now to convert everything to numeric
+
 ```{r further_N_clearning}
 class(raw_dat$n_c_post)
 
@@ -167,8 +167,8 @@ na_vals <- subset(raw_dat, is.na(anticipated_direction) |
 rm(na_vals)
 ```
 
-
 ### Lab/field variable
+
 ```{r lab_field}
 unique(raw_dat$lab_field)
 sum(is.na(raw_dat$lab_field)) # 0 as of 09/19
@@ -176,6 +176,7 @@ raw_dat$lab_field <- as.factor(raw_dat$lab_field)
 ```
 
 # fix study_design var and scale type
+
 ```{r study_design_and_scale_type}
 raw_dat$study_design <- str_replace_all(raw_dat$study_design,
                                         c('cross sectional' = 'cross-sectional',
@@ -195,8 +196,9 @@ unique(raw_dat$scale_type) # good
 
 ## Make everything under 10 clusters quasi-experimental
 
-As Paluck et al. note in 'Prejudice Reduction: Progress and Challenges':
-> in cluster-randomized experiments, groups of people, rather than individuals, are randomly assigned to experimental conditions. Reliably estimating standard errors requires at least 10 clusters, but many intervention studies do not approach even this minimal number.
+As Paluck et al. note in 'Prejudice Reduction: Progress and Challenges': 
+
+>  in cluster-randomized experiments, groups of people, rather than individuals, are randomly assigned to experimental conditions. Reliably estimating standard errors requires at least 10 clusters, but many intervention studies do not approach even this minimal number.
 
 So the cutoff is ten. We discuss this a bit in the appendix.
 
@@ -222,8 +224,8 @@ rm(redesignated)
 raw_dat$study_design <- as.factor(raw_dat$study_design)
 ```
 
-
 ### convert delay into numeric
+
 ```{r delay}
 raw_dat$delay <- str_replace_all(raw_dat$delay, c('4 month' = '122',
                                                    '2.5 years' = '912.5',
@@ -238,8 +240,8 @@ table(raw_dat$delay)
 raw_dat$delay <- as.numeric(raw_dat$delay)
 ```
 
-
 ### Convert intervention_length into numeric
+
 ```{r fix_intervention_length}
 raw_dat$intervention_length <- 
   ifelse(trimws(raw_dat$intervention_length) %in% 
@@ -255,7 +257,8 @@ raw_dat$intervention_length <- as.numeric(raw_dat$intervention_length)
 
 ### categorize behavior
 
-Perpetration, victimization, bystander, and involvement  are the big four intervention measures.
+Perpetration, victimization, bystander, and involvement are the big four intervention measures.
+
 ```{r categorize_behavior}
 
 raw_dat <- raw_dat |>
@@ -274,8 +277,8 @@ raw_dat <- raw_dat |>
              TRUE ~ NA_character_)))
 ```
 
-
 ### add useful levels
+
 ```{r levels}
 raw_dat <- separate(raw_dat, setting, into = c("setting", "setting2"))
 
@@ -365,8 +368,8 @@ raw_dat$delivery_of_treatment <- factor(raw_dat$delivery_of_treatment,
                                                    "other"))
 ```
 
+### participant_sex
 
-### participant_sex 
 This one is a little more complex because some studies have multiple treatment arms, one that's gender-segregreated and one that's mixed.
 
 ```{r participant_sex}
@@ -389,8 +392,8 @@ raw_dat$participant_sex <- factor(raw_dat$participant_sex,
                                              "general population"))
 ```
 
-
 ### Clean country
+
 ```{r}
 raw_dat <- raw_dat |> 
   mutate(country = case_when(country == "MX" ~ "Mexico",
@@ -404,8 +407,8 @@ raw_dat <- raw_dat |>
 table(raw_dat$country)
 ```
 
-
 ### clean up study_design
+
 ```{r study_design}
 raw_dat$study_design <- str_replace_all(raw_dat$study_design, 
                                         pattern = "pre-post",
@@ -413,8 +416,8 @@ raw_dat$study_design <- str_replace_all(raw_dat$study_design,
 table(raw_dat$study_design)
 ```
 
-
 ### Add in more useful variables
+
 ```{r more_useful_varaiables}
 # add in other useful variables
 raw_dat <- raw_dat |>
@@ -442,10 +445,10 @@ raw_dat <- raw_dat |>
                 TRUE ~ 'unpublished'),
     study_design = case_when(
       study_design == "observational" ~ "Observational",
-      study_design == "rct" ~ "Randomized Control Trial",
+      study_design == "rct" ~ "Randomized Controlled Trial",
       study_design == "quasi-experimental" ~ "Quasi-Experimental"),
     study_design = factor(study_design, levels = c(
-      "Randomized Control Trial",
+      "Randomized Controlled Trial",
       "Quasi-Experimental",
       "Observational")),
     behavior_type = str_to_title(behavior_type)) |>
@@ -462,9 +465,10 @@ raw_dat <- raw_dat |>
   ungroup()
 ```
 
-
 ### replace 'attitudes' with 'ideas'
+
 This was something we got more consistent about over the course of the paper, but at first.
+
 ```{r attitudes_become_ideas}
 raw_dat <- raw_dat |>
   rename(ideas_behaviors = attitudes_behaviors) |>
@@ -474,13 +478,15 @@ raw_dat <- raw_dat |>
   )
 ```
 
-## Export 
+## Export
+
 ```{r save_clean_data}
 saveRDS(object = raw_dat, file = '../data/sv_meta_data.rds')
 
 ```
 
 **Session info**
+
 ```{r sesion_info}
 sessioninfo::session_info()
 ```

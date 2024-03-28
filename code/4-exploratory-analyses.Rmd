@@ -114,7 +114,7 @@ sum_lm(dat, d, publication_type)
 
 dat |>
   filter(behavior_type == 'Perpetration', 
-         study_design == 'Randomized Control Trial') |> 
+         study_design == 'Randomized Controlled Trial') |> 
   sum_lm(d, se_d)
 ```
 
@@ -452,7 +452,7 @@ dat |>
 **additional ways to look at rct perp outcomes**
 ```{r rct_perp}
 # not a big difference
-rct_perp <- dat |> filter(study_design == 'Randomized Control Trial',
+rct_perp <- dat |> filter(study_design == 'Randomized Controlled Trial',
                           behavior_type == 'Perpetration')
 rct_perp |> ggplot(mapping = aes(x = delay, y = d)) + 
   geom_point() +
@@ -537,7 +537,7 @@ Then, looking at the correlation between ideas and behaviors just within the RCT
 
 ```{r labeled_correlation_plot}
 has_both |> 
-  filter(study_design == 'Randomized Control Trial') |> 
+  filter(study_design == 'Randomized Controlled Trial') |> 
   ggplot(mapping = aes(x = mean_d_ideas, y = mean_d_behavior)) +
   geom_point(size = 3, color = 'blue') + 
   geom_smooth(aes(fill = NULL), lty = "dashed", fullrange = TRUE,
@@ -560,7 +560,7 @@ dat for forest plot and sign tests:
 ```{r forest_plot_dat_and_sign_tests}
 dat_for_forest_plot <- dat |> 
   select(unique_study_id, scale_type, everything()) |>
-  filter(study_design == 'Randomized Control Trial') |>
+  filter(study_design == 'Randomized Controlled Trial') |>
   group_by(unique_study_id) |>
          filter(all(c('ideas', 'behavior') %in% scale_type)) |>
   mutate(study_names = paste0(tools::toTitleCase(word(author)), " ",
