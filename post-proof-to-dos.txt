@@ -1,0 +1,5 @@
+1) fix text: idea based -> ideas based
+2) fix text: randomized control trial -> randomized controlled trial
+3) update figure 5 to say "controlled"
+4) update all facts and figures inlight of slightly smaller dataset
+5) there's a capital "Is" in the middle of a sentence somewhere
