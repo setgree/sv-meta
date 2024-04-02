@@ -6,7 +6,7 @@ By Roni Porat, Ana Gantman, Seth A. Green, John-Henry Pezzuto, \& Elizabeth Levy
 
 ## Overview
 
-This repository reproduces every quantitative claim and figure in the accompanying paper. 
+This repository reproduces every quantitative claim and figure in the accompanying paper, [currently available as a preprint](https://osf.io/preprints/psyarxiv/xgbzj).
 
 ### Code
 
