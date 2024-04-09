@@ -30,6 +30,7 @@ source('./functions/map_robust.R')
 source('./functions/odds_ratio_to_d.R')
 source('./functions/study_count.R')
 source('./functions/sum_lm.R')
+source('./functions/sum_tab.R')
 source('./functions/var_d_calc.R')
 
 #' data
@@ -49,19 +50,19 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
 
 ```
 
-> Clustering at the level of paper rather than study raises the standard error to 0.0287, while removing the cluster entirely lowers it to 0.0206; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
+> Clustering at the level of paper rather than study raises the standard error to 0.0292, while removing the cluster entirely lowers it to 0.021; in both cases, the estimate of $\Delta$ does not change, and both are significant at the p < .0001 level.
 
 ```{r cluster_paper_level}
 # cluster at paper
 robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_paper_id)
-0.0287 - 0.0247
+
 #no cluster
 rma(yi = d, vi = var_d, data = dat)
 
 ```
 
-> Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.326 (se = 0.028), p < .0001,
+> Averaging $\Delta$ within each study and then meta-analyzing the means raises the result somewhat to 0.328 (se = 0.028), p < .0001,
  
 ```{r collapse_individual_ds}
 
@@ -72,7 +73,7 @@ dat |> group_by(unique_study_id) |>
   map_robust()
 ```
 
-> while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.302
+> while averaging $\Delta$ within each study's behavioral and ideas outcomes separately leads to $\Delta$ = 0.304
  
 ```{r collapse_ds_within_study_and_scale_type}
 dat |> group_by(unique_study_id, scale_type) |>
@@ -85,7 +86,7 @@ dat |> group_by(unique_study_id, scale_type) |>
 
 ## Additional checks for publication bias
 
-> In our sample, the pooled effect size in the largest quintile of studies, with at least 496 participants combined in treatment and control groups, is $\Delta$ = 0.275 (se = 0.073), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.302 (se = 0.043). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.281.
+> In our sample, the pooled effect size in the largest quintile of studies, with at least 496 participants combined in treatment and control groups, is $\Delta$ = 0.283 (se = 0.076), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.303 (se = 0.044). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.283.
 
 ```{r quintile_check}
 # what are the quantiles
@@ -99,7 +100,7 @@ dat |>
 dat |> sum_lm(y = d, x = quantile_var) # it's basically nothing
 ```
 
-> Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = 0.00023, p = 0.121.
+> Neither do we observe a statistically significant relationship between days of delay and effect size: $\beta$ = -0.00021, p = 0.149.
 
 ```{r d_and_delays}
 
@@ -118,7 +119,7 @@ dat |>
 
 **Evaluate the overall effect size of behavioral outcomes for all of the studies in the dataset, both in the short- and in the long-term**
 
-> Seventeen studies measure behavioral outcomes within one day of the conclusion of treatment and produce a combined effect size of $\Delta$ = 0.125 (SE = 0.057), p = 0.0426, while 83 studies measure behavioral outcomes at least a day after treatment concludes, and produce a combined effect size of $\Delta$ = 0.063 (SE = 0.023), p = 0.0081.
+> Seventeen studies measure behavioral outcomes within one day of the conclusion of treatment and produce a combined effect size of $\Delta$ = 0.138 (SE = 0.065), p = .0483, while 83 studies measure behavioral outcomes at least a day after treatment concludes, and produce a combined effect size of $\Delta$ = 0.063 (SE = 0.023), p = 0.0081.
 
 ```{r short_long_term_behavioral}
 dat |> 
@@ -180,7 +181,7 @@ dat |> filter(behavior_type == 'Perpetration',
 
 **Compare the effect size of behavioral outcomes and attitudinal outcomes, both in the short- and long-term, among the quasi-experimental and randomly-assigned studies. (The covariation of ideas and behaviors will be assessed in the full sample of studies.)**
 
-> Within randomized and quasi-experimental designs,  104 studies measure ideas-based outcomes immediately after treatment, with a pooled effect size of $\Delta$ = 0.311 (se = 0.042), p $<$ 0.0001. By contrast,  114 randomized and quasi-experimental evaluations measure ideas with a delay, and find a pooled effect size of  $\Delta$ = 0.288 (se = 0.032), p $<$ 0.0001.
+> Within randomized and quasi-experimental designs,  104 studies measure ideas-based outcomes immediately after treatment, with a pooled effect size of $\Delta$ = 0.311 (se = 0.042), p $<$ 0.0001. By contrast, 111 randomized and quasi-experimental evaluations measure ideas with a delay, and find a pooled effect size of  $\Delta$ = 0.296 (se = 0.033), p $<$ 0.0001.
 
 ```{r ideas_behaviors_quasi_random_delay_yes_no}
 
@@ -194,9 +195,11 @@ dat |> filter(behavior_type == 'Perpetration',
 
 # A note on clustered study designs
 
-> In this study's pre-analysis plan, we detailed a search for studies that were either ``purely observational,\ldots quasi-experimental,\ldots or experimental,'' defined as featuring random assignment. We did not anticipate, however, the quantity of cluster-assigned studies in our sample (174 cluster assignemnts, and 54 of 100 featuring random assignment.) 
+> In this study's pre-analysis plan, we detailed a search for studies that were either ``purely observational,\ldots quasi-experimental,\ldots or experimental,'' defined as featuring random assignment. We did not anticipate, however, the quantity of cluster-assigned studies in our sample (180 cluster assignemnts, and 46 of 102 studies featuring random assignment.) 
 
 ```{r cluster_study_redo}
+
+dat |> sum_tab(cluster_type)
 
 dat |> filter(!is.na(cluster_type)) |> group_by(ra) |> study_count()
 
@@ -204,14 +207,21 @@ dat |> group_by(ra) |> study_count()
 
 ```
 
-> In practice, there were 8 studies with fewer than 10 clusters, drawn from 6 papers and comprising 22 effect size estimates in total. If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from $\Delta$ = 0.2364 to $\Delta$ = 0.2312, and for quasi-experimental studies, from $\Delta$ = 0.2157 to $\Delta$ = 0.2173.
+> In practice, there were 8 studies with fewer than 10 clusters, drawn from 6 papers and comprising 19 effect size estimates in total. 
 
 ```{r reclassify_low_cluster_rcts}
 #' Ns
 robust_quasi <- dat |> filter(robust_quasi_check)
 length(unique(robust_quasi$unique_paper_id))
-robust_quasi |> study_count()
+robust_quasi |> 
+  summarise(unique_papers = n_distinct(unique_paper_id),
+            unique_studies = n_distinct(unique_study_id),
+            total_data_points = n())   
+```
 
+> If we reclassify all of these studies as RCTs, our overall meta-analytic estimate for RCTs moves from $\Delta$ = 0.241 to $\Delta$ = 0.232, and for quasi-experimental studies, from $\Delta$ = 0.2157 to $\Delta$ = 0.221
+
+```{r reclassify_robust_studies}
 #' effect sizes
 dat |> split(~study_design) |> map(map_robust)
 
@@ -245,4 +255,3 @@ ggplot() + geom_point(aes(proportions, SDs)) + theme_minimal()
 # our overall average
 difference_in_proportion_calc(0.05, 0.015)
 ```
-

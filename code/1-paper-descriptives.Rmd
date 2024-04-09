@@ -47,7 +47,7 @@ vtable(dat)
 
 ## 2 Introduction
 
-> Slightly fewer than half (140 of 298) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
+> Slightly fewer than half (140 of 295) of the studies that we identified for our quantitative meta-analysis measured rape myths in some form
 
 ```{r rape_myth_measurement}
 dat %>%
@@ -68,7 +68,7 @@ length(unique(dat$country))
 
 ### 4.1 Inclusion and Exclusion Criteria for Study Selection
 
-> (The PRISMA Flow Diagram (Appendix Figure 1) explains how we winnowed the original pool of studies down to the 225 manuscripts)
+> (The PRISMA Flow Diagram (Appendix Figure 1) explains how we winnowed the original pool of studies down to the 224 manuscripts)
 
 ```{r num_unique_papers}
 range(dat$unique_paper_id)
@@ -82,12 +82,12 @@ dat |>
   group_by(study_design) |> 
   summarise(n_papers = n_distinct(unique_paper_id),
             n_studies = n_distinct(unique_study_id)) |> 
-  kable(format = "latex", booktabs = T)
+  kable()
 ```
 
 ## 5 Overview of the Studies in the Meta-Analytic Database
 
-> The database spans the years 1985-2018, encompassing 225 manuscripts that describe 298 studies, in which we coded 499 distinct point estimates.
+> The database spans the years 1985-2018, encompassing 224 articles that describe 295 studies, in which we coded 489 distinct point estimates.
 
 ```{r years_and_countries}
 dat |> 
@@ -96,9 +96,11 @@ dat |>
             n_manuscripts = n_distinct(unique_paper_id),
             n_studies = n_distinct(unique_study_id),
             n_point_estimates = n())
+
+num_data_points <- nrow(dat); num_data_points
 ```
 
-> Overall these are relatively large studies, with an average of 403 participants and a median of 162 participants. 
+> Overall these are relatively large studies, with an average of 406 participants and a median of 162 participants. 
 
 ```{r avg_study_size}
 
@@ -109,7 +111,6 @@ dat |>
   summarise(mean_n = mean(mean_n_per_study), # then collapse studies in estimate
             median_n = median(mean_n_per_study))
 ```
-
 
 > In addition, 30% percent of these studies test primary prevention efforts that span more than one day.
 
@@ -170,7 +171,7 @@ tt_overall     |>
 ggsave("../results/figures/tt_studies.pdf", height = 5, width = 7.5)
 ```
 
-> We observe that 265 studies which constitute 89% of the database were conducted in the United States. 
+> We observe that 262 studies which constitute 89% of the database were conducted in the United States. 
 
 ```{r n_usa}
 dat |> 
@@ -191,8 +192,7 @@ dat |>
   janitor::adorn_totals(where = "row")
 ```
 
-
-> Nearly 67\% of all studies are conducted within college campuses. Another 15\% are conducted in high schools, while 11\% are conducted in middle schools. Four percent of studies were conducted in the workplace, and three percent in community settings.
+> Over 66% of all studies are conducted within college campuses. Another 15\% are conducted in high schools, while 11\% are conducted in middle schools. Four percent of studies were conducted in the workplace, and three percent in community settings.
 
 ```{r study_settings}
 dat |> 
@@ -203,7 +203,7 @@ dat |>
   mutate(perc = round(n / sum(n), 3))
 ```
 
-> In fact, 67% of the studies targeted both men and women, while 27\% targeted only men, and 6\% targeted only women.
+> In fact, 67% of the studies targeted both men and women, while 28\% targeted only men, and 6\% targeted only women.
 
 ```{r gender_breakdown}
 dat |> # 
@@ -346,10 +346,9 @@ dat |>
 ggsave("../results/figures/tt_att_beh.pdf", height = 5)
 ```
 
-
 #### 6.1.1 The First ten years
 
-> In the first 10 years, we find 47 studies reported in 33 manuscripts
+> In the first 10 years, we find 44 studies reported in 32 articles
  
 ```{r early_years_study_count}
 dat |> 
@@ -362,7 +361,7 @@ dat |>
   summarise(perc_early = mean(early))
 ```
 
-> This is also apparent when looking at the type of publication; while 24 of these studies are from journal articles, 23 are from dissertations
+> This is also apparent when looking at the type of publication; while 24 of these studies are from journal articles, 20 are from dissertations
 
 ```{r early_years_published_dissertation_breakdown}
 dat |> 
@@ -380,7 +379,7 @@ dat |>
   count(lab_field)
 ```
 
-> These studies tend to be smaller than the next generation of studies (with an average of 191 participants)
+> These studies tend to be smaller than the next generation of studies (with an average of 200 participants)
 
 ```{r early_years_study_size}
 dat |> 
@@ -391,7 +390,7 @@ dat |>
   summarise(mean_n = mean(mean_n_per_study)) # then collapse studies in estimate
 ```
 
-> They target both men and women (34 intervention arms, which constitute 69\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 22\% of all studies in this time frame). 
+> They target both men and women (31 interventions, which constitute 67\% of all studies in this time frame), but a relatively high number of studies target only men (11 studies, or 24\% of all studies in this time frame). 
 
 ```{r early_years_gender_breakdown}
 dat |> 
@@ -414,7 +413,7 @@ dat |>
 
 ## 7 Trends in Measurement in the Database
 
-> Overall, outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 354 to 145. 
+> Overall, outcomes referring to an individual's ideas about sexual violence outnumber behavioral outcomes in our sample by 356 to 143. 
 
 ```{r ideas_vs_behavior_outcome_count}
 dat |> 
@@ -423,7 +422,7 @@ dat |>
   summarise(n = n())
 ```
 
-> 202 measure outcomes about ideas only
+> 199 measure outcomes about ideas only
 
 ```{r att_only}
 dat |> 
@@ -435,7 +434,7 @@ dat |>
   nrow()
 ```
 
-> 36 measure only behaviors; 
+> 34 measure only behaviors; 
 
 ```{r behaviors_only}
 dat |> 
@@ -459,7 +458,7 @@ dat |>
   nrow()
 ```
 
-> While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was 1:4.75, 
+> While in the first 15 years, the ratio between ideas-based outcomes and behavior outcomes was 1:4.59, 
 
 ```{r early_years_ratio_between_ideas_and_beahvior_outcomes}
 dat |> 
@@ -511,7 +510,7 @@ ggsave("../results/figures/tt_beh_type.pdf")
 
 ### 7.2 Measuring ideas
 
-> Overall these and other myth measures constitute 56% of the measures we coded that assessed ideas about sexual violence
+> Overall these and other myth measures constitute 57% of the measures we coded that assessed ideas about sexual violence
 
 ```{r myth_percentage}
 dat |> 

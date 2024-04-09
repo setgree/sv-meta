@@ -100,13 +100,13 @@ robust(x = rma(yi = d, vi = var_d, data = dat),
        cluster = dat$unique_study_id)
 ```
 
-> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.16 (SE = 0.176), p = 0.362.
+> In our database we find this relationship between effect sizes and standard errors to be weak and non-significant: $\beta$ = 0.16 (SE = 0.178), p = .379.
 
 ```{r publication_bias_overall}
 sum_lm(dat, d, se_d, coefs_only = T)
 ```
 
-> Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 105, $\beta$ = 0.22, SE = 0.248, p = 0.375) and quasi-experimental (N = 100, $\beta$ = -0.145, SE = 0.407, p = 0.722) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 96, $\beta$ = 2.26, SE = 0.642, p $<$ 0.001), suggesting some publication bias within these studies. 
+> Second, the relationship between SE and $\Delta$ remains non-significant within randomized (N = 102, $\beta$ = 0.22, SE = 0.252, p = .415) and quasi-experimental (N = 100, $\beta$ = -0.145, SE = 0.407, p = .722) designs, providing further evidence to the lack of publication bias within the literature. However, we do find a significant relationship within observational designs (N = 96, $\beta$ = 2.21, SE = 0.658, p $<$ .001), suggesting some publication bias within these studies. 
 
 ```{r publication_bias_by_study_design}
 # Ns
@@ -117,28 +117,24 @@ dat |>
 # effect sizes
 dat |> 
   split(~study_design) |> 
-  map(~sum_lm(.))
+  map(~sum_lm(.)) 
 ```
 
-
-> Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 189) and those that were not (N = 118). 
+> Our third check for publication bias is to separate the literature into studies published in peer-reviewed journals (N = 189) and those that were not (N = 106). 
 
 ```{r published_vs_unpubished}
 dat |> 
   group_by(published_unpublished) |> 
     study_count()
-
-# sanity check
-length(unique(dat$unique_study_id)) == 189 + 109
 ```
 
-> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.047), but not at a statistically significant level (p = 0.28) 
+> In our sample, being unpublished is associated with a small reduction in effect size ($\beta$  = -0.04), but not at a statistically significant level (p = .32) 
 
 ```{r publish_relationship_or_not}
 dat |> sum_lm(d, published_unpublished)
 ```
 
-> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant ($\beta$ = 0.021, SE 0.199, p = 0.914); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.591, SE = 0.361), the relationship is still statistically non-significant (p = 0.106).
+> Within published studies, the relationship between standard errors and $\Delta$ is tiny and insignificant ($\beta$ = 0.008, SE 0.2, p = .97); while the association between the two variables is larger in unpublished studies (N = 118, $\beta$  = 0.603, SE = 0.366), the relationship is still statistically non-significant (p = .101).
 
 ```{r pub_unpub_se_d}
 
@@ -147,7 +143,7 @@ dat |> split(~published_unpublished) |> map(sum_lm)
 
 ### 8.3 The Meta-Analytic Effect of Primary Prevention on Behavior and on Ideas about Sexual Violence
 
-> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is $\Delta$ = 0.071 (SE = 0.022), p = .0015; whereas the overall effect size for idea-based outcomes is $\Delta$ = 0.366 (SE = .031), p < 0.0001.
+> Overall we find that behaviors are much more resistant than ideas to change. The overall effect size for behaviors is $\Delta$ = 0.071 (SE = 0.022), p = .0018; whereas the overall effect size for idea-based outcomes is $\Delta$ = 0.371 (SE = .031), p < .0001.
 
 ```{r differences_by_ideas_behavior}
 dat |> split(~scale_type) |> map(.f = map_robust)
@@ -165,15 +161,14 @@ sum_lm(x = "se_d + year")
 dat |>
   split(~interaction(scale_type, study_design)) |>
   imap(~bind_cols(study_count(.x), map_robust(.x)) |> 
-         kable('markdown')) 
+         kable('markdown'))
 ```
 
-> This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are more than 20 times larger than behavioral responses. 
+> This analysis reveals that the discrepancy between changing behaviors and changing ideas is substantial across every design category, and in particular in observational research, where outcomes pertaining to an individual’s ideas about sexual violence are more than 20 times larger than behavioral responses.
 
 ```{r obs_ideas_beh_multiplier}
 round(0.503 / 0.024)
 ```
-
 
 #### 8.3.1 Do bystander interventions Change Sexually Violent Behavior?
 
@@ -219,7 +214,7 @@ bystander_dat |>
   filter(scale_type == "behavior")
 ```
 
-> Overall, 22 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.154 (SE = 0.056), p = 0.011. In our database, 20 bystander studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019, SE = 0.019, p = 0.329) or victimization ($\Delta$ =-0.009, SE = 0.041,  p = 0.835).
+> Overall, 22 studies measured whether bystander interventions increase bystander behaviors, which they do to a modest extent $\Delta$ = 0.154 (SE = 0.056), p = .011. In our database, 20 bystander studies measure perpetration or victimization, the ultimate goal of these interventions. We did not find that bystander interventions meaningfully change rates of perpetration  ($\Delta$ = 0.019, SE = 0.019, p = .329) or victimization ($\Delta$ =-0.009, SE = 0.041,  p = .835).
 
 ```{r bystander_dv_count}
 #' filter out the one 'involvement' outcome because 
@@ -268,38 +263,33 @@ dat_has_both <- dat |> filter(has_both == 'both')
 dat_has_both |> study_count()
 ```
 
-> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.029), p = 0.006, while the pooled idea change effect is $\Delta$ = 0.29 (SE = 0.039), p < 0.0001. In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.368), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071).
+> In this subset of studies, the pooled behavior change effect is $\Delta$ = 0.083 (SE = 0.03), p = .007, while the pooled idea change effect is $\Delta$ = 0.292 (SE = 0.039), p < .0001
 
 ```{r has_both_behav_att_meta_results}
 dat_has_both |> split(~scale_type) |> 
   map(map_robust)
 ```
 
-> In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.366, SE = 0.031), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071, 0.022).
+> In other words, the idea change effects are slightly lower than the overall effect we obtained when looking at the full database ($\Delta$ = 0.371, SE = 0.031), while the behavior change effects are slightly larger than the overall effect ($\Delta$ = 0.071, 0.022).
 
 ```{r reitirating_main_effects}
 dat |> split(~scale_type) |> 
    imap(~map_robust(.x) |> kable('markdown'))
 ```
 
-> Unfortunately, in these studies, we find a small, statistically non-significant correlation of *r* (60) = 0.136, p = 0.293 between changes in ideas and changes in behaviors
+> Unfortunately, in these studies, we find a small, statistically non-significant correlation of *r* (60) = 0.136, p = .293 between changes in ideas and changes in behaviors
 
 ```{r ideas_behavior_correlation_overall}
 
-#' First, a kind of hacky solution to a hard problem, which is that some studies
-#' offer some outcomes that can be evaluated quasi-experimentally (i.e. compare 
-#' a treatment group to a non-randomly assigned control group) but other outcomes
-#' that can only be evaluated pre-post. Peterson (2014) evaluates its behavioral 
-#' outcomes -- bystander behaviors -- quasi-experimentally, but its ideas-based
-#' outcomes pre-post. (Things like this issue are why we get an N of 
-#' 301 when we divide the studies into design and then count unique_study_ids, 
-#' but we only have 298 unique study IDs). This means that when we pivot
+#' First, a problem to solve: Peterson (2014) evaluates its behavioral 
+#' outcomes (bystander behaviors) quasi-experimentally, but its ideas-based
+#' outcomes pre-post. This means that when we pivot
 #' the data to have one column for mean attitude outcomes and one for mean
 #' behavioral outcomes, Peterson 2014 is getting treated as two studies b/c
 #' the identifying information is inconsistent. This results in a few rows of
 #' NAs. You can ignore this and still get basically the same results, but
-#' just for completeness, here we're assigning 'Quasi-Experimental' to 
-#' to the study design for all Peterson 2014 results so that every attitude
+#' just for completeness, here we assign 'Quasi-Experimental' to 
+#' to the study design for all Peterson 2014 outcomes so that every attitude
 #' outcome has a corresponding behavior outcome.
 
 dat_has_both <- dat_has_both |> mutate(
@@ -323,7 +313,7 @@ cor.test(x = has_both_reshaped$mean_d_ideas,
          y = has_both_reshaped$mean_d_behavior)
 ```
 
-> The relationship remains small and non-significant when looking solely at randomized evaluations (*r* = 0.138, p = 0.48). 
+> The relationship remains small and non-significant when looking solely at randomized evaluations (*r* (27) = 0.138, p = .48). 
  
 ```{r ideas_behavior_correlation_subsets}
 rcts_both <- has_both_reshaped |> filter(study_design == 'Randomized Controlled Trial')
@@ -335,7 +325,6 @@ rm(rcts_both)
 > Figure 5 highlights this lack of correlation. Specifically, each point in the figure represents a study that measures both ideas and behaviors, with the average effect size for ideas about sexual violence (within a given study) on the X axis and the average within-study behavioral effect size on the Y axis. The dotted black line shows what a correlation of 1.0 would look like, and the dotted gray line shows the correlation that we actually observe. Studies are color-coded by design.
 
 ```{r correlation_scatterplot}
-
 dat_has_both |>
   group_by(author, year, study_design, unique_study_id, scale_type) |>
   filter(delay == min(delay)) |>
@@ -371,8 +360,26 @@ dat_has_both |>
 ggsave("../results/figures/att_beh_corr.pdf", width = 9.6, height = 9.6)
 ```
 
-**record computational environment**
+> An optimist could look at this literature and conclude that overall we have a pretty good grip on how to change attitudes, beliefs, and knowledge about sexual violence, and although the overall effect size for behaviors was small (Δ = 0.071), it was also precisely estimated (p = .0018),
 
+```{r overall_for_discussion}
+dat |> filter(behavior_type != 'ideas') |> map_robust()
+```
+
+> Further, although behavioral outcomes tended to be larger in randomized controlled trials, changes in ideas were greatest in observational research (Δ = 0.509 vs. Δ = 0.318 for randomized controlled trials and Δ = 0.287 for quasi-experimental designs).
+
+```{r discussion_study_type_results}
+dat |> filter(behavior_type == 'ideas') |> 
+  split(~study_design) |> map(map_robust)
+```
+
+> Last, a pessimist might argue that the most straight- forward explanation for why there were average reductions (Δ) of just 0.032 for perpetration and 0.046 for victimization is that we do not know how to change the rates of either.
+
+```{r discussion_perp_vict}
+dat |> split(~behavior_type) |> map(map_robust)
+```
+
+**record computational environment**
 ```{r computational_reproducibility}
 
 session_info()
