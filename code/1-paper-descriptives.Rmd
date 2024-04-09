@@ -74,7 +74,6 @@ length(unique(dat$country))
 range(dat$unique_paper_id)
 ```
 
-
 > Table 1 details the number of papers for each study design.
 
 ```{r table_one}

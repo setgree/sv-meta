@@ -3,3 +3,6 @@
 3) update figure 5 to say "controlled"
 4) update all facts and figures inlight of slightly smaller dataset
 5) there's a capital "Is" in the middle of a sentence somewhere
+6) Sharma working paper is wp2053 per https://kingcenter.stanford.edu/sites/g/files/sbiybj16611/files/media/file/wp2053_0.pdf
+7) Make sure we have code and data linked appropriately, I provided the necessary materials to Becca and I don't know what happened to it but I won't worry about it too much
+8) update everything on 
