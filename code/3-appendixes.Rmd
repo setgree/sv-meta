@@ -84,7 +84,7 @@ dat |> group_by(unique_study_id, scale_type) |>
 ```
 
 
-## Additional checks for publication bias
+## Additional robustness checks
 
 > In our sample, the pooled effect size in the largest quintile of studies, with at least 496 participants combined in treatment and control groups, is $\Delta$ = 0.283 (se = 0.076), while those in our smallest quintile, which have between 20 and 83 participants, is $\Delta$ = 0.303 (se = 0.044). In other words, neither is more 0.02 away from our overall effect size of $\Delta$ = 0.283.
 
