@@ -9,11 +9,14 @@
 #' @return Cohen's D value.
 #'
 odds_ratio_to_d <- function(p1, p2) {
-  # Calculate the odds ratio
-  odds_ratio <- p1 / p2
+  # Calculate odds for each probability
+  odds1 <- p1 / (1 - p1)
+  odds2 <- p2 / (1 - p2)
   
-  # Convert odds ratio to Cohen's D using the specific formula
+  # Calculate odds ratio
+  odds_ratio <- odds1 / odds2
+  
+  # Convert odds ratio to Cohen's d
   d <- log(odds_ratio) * sqrt(3) / pi
-  
   return(d)
 }
