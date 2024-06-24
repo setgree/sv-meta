@@ -241,7 +241,7 @@ difference_in_proportion_calc(.6, .3)  # pretty similar
 
 # with smaller numbers?
 odds_ratio_to_d(p1 = 0.06, p2 = 0.03)
-PaluckMetaSOP::d_calc("d_i_p", 0.06 - 0.03, 0.03)
+d_calc("d_i_p", 0.06 - 0.03, 0.03)
 # pretty different
 
 # A visualization of the intuition behind this estimator: 
